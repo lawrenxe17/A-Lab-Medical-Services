@@ -1,0 +1,933 @@
+<div class="page-view" id="page-reports">
+<style>
+/* ── Reports page styles ── */
+.rpt-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+.rpt-period-btn{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;font-size:12px;font-weight:700;color:var(--text-3);cursor:pointer;font-family:var(--font);transition:all .15s;}
+.rpt-period-btn.active,.rpt-period-btn:hover{background:var(--teal-600);color:#fff;border-color:var(--teal-600);}
+.rpt-date-range{display:flex;align-items:center;gap:6px;}
+.rpt-date-range input{padding:5px 10px;border-radius:8px;border:1.5px solid var(--border);font-size:12px;font-family:var(--mono);color:var(--text-1);background:var(--white);cursor:pointer;}
+.rpt-date-range input:focus{outline:none;border-color:var(--teal-500);}
+.rpt-actions{margin-left:auto;display:flex;gap:8px;}
+.rpt-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px;}
+.rpt-sum-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;position:relative;overflow:hidden;}
+.rpt-sum-card-accent{position:absolute;top:0;left:0;right:0;height:3px;}
+.rpt-sum-label{font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+.rpt-sum-val{font-size:26px;font-weight:900;color:var(--text-1);line-height:1;font-family:var(--mono);}
+.rpt-sum-sub{font-size:11px;color:var(--text-4);margin-top:4px;}
+.rpt-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:900px){.rpt-grid2{grid-template-columns:1fr;}}
+.rpt-section-title{font-size:13px;font-weight:800;color:var(--text-1);margin-bottom:2px;}
+.rpt-section-sub{font-size:11px;color:var(--text-4);margin-bottom:12px;}
+.rpt-empty{text-align:center;padding:32px;color:var(--text-4);font-size:13px;}
+.rpt-method-bar{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-100);}
+.rpt-method-bar:last-child{border-bottom:none;}
+.rpt-method-name{font-size:12px;font-weight:700;color:var(--text-1);min-width:80px;}
+.rpt-method-track{flex:1;height:8px;background:var(--gray-100);border-radius:4px;overflow:hidden;}
+.rpt-method-fill{height:100%;border-radius:4px;background:var(--teal-500);transition:width .4s ease;}
+.rpt-method-amt{font-size:12px;font-weight:700;color:var(--text-1);font-family:var(--mono);min-width:90px;text-align:right;}
+.rpt-branch-badge{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:rgba(0,96,176,.1);color:var(--teal-700);font-family:var(--mono);}
+
+/* ── Print styles ── */
+@media print {
+  .app-sidebar,.app-topbar,.rpt-toolbar,.rpt-actions,
+  button,.btn,.sb-logo,.sb-nav,.sb-footer,
+  #page-reports .rpt-no-print { display:none!important; }
+  .page-view { display:block!important; padding:0!important; }
+  #page-reports { display:block!important; }
+  .rpt-print-header { display:block!important; }
+  body,html { background:#fff!important; }
+  .card,.rpt-sum-card { break-inside:avoid; box-shadow:none!important; border:1px solid #ddd!important; }
+  .rpt-summary-grid,.rpt-grid2 { grid-template-columns:1fr 1fr!important; }
+}
+.rpt-print-header { display:none; padding:0 0 16px; border-bottom:2px solid var(--border); margin-bottom:20px; }
+</style>
+
+<div style="padding:28px 32px;" id="rptContent">
+
+  <!-- Print header (hidden on screen) -->
+  <div class="rpt-print-header">
+    <div style="font-size:20px;font-weight:900;color:var(--text-1);" id="rptPrintTitle">A-Lab Income Report</div>
+    <div style="font-size:12px;color:var(--text-3);margin-top:2px;" id="rptPrintSub"></div>
+  </div>
+
+  <!-- Page Title -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;" class="rpt-no-print">
+    <div>
+      <div style="font-size:22px;font-weight:900;color:var(--text-1);">Reports</div>
+      <div style="font-size:12px;color:var(--text-4);margin-top:2px;" id="rptSubtitle">Select a date range to load report</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-secondary btn-sm" onclick="rpt_export()" id="rptExportBtn" style="display:none;">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Export CSV
+      </button>
+      <button class="btn btn-secondary btn-sm" onclick="rpt_print()" id="rptPrintBtn" style="display:none;">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+        Print
+      </button>
+    </div>
+  </div>
+
+  <!-- Tab switcher -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1.5px solid var(--border);padding-bottom:0;" class="rpt-no-print">
+    <button class="rpt-tab-btn active" id="rptTabIncome" onclick="rpt_switchTab('income')"
+      style="padding:8px 18px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:700;color:var(--teal-600);border-bottom:2.5px solid var(--teal-600);margin-bottom:-1.5px;font-family:var(--font);">
+      📊 Income Report
+    </button>
+    <button class="rpt-tab-btn" id="rptTab4ps" onclick="rpt_switchTab('4ps')"
+      style="padding:8px 18px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:700;color:var(--text-3);border-bottom:2.5px solid transparent;margin-bottom:-1.5px;font-family:var(--font);">
+      🏠 4P's Census
+    </button>
+    <button class="rpt-tab-btn" id="rptTabPhilhealth" onclick="rpt_switchTab('philhealth')"
+      style="padding:8px 18px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:700;color:var(--text-3);border-bottom:2.5px solid transparent;margin-bottom:-1.5px;font-family:var(--font);">
+      🏥 PhilHealth Claims
+    </button>
+  </div>
+
+  <!-- 4P's Census Section -->
+  <!-- PhilHealth Claims Section -->
+  <div id="rptPhilhealthSection" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <div style="font-size:15px;font-weight:800;color:var(--text-1);">PhilHealth Claims</div>
+        <div style="font-size:12px;color:var(--text-4);margin-top:2px;">Track and monitor PhilHealth benefit claims per branch</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div id="rptPhBranchWrap" style="display:none;">
+          <select id="rptPhBranchSelect" class="f-inp" style="width:auto;min-width:180px;font-size:13px;cursor:pointer;" onchange="rpt_ph_load()">
+            <option value="">All Branches</option>
+          </select>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="rpt_ph_load()">↺ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+      <div class="card" style="padding:16px 20px;">
+        <div style="font-size:28px;font-weight:800;color:var(--text-1);" id="rptPhStatTotal">—</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Total Claims</div>
+      </div>
+      <div class="card" style="padding:16px 20px;">
+        <div style="font-size:28px;font-weight:800;color:#ca8a04;" id="rptPhStatPending">—</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">⏳ Pending</div>
+      </div>
+      <div class="card" style="padding:16px 20px;">
+        <div style="font-size:28px;font-weight:800;color:#16a34a;" id="rptPhStatClaimed">—</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">✅ Claimed</div>
+      </div>
+      <div class="card" style="padding:16px 20px;">
+        <div style="font-size:28px;font-weight:800;color:var(--teal-600);" id="rptPhStatAmount">—</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Total Amount</div>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">
+      <div style="position:relative;flex:1;">
+        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-4);" width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
+        <input type="text" id="rptPhSearch" class="f-inp" style="padding-left:32px;font-size:13px;" placeholder="Search patient or PIN…" oninput="rpt_ph_filter()">
+      </div>
+      <select id="rptPhStatusFilter" class="f-inp" style="width:auto;min-width:160px;font-size:13px;cursor:pointer;" onchange="rpt_ph_filter()">
+        <option value="">All Statuses</option>
+        <option value="PENDING">⏳ Pending</option>
+        <option value="CLAIMED">✅ Claimed</option>
+        <option value="FILED">📋 Filed</option>
+        <option value="APPROVED">🏥 Approved</option>
+      </select>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>PhilHealth PIN</th>
+              <th>Order No.</th>
+              <th>Year</th>
+              <th style="text-align:right;">Amount</th>
+              <th>Status</th>
+              <th id="rptPhBranchColHdr" style="display:none;">Branch</th>
+            </tr>
+          </thead>
+          <tbody id="rptPhTableBody">
+            <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-4);">Click Refresh to load claims.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="rpt4psSection" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <div style="font-size:15px;font-weight:800;color:var(--text-1);">4P's Beneficiary Census</div>
+        <div style="font-size:12px;color:var(--text-4);margin-top:2px;">Pantawid Pamilyang Pilipino Program — government reporting</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary btn-sm" onclick="rpt_4ps_export()">Export CSV</button>
+        <button class="btn btn-primary btn-sm" onclick="rpt_4ps_load()">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Load Census
+        </button>
+      </div>
+    </div>
+    <div id="rpt4psLoading" style="display:none;text-align:center;padding:40px;color:var(--text-4);">
+      <span class="spinner spinner-teal" style="display:inline-block;margin-bottom:8px;"></span>
+      <div style="font-size:13px;">Loading 4P's census…</div>
+    </div>
+    <div id="rpt4psBody" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="rpt-sum-card" style="display:inline-flex;align-items:center;gap:12px;padding:12px 20px;">
+          <div style="font-size:28px;font-weight:900;color:#7c3aed;" id="rpt4psCount">0</div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text-3);">TOTAL 4P'S BENEFICIARIES</div>
+            <div style="font-size:11px;color:var(--text-4);" id="rpt4psBranchLabel">All Branches</div>
+          </div>
+        </div>
+        <input type="text" id="rpt4psSearch" class="f-inp" placeholder="Search patient…"
+          style="width:200px;font-size:12px;padding:6px 10px;" oninput="rpt_4ps_filter()">
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Patient</th>
+                <th>Sex</th>
+                <th>Date of Birth</th>
+                <th>Contact</th>
+                <th>PhilHealth</th>
+                <th id="rpt4psBranchCol">Branch</th>
+              </tr>
+            </thead>
+            <tbody id="rpt4psTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="rpt4psEmpty" style="text-align:center;padding:48px;color:var(--text-4);">
+      <div style="font-size:36px;margin-bottom:10px;">🏠</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:4px;">No 4P's data</div>
+      <div style="font-size:12px;">Click "Load Census" to fetch 4P's patient list.</div>
+    </div>
+  </div>
+
+  <!-- Income Report Section -->
+  <div id="rptIncomeSection">
+  <!-- Filter bar: branch (SA only) + date range — all on same line -->
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;" class="rpt-no-print">
+    <!-- Branch selector (SA only, inline) -->
+    <div id="rptBranchSelector" style="display:none;">
+      <select id="rptBranchSelect" class="f-inp" style="width:auto;min-width:200px;font-size:13px;cursor:pointer;" onchange="rpt_onBranchChange()">
+        <option value="">All Branches</option>
+      </select>
+    </div>
+    <!-- Period buttons -->
+    <div style="display:flex;gap:4px;">
+      <button class="rpt-period-btn" data-period="today"  onclick="rpt_setPeriod('today')">Today</button>
+      <button class="rpt-period-btn" data-period="week"   onclick="rpt_setPeriod('week')">This Week</button>
+      <button class="rpt-period-btn active" data-period="month" onclick="rpt_setPeriod('month')">This Month</button>
+      <button class="rpt-period-btn" data-period="custom" onclick="rpt_setPeriod('custom')">Custom</button>
+    </div>
+    <!-- Custom date range -->
+    <div class="rpt-date-range" id="rptCustomRange" style="display:none;">
+      <input type="date" id="rptDateFrom" onchange="rpt_load()">
+      <span style="color:var(--text-4);font-size:12px;">to</span>
+      <input type="date" id="rptDateTo"   onchange="rpt_load()">
+    </div>
+    <!-- Refresh -->
+    <button class="btn btn-primary btn-sm rpt-no-print" onclick="rpt_load()" style="margin-left:auto;">
+      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Loading state -->
+  <div id="rptLoading" style="display:none;text-align:center;padding:60px;color:var(--text-4);">
+    <span class="spinner spinner-teal" style="display:inline-block;margin-bottom:12px;width:28px;height:28px;border-width:3px;"></span>
+    <div style="font-size:13px;margin-top:8px;">Building report…</div>
+  </div>
+
+  <!-- Empty state -->
+  <div id="rptEmpty" style="text-align:center;padding:60px;color:var(--text-4);">
+    <div style="font-size:40px;margin-bottom:12px;">📊</div>
+    <div style="font-size:15px;font-weight:700;color:var(--text-2);margin-bottom:4px;">No data yet</div>
+    <div style="font-size:13px;">Select a date range and click Refresh to load the report.</div>
+  </div>
+
+  <!-- Report content -->
+  <div id="rptBody" style="display:none;">
+
+    <!-- Summary cards -->
+    <div class="rpt-summary-grid" id="rptSummaryCards"></div>
+
+    <!-- By Branch (SA all-branches view only) -->
+    <div id="rptByBranchWrap" style="display:none;margin-bottom:16px;">
+      <div class="card">
+        <div style="padding:16px 20px 10px;border-bottom:1px solid var(--border);">
+          <div class="rpt-section-title">Revenue by Branch</div>
+          <div class="rpt-section-sub">Breakdown of income per branch</div>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Branch</th><th style="text-align:right;">Orders</th><th style="text-align:right;">Revenue</th><th style="text-align:right;">Avg / Order</th></tr></thead>
+            <tbody id="rptByBranchBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid: payment methods + top services -->
+    <div class="rpt-grid2">
+
+      <!-- Payment methods -->
+      <div class="card">
+        <div style="padding:16px 20px 10px;border-bottom:1px solid var(--border);">
+          <div class="rpt-section-title">Payment Methods</div>
+          <div class="rpt-section-sub">Revenue collected per method</div>
+        </div>
+        <div style="padding:12px 20px;" id="rptPayMethods"></div>
+      </div>
+
+      <!-- Daily revenue mini chart (text-based) -->
+      <div class="card">
+        <div style="padding:16px 20px 10px;border-bottom:1px solid var(--border);">
+          <div class="rpt-section-title">Daily Revenue</div>
+          <div class="rpt-section-sub">Orders and revenue per day</div>
+        </div>
+        <div style="padding:4px 0;max-height:240px;overflow-y:auto;" id="rptByDay"></div>
+      </div>
+
+    </div>
+
+    <!-- Service breakdown table -->
+    <div class="card" style="margin-bottom:16px;">
+      <div style="padding:16px 20px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div class="rpt-section-title">Revenue by Service / Package</div>
+          <div class="rpt-section-sub">All billed items in the selected period</div>
+        </div>
+        <input type="text" id="rptSvcSearch" class="f-inp" placeholder="Search service…"
+          style="width:180px;font-size:12px;padding:6px 10px;" oninput="rpt_filterServices()" class="rpt-no-print">
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Service / Package</th>
+              <th style="text-align:right;">Qty</th>
+              <th style="text-align:right;">Gross</th>
+              <th style="text-align:right;">Discount</th>
+              <th style="text-align:right;">Net Revenue</th>
+            </tr>
+          </thead>
+          <tbody id="rptSvcBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /rptIncomeSection -->
+</div><!-- /rptContent -->
+
+<script>
+var RPT = {
+  branchId:   null,
+  isSA:       false,
+  period:     'month',
+  data:       null,
+  services:   [],
+  branches:   []
+};
+
+var STATUS_COLORS = {
+  DRAFT:'#64748b', OPEN:'#ca8a04', PAID:'#16a34a',
+  IN_PROGRESS:'#2563eb', FOR_RELEASE:'#7c3aed',
+  RELEASED:'#0060b0', CANCELLED:'#dc2626', VOID:'#dc2626'
+};
+
+/* ── Init ── */
+function rpt_init() {
+  var role = APP.user ? APP.user.role : '';
+  RPT.isSA = role === 'Super Admin';
+
+  // Set default period (this month)
+  rpt_setPeriod('month', true);
+
+  // Branch selector
+  var brSel = document.getElementById('rptBranchSelector');
+  if (RPT.isSA) {
+    brSel.style.display = '';
+    google.script.run
+      .withSuccessHandler(function(r) {
+        if (!r.success) return;
+        RPT.branches = r.data || [];
+        var sel = document.getElementById('rptBranchSelect');
+        sel.innerHTML = '<option value="">All Branches</option>';
+        RPT.branches.forEach(function(b) {
+          sel.innerHTML += '<option value="' + _e(b.branch_id) + '">' + _e(b.branch_name) + ' (' + _e(b.branch_code) + ')</option>';
+        });
+      })
+      .withFailureHandler(function(){})
+      .getBranchesForPatientView('');
+    RPT.branchId = '';
+  } else {
+    brSel.style.display = 'none';
+    RPT.branchId = APP.user && APP.user.branch_ids
+      ? APP.user.branch_ids.split(',')[0].trim() : '';
+  }
+  rpt_load();
+}
+
+function rpt_onBranchChange() {
+  RPT.branchId = document.getElementById('rptBranchSelect').value;
+  rpt_load();
+}
+
+/* ── Period buttons ── */
+function rpt_setPeriod(period, silent) {
+  RPT.period = period;
+  document.querySelectorAll('.rpt-period-btn').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-period') === period);
+  });
+  var custom = document.getElementById('rptCustomRange');
+  custom.style.display = period === 'custom' ? 'flex' : 'none';
+
+  var today = new Date();
+  var from, to;
+
+  if (period === 'today') {
+    from = to = _fmtDate(today);
+  } else if (period === 'week') {
+    var day = today.getDay();
+    var mon = new Date(today); mon.setDate(today.getDate() - (day === 0 ? 6 : day - 1));
+    from = _fmtDate(mon); to = _fmtDate(today);
+  } else if (period === 'month') {
+    from = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-01';
+    to   = _fmtDate(today);
+  } else if (period === 'custom') {
+    return; // user sets dates manually
+  }
+
+  if (from) document.getElementById('rptDateFrom').value = from;
+  if (to)   document.getElementById('rptDateTo').value   = to;
+  if (!silent) rpt_load();
+}
+
+function _fmtDate(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+
+/* ── Load ── */
+function rpt_load() {
+  var from = document.getElementById('rptDateFrom').value;
+  var to   = document.getElementById('rptDateTo').value;
+  if (!from || !to) return;
+
+  document.getElementById('rptLoading').style.display = '';
+  document.getElementById('rptEmpty').style.display   = 'none';
+  document.getElementById('rptBody').style.display    = 'none';
+  document.getElementById('rptExportBtn').style.display = 'none';
+  document.getElementById('rptPrintBtn').style.display  = 'none';
+
+  var fn = (!RPT.isSA || RPT.branchId)
+    ? function() {
+        google.script.run
+          .withSuccessHandler(rpt_onData)
+          .withFailureHandler(rpt_onErr)
+          .getBranchIncomeReport(RPT.branchId || '', from, to);
+      }
+    : function() {
+        google.script.run
+          .withSuccessHandler(rpt_onData)
+          .withFailureHandler(rpt_onErr)
+          .getAllBranchesIncomeReport(from, to);
+      };
+
+  fn();
+}
+
+function rpt_onErr(e) {
+  document.getElementById('rptLoading').style.display = 'none';
+  document.getElementById('rptEmpty').style.display   = '';
+  document.getElementById('rptSubtitle').textContent  = 'Error: ' + (e.message || 'Failed to load report.');
+}
+
+function rpt_onData(r) {
+  document.getElementById('rptLoading').style.display = 'none';
+  if (!r.success) { rpt_onErr({ message: r.message }); return; }
+
+  RPT.data = r;
+  RPT.services = r.by_service || [];
+
+  var from = document.getElementById('rptDateFrom').value;
+  var to   = document.getElementById('rptDateTo').value;
+  var isSA = RPT.isSA && !RPT.branchId;
+
+  // Subtitle + print header
+  var brName = RPT.branchId
+    ? (RPT.branches.find(function(b){ return b.branch_id === RPT.branchId; }) || {}).branch_name || RPT.branchId
+    : 'All Branches';
+  var rangeLabel = from === to ? from : from + ' → ' + to;
+  document.getElementById('rptSubtitle').textContent = (isSA ? 'All Branches' : brName) + ' · ' + rangeLabel;
+  document.getElementById('rptPrintTitle').textContent = 'A-Lab Income Report — ' + (isSA ? 'All Branches' : brName);
+  document.getElementById('rptPrintSub').textContent   = 'Period: ' + rangeLabel + ' · Generated: ' + new Date().toLocaleString('en-PH');
+
+  // Show body + buttons
+  document.getElementById('rptBody').style.display    = '';
+  document.getElementById('rptExportBtn').style.display = '';
+  document.getElementById('rptPrintBtn').style.display  = '';
+
+  rpt_renderSummary(r.summary, isSA);
+  rpt_renderPayMethods(r.by_payment_method || []);
+  rpt_renderByDay(r.by_day || []);
+  rpt_renderServices();
+
+  // Branch breakdown (SA all-branches only)
+  var byBranchWrap = document.getElementById('rptByBranchWrap');
+  if (isSA && r.by_branch && r.by_branch.length) {
+    byBranchWrap.style.display = '';
+    rpt_renderByBranch(r.by_branch);
+  } else {
+    byBranchWrap.style.display = 'none';
+  }
+}
+
+/* ── Render Summary Cards ── */
+function rpt_renderSummary(s, isSA) {
+  var p = function(v) { return '₱' + Number(v||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+  var cards = [
+    { label:'Total Revenue',     val: p(s.total_revenue),    sub: s.total_orders + ' paid orders',     accent:'var(--teal-600)' },
+    { label:'Avg per Order',     val: p(s.avg_per_order),    sub: 'Revenue ÷ Orders',                   accent:'#2563eb' },
+    { label:'Total Patients',    val: (s.total_patients||0), sub: 'Enrolled in branch',                 accent:'#7c3aed' },
+    { label:'Total Discount',    val: p(s.total_discount),   sub: 'Across all items',                   accent:'#ca8a04' },
+    { label:'PhilHealth Claims', val: p(s.total_philhealth), sub: 'Claims this period',                 accent:'#0ea5e9' },
+  ];
+  var h = '';
+  cards.forEach(function(c) {
+    h += '<div class="rpt-sum-card">'
+      + '<div class="rpt-sum-card-accent" style="background:' + c.accent + ';"></div>'
+      + '<div class="rpt-sum-label">' + c.label + '</div>'
+      + '<div class="rpt-sum-val">' + c.val + '</div>'
+      + '<div class="rpt-sum-sub">' + c.sub + '</div>'
+      + '</div>';
+  });
+  document.getElementById('rptSummaryCards').innerHTML = h;
+}
+
+/* ── Render Payment Methods ── */
+function rpt_renderPayMethods(methods) {
+  if (!methods.length) {
+    document.getElementById('rptPayMethods').innerHTML = '<div class="rpt-empty">No payment data.</div>';
+    return;
+  }
+  var total = methods.reduce(function(s,m){ return s+m.amount; }, 0);
+  var methodColors = { CASH:'#16a34a', GCASH:'#2563eb', CARD:'#7c3aed',
+    MAYA:'#0ea5e9', CHECK:'#ca8a04', TRANSFER:'#0f766e' };
+  var h = '';
+  methods.forEach(function(m) {
+    var pct = total > 0 ? (m.amount/total*100) : 0;
+    var color = methodColors[m.method.toUpperCase()] || 'var(--teal-500)';
+    h += '<div class="rpt-method-bar">'
+      + '<div class="rpt-method-name">' + _e(m.method) + '</div>'
+      + '<div class="rpt-method-track"><div class="rpt-method-fill" style="width:' + pct.toFixed(1) + '%;background:' + color + ';"></div></div>'
+      + '<div class="rpt-method-amt">₱' + Number(m.amount).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}) + '</div>'
+      + '</div>';
+  });
+  document.getElementById('rptPayMethods').innerHTML = h;
+}
+
+/* ── Render By Day ── */
+function rpt_renderByDay(days) {
+  if (!days.length) {
+    document.getElementById('rptByDay').innerHTML = '<div class="rpt-empty">No daily data.</div>';
+    return;
+  }
+  var maxRev = Math.max.apply(null, days.map(function(d){ return d.revenue; }));
+  var h = '<table style="width:100%;border-collapse:collapse;">';
+  days.forEach(function(d) {
+    var pct = maxRev > 0 ? (d.revenue/maxRev*100) : 0;
+    var dateObj = new Date(d.date + 'T12:00:00');
+    var label = dateObj.toLocaleDateString('en-PH',{month:'short',day:'numeric',weekday:'short'});
+    h += '<tr style="border-bottom:1px solid var(--gray-100);">'
+      + '<td style="padding:6px 12px;font-size:11px;color:var(--text-3);white-space:nowrap;width:90px;">' + label + '</td>'
+      + '<td style="padding:6px 6px;"><div style="height:6px;border-radius:3px;background:rgba(0,96,176,.12);"><div style="height:100%;border-radius:3px;background:var(--teal-500);width:' + pct.toFixed(1) + '%;"></div></div></td>'
+      + '<td style="padding:6px 12px;font-size:11px;font-family:var(--mono);font-weight:700;color:var(--text-1);white-space:nowrap;text-align:right;">₱' + Number(d.revenue).toLocaleString('en-PH',{minimumFractionDigits:0,maximumFractionDigits:0}) + '</td>'
+      + '<td style="padding:6px 12px;font-size:11px;color:var(--text-4);white-space:nowrap;">' + d.orders + ' orders</td>'
+      + '</tr>';
+  });
+  h += '</table>';
+  document.getElementById('rptByDay').innerHTML = h;
+}
+
+/* ── Render Services ── */
+function rpt_filterServices() {
+  rpt_renderServices();
+}
+
+function rpt_renderServices() {
+  var q = (document.getElementById('rptSvcSearch').value || '').toLowerCase().trim();
+  var list = q
+    ? RPT.services.filter(function(s){ return s.lab_name.toLowerCase().indexOf(q) !== -1; })
+    : RPT.services;
+
+  if (!list.length) {
+    document.getElementById('rptSvcBody').innerHTML =
+      '<tr><td colspan="5" class="rpt-empty">No service data for this period.</td></tr>';
+    return;
+  }
+  var p = function(v) { return '₱' + Number(v||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+  var totQty=0, totGross=0, totDisc=0, totNet=0;
+  var h = '';
+  list.forEach(function(s) {
+    totQty  += s.qty; totGross += s.gross; totDisc += s.discount; totNet += s.net;
+    h += '<tr>'
+      + '<td style="font-weight:600;color:var(--text-1);">' + _e(s.lab_name) + '</td>'
+      + '<td style="text-align:right;font-family:var(--mono);font-size:12px;">' + s.qty + '</td>'
+      + '<td style="text-align:right;font-family:var(--mono);font-size:12px;color:var(--text-3);">' + p(s.gross) + '</td>'
+      + '<td style="text-align:right;font-family:var(--mono);font-size:12px;color:var(--danger);">-' + p(s.discount) + '</td>'
+      + '<td style="text-align:right;font-family:var(--mono);font-size:12px;font-weight:800;color:var(--teal-600);">' + p(s.net) + '</td>'
+      + '</tr>';
+  });
+  // Totals row
+  h += '<tr style="background:var(--gray-50);font-weight:800;border-top:2px solid var(--border);">'
+    + '<td>TOTAL</td>'
+    + '<td style="text-align:right;font-family:var(--mono);">' + totQty + '</td>'
+    + '<td style="text-align:right;font-family:var(--mono);color:var(--text-3);">₱' + Number(totGross).toLocaleString('en-PH',{minimumFractionDigits:2}) + '</td>'
+    + '<td style="text-align:right;font-family:var(--mono);color:var(--danger);">-₱' + Number(totDisc).toLocaleString('en-PH',{minimumFractionDigits:2}) + '</td>'
+    + '<td style="text-align:right;font-family:var(--mono);color:var(--teal-600);">₱' + Number(totNet).toLocaleString('en-PH',{minimumFractionDigits:2}) + '</td>'
+    + '</tr>';
+  document.getElementById('rptSvcBody').innerHTML = h;
+}
+
+/* ── Render By Branch (SA) ── */
+function rpt_renderByBranch(branches) {
+  var p = function(v){ return '₱' + Number(v||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+  var h = '';
+  branches.sort(function(a,b){ return b.revenue - a.revenue; }).forEach(function(b) {
+    h += '<tr>'
+      + '<td><span class="rpt-branch-badge">' + _e(b.branch_name) + '</span></td>'
+      + '<td style="text-align:right;font-family:var(--mono);">' + b.orders + '</td>'
+      + '<td style="text-align:right;font-family:var(--mono);font-weight:800;color:var(--teal-600);">' + p(b.revenue) + '</td>'
+      + '<td style="text-align:right;font-family:var(--mono);color:var(--text-3);">' + p(b.avg) + '</td>'
+      + '</tr>';
+  });
+  document.getElementById('rptByBranchBody').innerHTML = h || '<tr><td colspan="4" class="rpt-empty">No data.</td></tr>';
+}
+
+/* ── Render Orders ── */
+/* ── Print ── */
+function rpt_print() { window.print(); }
+
+/* ── Export CSV ── */
+function rpt_export() {
+  if (!RPT.data) return;
+  var from = document.getElementById('rptDateFrom').value;
+  var to   = document.getElementById('rptDateTo').value;
+  var s    = RPT.data.summary;
+  var rows = [];
+
+  // Summary section
+  rows.push(['A-Lab Income Report']);
+  rows.push(['Period:', from + ' to ' + to]);
+  rows.push(['Generated:', new Date().toLocaleString('en-PH')]);
+  rows.push([]);
+  rows.push(['SUMMARY']);
+  rows.push(['Total Revenue', s.total_revenue]);
+  rows.push(['Total Orders',  s.total_orders]);
+  rows.push(['Avg per Order', Number(s.avg_per_order).toFixed(2)]);
+  rows.push(['Total Discount',    s.total_discount]);
+  rows.push(['Total PhilHealth',  s.total_philhealth]);
+  rows.push([]);
+
+  // By branch (SA)
+  if (RPT.data.by_branch && RPT.data.by_branch.length) {
+    rows.push(['BY BRANCH']);
+    rows.push(['Branch','Orders','Revenue','Avg per Order']);
+    RPT.data.by_branch.forEach(function(b) {
+      rows.push([b.branch_name, b.orders, b.revenue.toFixed(2), b.avg.toFixed(2)]);
+    });
+    rows.push([]);
+  }
+
+  // Payment methods
+  rows.push(['PAYMENT METHODS']);
+  rows.push(['Method','Amount']);
+  (RPT.data.by_payment_method || []).forEach(function(m) {
+    rows.push([m.method, m.amount.toFixed(2)]);
+  });
+  rows.push([]);
+
+  // Services
+  rows.push(['SERVICE BREAKDOWN']);
+  rows.push(['Service','Qty','Gross','Discount','Net Revenue']);
+  (RPT.data.by_service || []).forEach(function(sv) {
+    rows.push([sv.lab_name, sv.qty, sv.gross.toFixed(2), sv.discount.toFixed(2), sv.net.toFixed(2)]);
+  });
+  rows.push([]);
+
+  // Build CSV
+  var csv = rows.map(function(r) {
+    return r.map(function(c) {
+      var s = String(c == null ? '' : c);
+      if (s.includes(',') || s.includes('"') || s.includes('\n'))
+        s = '"' + s.replace(/"/g,'""') + '"';
+      return s;
+    }).join(',');
+  }).join('\r\n');
+
+  // Download
+  var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href   = url;
+  a.download = 'alab-income-report-' + from + '-to-' + to + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('success', 'Report exported as CSV.');
+}
+
+/* ══════════════════════════════════════
+   TAB SWITCHER
+══════════════════════════════════════ */
+var RPT_TAB = 'income';
+
+function rpt_switchTab(tab) {
+  RPT_TAB = tab;
+  // Toggle tab button styles
+  document.getElementById('rptTabIncome').style.color        = tab === 'income'     ? 'var(--teal-600)' : 'var(--text-3)';
+  document.getElementById('rptTabIncome').style.borderBottom = tab === 'income'     ? '2.5px solid var(--teal-600)' : '2.5px solid transparent';
+  document.getElementById('rptTab4ps').style.color           = tab === '4ps'        ? 'var(--teal-600)' : 'var(--text-3)';
+  document.getElementById('rptTab4ps').style.borderBottom    = tab === '4ps'        ? '2.5px solid var(--teal-600)' : '2.5px solid transparent';
+  document.getElementById('rptTabPhilhealth').style.color        = tab === 'philhealth' ? 'var(--teal-600)' : 'var(--text-3)';
+  document.getElementById('rptTabPhilhealth').style.borderBottom = tab === 'philhealth' ? '2.5px solid var(--teal-600)' : '2.5px solid transparent';
+  // Show/hide sections
+  document.getElementById('rptIncomeSection').style.display    = tab === 'income'     ? '' : 'none';
+  document.getElementById('rpt4psSection').style.display       = tab === '4ps'        ? '' : 'none';
+  document.getElementById('rptPhilhealthSection').style.display= tab === 'philhealth' ? '' : 'none';
+  // Auto-load PhilHealth on first switch
+  if (tab === 'philhealth' && !RPT_PH.loaded) rpt_ph_load();
+}
+
+/* ══════════════════════════════════════
+   4P'S CENSUS
+══════════════════════════════════════ */
+/* ══════════════════════════════════════
+   PHILHEALTH CLAIMS (inside Reports)
+══════════════════════════════════════ */
+var RPT_PH = { data: [], filtered: [], loaded: false };
+
+function rpt_ph_init() {
+  var isSA = APP.user && APP.user.role === 'Super Admin';
+  var branchWrap = document.getElementById('rptPhBranchWrap');
+  var branchCol  = document.getElementById('rptPhBranchColHdr');
+  if (branchWrap) branchWrap.style.display = isSA ? '' : 'none';
+  if (branchCol)  branchCol.style.display  = isSA ? '' : 'none';
+
+  if (isSA && RPT.branches && RPT.branches.length) {
+    var sel = document.getElementById('rptPhBranchSelect');
+    // Only populate if not already populated (preserve current selection)
+    if (sel && sel.options.length <= 1) {
+      var curVal = sel.value;
+      sel.innerHTML = '<option value="">All Branches</option>'
+        + RPT.branches.map(function(b){
+            return '<option value="' + _e(b.branch_id) + '">' + _e(b.branch_name) + '</option>';
+          }).join('');
+      // Restore selection
+      if (curVal) sel.value = curVal;
+    }
+  }
+}
+
+function rpt_ph_load() {
+  var isSA     = APP.user && APP.user.role === 'Super Admin';
+  var branchId = isSA
+    ? (document.getElementById('rptPhBranchSelect') ? document.getElementById('rptPhBranchSelect').value : '')
+    : (APP.user && APP.user.branch_ids ? APP.user.branch_ids.split(',')[0].trim() : '');
+
+  rpt_ph_init();
+
+  var body = document.getElementById('rptPhTableBody');
+  body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;"><span class="spinner spinner-teal" style="display:inline-block;width:16px;height:16px;border-width:2px;"></span></td></tr>';
+  ['rptPhStatTotal','rptPhStatPending','rptPhStatClaimed','rptPhStatAmount']
+    .forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent='…'; });
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      RPT_PH.loaded = true;
+      RPT_PH.data   = r.success ? (r.data || []) : [];
+
+      var total=0, pending=0, claimed=0, filed=0, approved=0, totalAmt=0;
+      RPT_PH.data.forEach(function(c){
+        total++;
+        if (c.status === 'PENDING')  pending++;
+        if (c.status === 'CLAIMED')  claimed++;
+        if (c.status === 'FILED')    filed++;
+        if (c.status === 'APPROVED') approved++;
+        totalAmt += Number(c.amount_claimed)||0;
+      });
+      document.getElementById('rptPhStatTotal').textContent   = total;
+      document.getElementById('rptPhStatPending').textContent = pending;
+      document.getElementById('rptPhStatClaimed').textContent = claimed;
+      document.getElementById('rptPhStatAmount').textContent  = '₱' + totalAmt.toLocaleString('en-PH',{minimumFractionDigits:2});
+
+      rpt_ph_filter();
+    })
+    .withFailureHandler(function(e) {
+      RPT_PH.loaded = true;
+      document.getElementById('rptPhTableBody').innerHTML =
+        '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--danger);font-size:13px;">Failed: ' + _e((e&&e.message)||'Error') + '</td></tr>';
+    })
+    .getBranchPhilhealthClaims(branchId);
+}
+
+function rpt_ph_filter() {
+  var q      = (document.getElementById('rptPhSearch') ? document.getElementById('rptPhSearch').value : '').toLowerCase().trim();
+  var status = document.getElementById('rptPhStatusFilter') ? document.getElementById('rptPhStatusFilter').value : '';
+  var isSA   = APP.user && APP.user.role === 'Super Admin';
+
+  RPT_PH.filtered = RPT_PH.data.filter(function(c) {
+    if (status && c.status !== status) return false;
+    if (q) {
+      var hay = [c.patient_name||'', c.philhealth_pin||'', c.order_id||''].join(' ').toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+
+  var statusColors = {
+    PENDING:  { bg:'rgba(202,138,4,.1)',   color:'#92400e' },
+    CLAIMED:  { bg:'rgba(22,163,74,.1)',   color:'#15803d' },
+    FILED:    { bg:'rgba(37,99,235,.1)',   color:'#1d4ed8' },
+    APPROVED: { bg:'rgba(0,96,176,.1)',    color:'#0060b0' }
+  };
+  var statusIcons = { PENDING:'⏳', CLAIMED:'✅', FILED:'📋', APPROVED:'🏥' };
+
+  var body = document.getElementById('rptPhTableBody');
+  if (!RPT_PH.filtered.length) {
+    body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-4);font-size:13px;">No claims found.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = RPT_PH.filtered.map(function(c) {
+    var sc    = statusColors[c.status] || { bg:'var(--gray-100)', color:'var(--text-3)' };
+    var badge = '<span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;background:' + sc.bg + ';color:' + sc.color + ';">'
+      + (statusIcons[c.status]||'') + ' ' + _e(c.status||'PENDING') + '</span>';
+    return '<tr>'
+      + '<td style="font-weight:700;font-size:13px;">' + _e(c.patient_name || c.patient_id || '—') + '</td>'
+      + '<td style="font-family:var(--mono);font-size:12px;">' + _e(c.philhealth_pin || '—') + '</td>'
+      + '<td style="font-family:var(--mono);font-size:12px;color:var(--teal-600);font-weight:700;">' + _e(c.order_id||'—') + '</td>'
+      + '<td style="font-size:12px;">' + _e(String(c.year||'')) + '</td>'
+      + '<td style="font-family:var(--mono);font-size:12px;font-weight:700;text-align:right;">₱' + Number(c.amount_claimed||0).toLocaleString('en-PH',{minimumFractionDigits:2}) + '</td>'
+      + '<td>' + badge + '</td>'
+      + (isSA ? '<td style="font-size:11px;color:var(--text-3);">' + _e(c.branch_name||c.branch_id||'—') + '</td>' : '')
+      + '</tr>';
+  }).join('');
+}
+
+var RPT_4PS = { data: [], filtered: [] };
+
+function rpt_4ps_load() {
+  document.getElementById('rpt4psLoading').style.display = '';
+  document.getElementById('rpt4psBody').style.display    = 'none';
+  document.getElementById('rpt4psEmpty').style.display   = 'none';
+
+  var branchIds = (!RPT.isSA && APP.user && APP.user.branch_ids) ? APP.user.branch_ids : '';
+  var isSA = RPT.isSA;
+
+  document.getElementById('rpt4psBranchLabel').textContent =
+    isSA ? 'All Branches' : (APP.user && APP.user.branch_name ? APP.user.branch_name : 'Your Branch');
+  document.getElementById('rpt4psBranchCol').style.display = isSA ? '' : 'none';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      document.getElementById('rpt4psLoading').style.display = 'none';
+      if (!r.success) {
+        document.getElementById('rpt4psEmpty').style.display = '';
+        return;
+      }
+      RPT_4PS.data     = r.data || [];
+      RPT_4PS.filtered = RPT_4PS.data;
+      document.getElementById('rpt4psCount').textContent = RPT_4PS.data.length;
+      if (!RPT_4PS.data.length) {
+        document.getElementById('rpt4psEmpty').style.display = '';
+      } else {
+        document.getElementById('rpt4psBody').style.display = '';
+        rpt_4ps_render();
+      }
+    })
+    .withFailureHandler(function(e) {
+      document.getElementById('rpt4psLoading').style.display = 'none';
+      document.getElementById('rpt4psEmpty').style.display   = '';
+      toast('error', e.message || 'Failed to load census.');
+    })
+    .get4psCensus(branchIds || '');
+}
+
+function rpt_4ps_filter() {
+  var q = (document.getElementById('rpt4psSearch').value || '').toLowerCase().trim();
+  RPT_4PS.filtered = q
+    ? RPT_4PS.data.filter(function(p) {
+        return [p.last_name, p.first_name, p.contact, p.patient_id].join(' ').toLowerCase().includes(q);
+      })
+    : RPT_4PS.data;
+  document.getElementById('rpt4psCount').textContent = RPT_4PS.filtered.length;
+  rpt_4ps_render();
+}
+
+function rpt_4ps_render() {
+  var isSA = RPT.isSA;
+  var h = '';
+  RPT_4PS.filtered.forEach(function(p) {
+    var name    = _e(p.last_name) + ', ' + _e(p.first_name) + (p.middle_name ? ' ' + _e(p.middle_name.charAt(0)) + '.' : '');
+    var dobDisp = p.dob ? new Date(p.dob).toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'}) : '—';
+    h += '<tr>'
+      + '<td>'
+        + '<div style="font-weight:700;color:var(--text-1);">' + name + '</div>'
+        + '<div style="font-size:10px;color:var(--text-4);font-family:var(--mono);">' + _e(p.patient_id) + '</div>'
+      + '</td>'
+      + '<td style="font-size:12px;">' + _e(p.sex||'—') + '</td>'
+      + '<td style="font-size:12px;font-family:var(--mono);">' + dobDisp + '</td>'
+      + '<td style="font-size:12px;font-family:var(--mono);">' + _e(p.contact||'—') + '</td>'
+      + '<td>'
+        + (p.philhealth_pin
+          ? '<span class="badge badge-teal" style="font-size:10px;font-family:var(--mono);">✓ ' + _e(p.philhealth_pin) + '</span>'
+          : '<span style="color:var(--text-4);font-size:12px;">—</span>')
+      + '</td>'
+      + (isSA ? '<td><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,96,176,.1);color:var(--teal-700);font-family:var(--mono);">' + _e(p.branch_name||'') + '</span></td>' : '<td style="display:none;"></td>')
+      + '</tr>';
+  });
+  document.getElementById('rpt4psTableBody').innerHTML =
+    h || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-4);">No patients match your search.</td></tr>';
+}
+
+function rpt_4ps_export() {
+  if (!RPT_4PS.data.length) { toast('error', 'Load the census first.'); return; }
+  var isSA = RPT.isSA;
+  var rows = [['A-Lab 4P\'s Beneficiary Census'], ['Generated:', new Date().toLocaleString('en-PH')], []];
+  var hdr  = ['Patient ID','Last Name','First Name','Middle Name','Sex','Date of Birth','Contact','Address','PhilHealth PIN'];
+  if (isSA) hdr.push('Branch');
+  rows.push(hdr);
+  RPT_4PS.filtered.forEach(function(p) {
+    var row = [p.patient_id, p.last_name, p.first_name, p.middle_name||'', p.sex||'', p.dob||'', p.contact||'', p.address||'', p.philhealth_pin||''];
+    if (isSA) row.push(p.branch_name||'');
+    rows.push(row);
+  });
+  var csv  = rows.map(function(r){ return r.map(function(c){ var s=String(c); if(s.includes(','))s='"'+s+'"'; return s; }).join(','); }).join('\r\n');
+  var blob = new Blob(['\uFEFF' + csv], { type:'text/csv;charset=utf-8;' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href   = url; a.download = 'alab-4ps-census-' + new Date().toISOString().split('T')[0] + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('success', '4P\'s census exported.');
+}
+</script>
+</div>
+</div>

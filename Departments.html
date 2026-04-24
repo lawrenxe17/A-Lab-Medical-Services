@@ -1,0 +1,748 @@
+<!-- DEPARTMENTS -->
+      <div class="page-view" id="page-departments">
+
+        <div class="section-header">
+          <div>
+            <div class="section-title" style="font-size:20px;">Departments</div>
+            <div class="section-sub" id="deptSubtitle">Manage departments and categories</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-secondary btn-sm" onclick="dept_load()" id="deptRefreshBtn">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="deptRefreshIcon">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Refresh
+            </button>
+            <!-- SA only -->
+            <button class="btn btn-primary btn-sm" id="deptAddBtn" onclick="dept_openModal()">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+              </svg>
+              Add Department
+            </button>
+          </div>
+        </div>
+
+        <!-- SA: search + filter | Branch Admin: branch context banner -->
+        <div id="deptSAToolbar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+          <div style="position:relative;flex:1;min-width:200px;">
+            <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-4);" width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+            </svg>
+            <input type="text" id="deptSearch" class="f-inp" style="padding-left:34px;font-size:13px;"
+              placeholder="Search department name…" oninput="dept_applyFilter()">
+          </div>
+          <select id="deptFilterStatus" class="f-inp" style="width:auto;font-size:13px;cursor:pointer;" onchange="dept_applyFilter()">
+            <option value="">All Status</option>
+            <option value="1">Active</option>
+            <option value="0">Inactive</option>
+          </select>
+        </div>
+        <div id="deptBABanner" style="display:none;margin-bottom:16px;padding:10px 14px;background:rgba(16,168,168,.06);border:1px solid rgba(0,96,176,.15);border-radius:var(--radius);display:none;align-items:center;gap:8px;">
+          <svg width="14" height="14" fill="none" stroke="var(--teal-600)" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <span style="font-size:12px;color:var(--teal-700);font-weight:600;" id="deptBABranchName">Your branch</span>
+          <span style="font-size:12px;color:var(--text-3);">— toggle departments and categories for your branch only.</span>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+          <div class="table-wrap">
+            <table class="table">
+              <thead id="deptThead">
+                <tr>
+                  <th>Department ID</th>
+                  <th>Department Name</th>
+                  <th>Type</th>
+                  <th>Categories</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th style="text-align:center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="deptTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══ DEPARTMENT MODAL ══ -->
+      <div id="deptModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
+        <div style="background:var(--white);border-radius:var(--radius-xl);width:100%;max-width:580px;box-shadow:var(--shadow-xl);animation:modalIn .22s cubic-bezier(.34,1.2,.64,1);margin:20px 0;">
+
+          <!-- Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);">
+            <div>
+              <div style="font-size:16px;font-weight:800;color:var(--text-1);" id="deptModalTitle">Add Department</div>
+              <div style="font-size:12px;color:var(--text-3);margin-top:2px;font-family:var(--mono);" id="deptModalSub">Fill in department details</div>
+            </div>
+            <button onclick="dept_closeModal()" style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div style="padding:24px;max-height:70vh;overflow-y:auto;">
+            <input type="hidden" id="deptModalId">
+
+            <!-- Department Name -->
+            <div class="f-wrap">
+              <label class="f-label">Department Name <span style="color:var(--danger);">*</span></label>
+              <input type="text" id="deptFldName" class="f-inp" placeholder="e.g. Hematology">
+            </div>
+
+            <!-- Department Type -->
+            <div class="f-wrap" id="deptTypeWrap">
+              <label class="f-label">Department Type <span style="color:var(--danger);">*</span></label>
+              <select id="deptFldType" class="f-inp">
+                <option value="lab">Lab Services</option>
+                <option value="xray">Digital X-Ray</option>
+                <option value="consultation">Consultation</option>
+                <option value="others">Others</option>
+              </select>
+              <div style="font-size:11px;color:var(--text-4);margin-top:4px;">All services inside this department will automatically inherit this type.</div>
+            </div>
+
+            <!-- Status (edit only) -->
+            <div id="deptStatusWrap" style="display:none;margin-bottom:16px;">
+              <label class="f-label" style="margin-bottom:8px;display:block;">Status</label>
+              <div style="display:flex;gap:8px;">
+                <label id="deptStatusPillActive" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:var(--radius);border:1.5px solid var(--border);cursor:pointer;flex:1;">
+                  <input type="radio" name="deptStatus" value="1" onchange="dept_onStatusChange()" style="accent-color:var(--teal-600);width:15px;height:15px;">
+                  <div>
+                    <div style="font-size:13px;font-weight:700;color:var(--text-1);">Active</div>
+                    <div style="font-size:11px;color:var(--text-3);">Visible to all branches</div>
+                  </div>
+                </label>
+                <label id="deptStatusPillInactive" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:var(--radius);border:1.5px solid var(--border);cursor:pointer;flex:1;">
+                  <input type="radio" name="deptStatus" value="0" onchange="dept_onStatusChange()" style="accent-color:var(--danger);width:15px;height:15px;">
+                  <div>
+                    <div style="font-size:13px;font-weight:700;color:var(--text-1);">Inactive</div>
+                    <div style="font-size:11px;color:var(--text-3);">Hidden from all branches</div>
+                  </div>
+                </label>
+              </div>
+              <div id="deptInactiveWarn" style="display:none;margin-top:8px;padding:8px 12px;background:var(--danger-bg);border:1px solid rgba(239,68,68,.2);border-radius:8px;font-size:12px;color:var(--danger);gap:7px;align-items:center;">
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                Setting inactive will deactivate all categories and hide this department from all branches.
+              </div>
+            </div>
+
+            <!-- Info note: new depts always active -->
+            <div id="deptNewNote" style="margin-bottom:16px;padding:9px 12px;background:rgba(16,168,168,.06);border:1px solid rgba(0,96,176,.15);border-radius:8px;font-size:12px;color:var(--teal-700);display:flex;align-items:center;gap:7px;">
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              New departments are Active by default and propagated to all branches. Manage per-branch status from the Branches tab.
+            </div>
+
+            <!-- Categories Section -->
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <label class="f-label" style="margin-bottom:0;">Categories</label>
+                <button type="button" onclick="dept_addCatRow()" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--teal-600);background:none;border:none;cursor:pointer;padding:3px 0;">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                  Add Category
+                </button>
+              </div>
+
+              <div id="deptCatList" style="display:flex;flex-direction:column;gap:6px;"></div>
+
+              <div id="deptCatEmpty" style="text-align:center;padding:20px;border:1.5px dashed var(--border);border-radius:var(--radius);font-size:12px;color:var(--text-4);">
+                No categories yet. Click <strong>Add Category</strong> to add one.
+              </div>
+            </div>
+
+            <div id="deptModalErr" style="display:none;margin-top:14px;font-size:12px;color:var(--danger);background:var(--danger-bg);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:9px 12px;"></div>
+          </div>
+
+          <!-- Footer -->
+          <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;">
+            <button class="btn btn-secondary" onclick="dept_closeModal()">Cancel</button>
+            <button class="btn btn-primary" id="deptSaveBtn" onclick="dept_save()">
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              Save Department
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ DELETE CONFIRM ══ -->
+      <div id="deptDeleteModal" style="display:none;position:fixed;inset:0;z-index:501;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;padding:20px;">
+        <div style="background:var(--white);border-radius:24px 24px 0 0;width:100%;max-width:440px;box-shadow:var(--shadow-xl);padding:28px 24px;animation:slideup .22s ease;">
+          <div style="display:flex;gap:14px;margin-bottom:20px;align-items:flex-start;">
+            <div style="width:42px;height:42px;border-radius:50%;background:var(--danger-bg);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" fill="none" stroke="var(--danger)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </div>
+            <div>
+              <div style="font-size:16px;font-weight:800;color:var(--text-1);margin-bottom:4px;">Delete Department?</div>
+              <div style="font-size:13px;color:var(--text-2);line-height:1.6;" id="deptDeleteMsg">This will also delete all its categories.</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button class="btn btn-danger" style="width:100%;justify-content:center;padding:13px;" onclick="dept_confirmDelete()">Yes, Delete Department</button>
+            <button class="btn btn-secondary" style="width:100%;justify-content:center;padding:13px;" onclick="dept_closeDeleteModal()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+<script>
+/* ════════════════════════════════════
+   DEPARTMENTS MODULE
+════════════════════════════════════ */
+var DEPT = {
+  all:          [],
+  filtered:     [],
+  editingId:    null,
+  catRows:      [],
+  isBranchView: false,
+  branchId:     null
+};
+var _deptDeleteId  = null;
+var _deptCatRowIdx = 0;
+
+/* ── Skeleton ── */
+function dept_skeleton() {
+  var row = '<tr>';
+  for (var i = 0; i < 6; i++) {
+    row += '<td><div style="height:14px;border-radius:6px;background:linear-gradient(90deg,#f0f2f7 25%,#e4e8f0 50%,#f0f2f7 75%);background-size:400px 100%;animation:shimmer 1.3s infinite;"></div></td>';
+  }
+  return row + '</tr>' + row + row + row;
+}
+
+/* ── Load ── */
+function dept_load() {
+  var isSA     = APP.user && APP.user.role === 'Super Admin';
+  var branchId = !isSA ? (APP.user && APP.user.branch_ids ? APP.user.branch_ids.split(',')[0].trim() : '') : '';
+
+  // Show/hide SA vs Branch Admin UI
+  var addBtn   = document.getElementById('deptAddBtn');
+  var toolbar  = document.getElementById('deptSAToolbar');
+  var banner   = document.getElementById('deptBABanner');
+  if (addBtn)  addBtn.style.display  = isSA ? '' : 'none';
+  if (toolbar) toolbar.style.display = isSA ? 'flex' : 'none';
+  if (banner)  banner.style.display  = !isSA ? 'flex' : 'none';
+
+  // Set branch name in banner
+  if (!isSA && branchId) {
+    var bname = document.getElementById('deptBABranchName');
+    // Priority: cached session name → BR.all → GAS call
+    var cachedName = APP.user && APP.user.branch_name;
+    var branchObj  = !cachedName && typeof BR !== 'undefined' && BR.all && BR.all.find(function(b){ return b.branch_id === branchId; });
+    if (cachedName) {
+      if (bname) bname.textContent = cachedName;
+    } else if (branchObj) {
+      if (bname) bname.textContent = branchObj.branch_name;
+    } else {
+      google.script.run
+        .withSuccessHandler(function(r) {
+          if (r.success && r.data && r.data.length && bname)
+            bname.textContent = r.data[0].branch_name || branchId;
+        })
+        .withFailureHandler(function(){})
+        .getBranchesForPatientView(branchId);
+    }
+  }
+
+  var icon = document.getElementById('deptRefreshIcon');
+  if (icon) icon.style.animation = 'spin .8s linear infinite';
+  document.getElementById('deptSubtitle').textContent = 'Loading…';
+  document.getElementById('deptTableBody').innerHTML  = dept_skeleton();
+
+  if (isSA) {
+    // Super Admin — full master catalog
+    google.script.run
+      .withSuccessHandler(function(r) {
+        if (icon) icon.style.animation = '';
+        if (!r.success) { toast('error', r.message || 'Failed to load departments.'); return; }
+        DEPT.all      = r.data || [];
+        DEPT.isBranchView = false;
+        dept_applyFilter();
+      })
+      .withFailureHandler(function(e) {
+        if (icon) icon.style.animation = '';
+        toast('error', e.message || 'Connection error.');
+        document.getElementById('deptTableBody').innerHTML =
+          '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--danger);font-size:13px;">Error. <a href="javascript:void(0)" onclick="dept_load()" style="color:var(--teal-600);">Retry</a></td></tr>';
+      })
+      .getDepartments();
+  } else {
+    // Branch Admin — branch-specific view with toggles
+    if (!branchId) {
+      if (icon) icon.style.animation = '';
+      document.getElementById('deptTableBody').innerHTML =
+        '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-4);font-size:13px;">No branch assigned to your account.</td></tr>';
+      return;
+    }
+    google.script.run
+      .withSuccessHandler(function(r) {
+        if (icon) icon.style.animation = '';
+        if (!r.success) { toast('error', r.message || 'Failed to load.'); return; }
+        DEPT.all          = r.data || [];
+        DEPT.isBranchView = true;
+        DEPT.branchId     = branchId;
+        dept_renderBranchView();
+      })
+      .withFailureHandler(function(e) {
+        if (icon) icon.style.animation = '';
+        toast('error', e.message || 'Connection error.');
+      })
+      .getBranchDeptStatus(branchId);
+  }
+}
+
+/* ── Filter + Render ── */
+function dept_applyFilter() {
+  // Restore SA thead if needed
+  var thead = document.getElementById('deptThead');
+  if (thead && !DEPT.isBranchView) {
+    thead.innerHTML = '<tr><th>Department ID</th><th>Department Name</th><th>Type</th><th>Categories</th><th>Status</th><th>Created</th><th style="text-align:center;">Actions</th></tr>';
+  }
+  var q  = (document.getElementById('deptSearch').value || '').trim().toLowerCase();
+  var sf = (document.getElementById('deptFilterStatus').value || '');
+  DEPT.filtered = DEPT.all.filter(function(d) {
+    if (sf !== '' && String(d.is_active) !== sf) return false;
+    if (q && d.department_name.toLowerCase().indexOf(q) === -1) return false;
+    return true;
+  });
+  dept_render();
+}
+
+function dept_render() {
+  var count = DEPT.filtered.length;
+  document.getElementById('deptSubtitle').textContent =
+    count + ' department' + (count !== 1 ? 's' : '') +
+    (count !== DEPT.all.length ? ' (filtered from ' + DEPT.all.length + ')' : ' total');
+
+  if (!count) {
+    document.getElementById('deptTableBody').innerHTML =
+      '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-4);font-family:var(--mono);font-size:13px;">No departments found.</td></tr>';
+    return;
+  }
+
+  var h = '';
+  DEPT.filtered.forEach(function(d) {
+    var isActive   = d.is_active == 1;
+    var activeCats = (d.categories || []).filter(function(c){ return c.is_active == 1; }).length;
+    var totalCats  = (d.categories || []).length;
+    var catBadge   = totalCats === 0
+      ? '<span style="font-size:11px;color:var(--text-4);">—</span>'
+      : '<span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text-1);">'
+        + activeCats + '<span style="color:var(--text-4);font-weight:400;">/' + totalCats + '</span> active</span>';
+
+    var createdAt = d.created_at
+      ? new Date(d.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' })
+      : '—';
+
+    var dTypeLabel = (d.department_type || 'lab').toUpperCase();
+
+    h += '<tr id="dept-row-' + _e(d.dept_id) + '">'
+      + '<td><span style="font-family:var(--mono);font-size:11px;color:var(--text-3);">' + _e(d.dept_id) + '</span></td>'
+      + '<td><span style="font-weight:700;color:var(--text-1);font-size:13px;">' + _e(d.department_name) + '</span></td>'
+      + '<td><span style="font-size:10px;font-weight:800;background:rgba(16,168,168,.1);color:var(--teal-600);padding:2px 6px;border-radius:4px;">' + _e(dTypeLabel) + '</span></td>'
+      + '<td>' + catBadge + '</td>'
+      + '<td><span class="badge ' + (isActive ? 'badge-green' : 'badge-gray') + '" style="font-family:var(--mono);">' + (isActive ? '● Active' : '○ Inactive') + '</span></td>'
+      + '<td style="font-size:12px;color:var(--text-3);font-family:var(--mono);">' + createdAt + '</td>'
+      + '<td style="text-align:center;">'
+        + '<div style="display:flex;gap:5px;justify-content:center;">'
+          + '<button class="btn btn-sm btn-secondary" onclick="dept_openEdit(\'' + _e(d.dept_id) + '\')" style="padding:5px 10px;" title="Edit">'
+            + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>'
+          + '</button>'
+          + '<button class="btn btn-sm btn-danger" onclick="dept_openDelete(\'' + _e(d.dept_id) + '\')" style="padding:5px 10px;" title="Delete">'
+            + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>'
+          + '</button>'
+        + '</div>'
+      + '</td>'
+      + '</tr>';
+  });
+  document.getElementById('deptTableBody').innerHTML = h;
+}
+
+/* ════════════════════════════════════
+   MODAL — STATUS RADIO
+════════════════════════════════════ */
+function dept_onStatusChange() {
+  var val       = document.querySelector('input[name="deptStatus"]:checked');
+  var isInactive = val && val.value === '0';
+  var warn      = document.getElementById('deptInactiveWarn');
+  var pillA     = document.getElementById('deptStatusPillActive');
+  var pillI     = document.getElementById('deptStatusPillInactive');
+  if (warn) warn.style.display = isInactive ? 'flex' : 'none';
+  if (pillA) { pillA.style.borderColor = !isInactive ? 'var(--teal-500)' : 'var(--border)'; pillA.style.background = !isInactive ? 'rgba(16,168,168,.05)' : ''; }
+  if (pillI) { pillI.style.borderColor =  isInactive ? 'var(--danger)' : 'var(--border)';   pillI.style.background =  isInactive ? 'rgba(239,68,68,.04)' : ''; }
+}
+
+/* ════════════════════════════════════
+   MODAL — CATEGORY ROWS
+════════════════════════════════════ */
+function dept_addCatRow(cat) {
+  // cat = existing category object or undefined for new
+  var rowId = 'dcat-' + (++_deptCatRowIdx);
+  DEPT.catRows.push({
+    rowId:     rowId,
+    cat_id:    cat ? cat.cat_id    : '',
+    name:      cat ? cat.category_name : '',
+    is_active: cat ? cat.is_active : 1,
+    isNew:     !cat,
+    isDeleted: false
+  });
+  dept_renderCatRows();
+}
+
+function dept_removeCatRow(rowId) {
+  var row = DEPT.catRows.find(function(r){ return r.rowId === rowId; });
+  if (!row) return;
+  if (row.isNew) {
+    // New unsaved row — just remove from array
+    DEPT.catRows = DEPT.catRows.filter(function(r){ return r.rowId !== rowId; });
+  } else {
+    // Existing row — mark deleted
+    row.isDeleted = true;
+  }
+  dept_renderCatRows();
+}
+
+function dept_renderCatRows() {
+  var list    = document.getElementById('deptCatList');
+  var empty   = document.getElementById('deptCatEmpty');
+  var visible = DEPT.catRows.filter(function(r){ return !r.isDeleted; });
+
+  if (!visible.length) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  var h = '';
+  visible.forEach(function(row) {
+    var isActive = row.is_active == 1;
+    h += '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--gray-50);border:1px solid var(--border);border-radius:var(--radius);" id="dcat-wrap-' + row.rowId + '">'
+      // Name input
+      + '<input type="text" value="' + _e(row.name) + '" placeholder="Category name…"'
+      + ' oninput="dept_catRowUpdate(\'' + row.rowId + '\',\'name\',this.value)"'
+      + ' style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--white);outline:none;transition:border-color .15s;">'
+      // Active toggle
+      + '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap;font-size:12px;font-weight:600;color:' + (isActive ? 'var(--success)' : 'var(--text-4)') + ';" id="dcat-lbl-' + row.rowId + '">'
+      + '<input type="checkbox" ' + (isActive ? 'checked' : '') + ' onchange="dept_catRowUpdate(\'' + row.rowId + '\',\'is_active\',this.checked?1:0)" style="accent-color:var(--teal-600);width:14px;height:14px;">'
+      + (isActive ? 'Active' : 'Inactive')
+      + '</label>'
+      // Remove button
+      + '<button onclick="dept_removeCatRow(\'' + row.rowId + '\')" title="Remove" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);flex-shrink:0;">'
+      + '<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'
+      + '</button>'
+      + '</div>';
+  });
+  list.innerHTML = h;
+}
+
+function dept_catRowUpdate(rowId, field, value) {
+  var row = DEPT.catRows.find(function(r){ return r.rowId === rowId; });
+  if (!row) return;
+  row[field] = value;
+  // Update label color live
+  if (field === 'is_active') {
+    var lbl = document.getElementById('dcat-lbl-' + rowId);
+    if (lbl) { lbl.style.color = value == 1 ? 'var(--success)' : 'var(--text-4)'; lbl.childNodes[1].textContent = value == 1 ? 'Active' : 'Inactive'; }
+  }
+}
+
+/* ════════════════════════════════════
+   MODAL — OPEN ADD
+════════════════════════════════════ */
+function dept_openModal() {
+  DEPT.editingId = null;
+  DEPT.catRows   = [];
+  _deptCatRowIdx = 0;
+  document.getElementById('deptModalTitle').textContent = 'Add Department';
+  document.getElementById('deptModalSub').textContent   = 'Fill in department details';
+  document.getElementById('deptSaveBtn').textContent    = 'Save Department';
+  document.getElementById('deptModalId').value          = '';
+  document.getElementById('deptFldName').value          = '';
+  document.getElementById('deptFldType').value          = 'lab';
+  document.getElementById('deptStatusWrap').style.display = 'none';
+  var note = document.getElementById('deptNewNote');
+  if (note) note.style.display = 'flex';
+  dept_renderCatRows();
+  dept_hideModalErr();
+  document.getElementById('deptModal').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('deptFldName').focus(); }, 80);
+}
+
+/* ── OPEN EDIT ── */
+function dept_openEdit(id) {
+  var d = DEPT.all.find(function(x){ return x.dept_id === id; });
+  if (!d) { toast('error', 'Department not found.'); return; }
+  DEPT.editingId = id;
+  DEPT.catRows   = [];
+  _deptCatRowIdx = 0;
+  document.getElementById('deptModalTitle').textContent = 'Edit Department';
+  document.getElementById('deptModalSub').textContent   = d.department_name;
+  document.getElementById('deptSaveBtn').textContent    = 'Update Department';
+  document.getElementById('deptModalId').value          = d.dept_id;
+  document.getElementById('deptFldName').value          = d.department_name || '';
+  document.getElementById('deptFldType').value          = d.department_type || 'lab';
+  var statusVal = String(d.is_active) === '1' ? '1' : '0';
+  document.getElementById('deptStatusWrap').style.display = '';
+  document.querySelector('input[name="deptStatus"][value="' + statusVal + '"]').checked = true;
+  dept_onStatusChange();
+  var note = document.getElementById('deptNewNote');
+  if (note) note.style.display = 'none';
+  // Load existing categories
+  (d.categories || []).forEach(function(cat){ dept_addCatRow(cat); });
+  dept_renderCatRows();
+  dept_hideModalErr();
+  document.getElementById('deptModal').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('deptFldName').focus(); }, 80);
+}
+
+function dept_closeModal() {
+  document.getElementById('deptModal').style.display = 'none';
+  DEPT.editingId = null;
+  DEPT.catRows   = [];
+}
+function dept_showModalErr(msg) { var el = document.getElementById('deptModalErr'); el.textContent = msg; el.style.display = 'block'; }
+function dept_hideModalErr()    { document.getElementById('deptModalErr').style.display = 'none'; }
+
+/* ════════════════════════════════════
+   SAVE — Optimistic
+════════════════════════════════════ */
+function dept_save() {
+  var name     = document.getElementById('deptFldName').value.trim();
+  var type     = document.getElementById('deptFldType').value.trim() || 'lab';
+  var isEdit   = !!DEPT.editingId;
+  var isActive = 1;
+  if (isEdit) {
+    var radioChecked = document.querySelector('input[name="deptStatus"]:checked');
+    isActive = radioChecked ? parseInt(radioChecked.value) : 1;
+  }
+
+  if (!name) { dept_showModalErr('Department name is required.'); return; }
+
+  // Collect categories (skip blank + deleted)
+  var cats = DEPT.catRows
+    .filter(function(r){ return !r.isDeleted; })
+    .map(function(r){ return { cat_id: r.cat_id, category_name: r.name.trim(), is_active: isActive == 0 ? 0 : r.is_active, isNew: r.isNew }; })
+    .filter(function(c){ return c.category_name !== '' || c.cat_id !== ''; });
+
+  var payload = {
+    dept_id:         DEPT.editingId || '',
+    department_name: name,
+    department_type: type,
+    is_active:       isActive,
+    categories:      cats
+  };
+
+  var snapshot = JSON.parse(JSON.stringify(DEPT.all));
+
+  // ── Optimistic update ──
+  if (isEdit) {
+    var idx = DEPT.all.findIndex(function(d){ return d.dept_id === DEPT.editingId; });
+    if (idx !== -1) {
+      DEPT.all[idx] = Object.assign({}, DEPT.all[idx], {
+        department_name: name,
+        department_type: type,
+        is_active:       isActive,
+        categories:      cats.map(function(c){ return Object.assign({}, c, { category_name: c.category_name, is_active: c.is_active }); })
+      });
+    }
+  } else {
+    DEPT.all.unshift({ dept_id: 'DEPT-PENDING', department_name: name, department_type: type, is_active: isActive, categories: cats, created_at: new Date().toISOString() });
+  }
+
+  dept_applyFilter();
+  dept_closeModal();
+  toast('info', isEdit ? 'Saving changes…' : 'Adding department…');
+
+  var fn = isEdit ? 'updateDepartment' : 'createDepartment';
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) {
+        DEPT.all = snapshot; dept_applyFilter();
+        toast('error', r.message || 'Failed to save.');
+        // Reopen with data
+        setTimeout(function(){
+          dept_openModal();
+          document.getElementById('deptFldName').value = name;
+          cats.forEach(function(c){ dept_addCatRow({ cat_id: c.cat_id, category_name: c.category_name, is_active: c.is_active }); });
+          dept_renderCatRows();
+          dept_showModalErr(r.message || 'Failed to save.');
+        }, 200);
+        return;
+      }
+      if (!isEdit && r.dept_id) {
+        var ti = DEPT.all.findIndex(function(d){ return d.dept_id === 'DEPT-PENDING'; });
+        if (ti !== -1) {
+          DEPT.all[ti].dept_id    = r.dept_id;
+          DEPT.all[ti].categories = r.categories || cats;
+        }
+        dept_applyFilter();
+      }
+      toast('success', isEdit ? 'Department updated!' : 'Department created!');
+    })
+    .withFailureHandler(function(e) {
+      DEPT.all = snapshot; dept_applyFilter();
+      toast('error', e.message || 'Connection error.');
+    })
+    [fn](payload);
+}
+
+/* ════════════════════════════════════
+   DELETE — Optimistic
+════════════════════════════════════ */
+function dept_openDelete(id) {
+  var d = DEPT.all.find(function(x){ return x.dept_id === id; });
+  if (!d) return;
+  _deptDeleteId = id;
+  var catCount  = (d.categories || []).length;
+  document.getElementById('deptDeleteMsg').textContent =
+    'Delete "' + d.department_name + '"?' + (catCount ? ' This will also delete its ' + catCount + ' categories.' : '') + ' Cannot be undone.';
+  document.getElementById('deptDeleteModal').style.display = 'flex';
+}
+function dept_closeDeleteModal() { document.getElementById('deptDeleteModal').style.display = 'none'; _deptDeleteId = null; }
+
+function dept_confirmDelete() {
+  if (!_deptDeleteId) return;
+  var id       = _deptDeleteId;
+  var snapshot = JSON.parse(JSON.stringify(DEPT.all));
+  dept_closeDeleteModal();
+
+  var row = document.getElementById('dept-row-' + id);
+  if (row) { row.style.transition = 'opacity .25s,transform .25s'; row.style.opacity = '0'; row.style.transform = 'translateX(8px)'; }
+  setTimeout(function(){ DEPT.all = DEPT.all.filter(function(d){ return d.dept_id !== id; }); dept_applyFilter(); }, 260);
+  toast('info', 'Deleting department…');
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) { DEPT.all = snapshot; dept_applyFilter(); toast('error', r.message || 'Failed.'); return; }
+      toast('success', 'Department deleted.');
+    })
+    .withFailureHandler(function(e) { DEPT.all = snapshot; dept_applyFilter(); toast('error', e.message || 'Error.'); })
+    .deleteDepartment(id);
+}
+
+/* ── Backdrop close ── */
+// document.getElementById('deptModal').addEventListener('click', function(e){ if(e.target===this) dept_closeModal(); });
+// document.getElementById('deptDeleteModal').addEventListener('click', function(e){ if(e.target===this) dept_closeDeleteModal(); });
+/* ════════════════════════════════════
+   BRANCH ADMIN VIEW
+   Read-only except for active toggles
+════════════════════════════════════ */
+function dept_renderBranchView() {
+  var data  = DEPT.all;
+  var count = data.length;
+
+  document.getElementById('deptSubtitle').textContent =
+    count + ' department' + (count !== 1 ? 's' : '') + ' in your branch';
+
+  var thead = document.getElementById('deptThead');
+  if (thead) thead.innerHTML =
+    '<tr><th style="width:50%;">Department / Category</th><th>Global Status</th><th style="text-align:right;padding-right:20px;">Your Branch</th></tr>';
+
+  if (!count) {
+    document.getElementById('deptTableBody').innerHTML =
+      '<tr><td colspan="3" style="text-align:center;padding:40px;color:var(--text-4);font-family:var(--mono);font-size:13px;">No departments available.</td></tr>';
+    return;
+  }
+
+  var h = '';
+  data.forEach(function(dept, di) {
+    var masterActive = dept.master_active == 1;
+    var branchActive = dept.branch_active == 1 && masterActive;
+    var forcedOff    = !masterActive;
+
+    // ── Department row — big prominent toggle (44×24) ──
+    h += '<tr style="background:' + (branchActive ? 'rgba(16,168,168,.03)' : 'var(--white)') + ';">'
+      + '<td style="padding:12px 14px;">'
+        + '<div style="display:flex;align-items:center;gap:8px;">'
+          + '<svg width="14" height="14" fill="none" stroke="' + (branchActive ? 'var(--teal-600)' : 'var(--text-4)') + '" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>'
+          + '<span style="font-size:13px;font-weight:800;color:var(--text-1);">' + _e(dept.department_name) + '</span>'
+          + '<span style="font-size:11px;color:var(--text-4);font-family:var(--mono);">(' + (dept.categories||[]).length + ')</span>'
+        + '</div>'
+        + (forcedOff ? '<div style="font-size:10px;color:var(--danger);margin-top:3px;margin-left:22px;">⚠ Globally inactive by Super Admin</div>' : '')
+      + '</td>'
+      + '<td><span class="badge ' + (masterActive ? 'badge-green' : 'badge-gray') + '" style="font-family:var(--mono);">' + (masterActive ? '● Active' : '○ Inactive') + '</span></td>'
+      + '<td style="text-align:right;padding-right:20px;">'
+        + dept_buildToggle(branchActive, forcedOff, 'dept_baToggleDept(' + di + ')', 44, 24)
+      + '</td>'
+      + '</tr>';
+
+    // ── Category rows — smaller toggle (34×18), indented ──
+    if (dept.categories && dept.categories.length) {
+      dept.categories.forEach(function(cat, ci) {
+        var cActive   = cat.branch_active == 1 && branchActive;
+        var cDisabled = forcedOff || !branchActive;
+        h += '<tr style="background:var(--gray-50);border-top:1px solid var(--gray-100);">'
+          + '<td style="padding:9px 14px 9px 42px;">'
+            + '<div style="display:flex;align-items:center;gap:8px;">'
+              + '<div style="width:5px;height:5px;border-radius:50%;background:' + (cActive ? 'var(--teal-400)' : 'var(--gray-300)') + ';flex-shrink:0;"></div>'
+              + '<span style="font-size:12px;color:' + (cDisabled ? 'var(--text-4)' : 'var(--text-2)') + ';font-weight:500;">' + _e(cat.category_name) + '</span>'
+            + '</div>'
+          + '</td>'
+          + '<td></td>'
+          + '<td style="text-align:right;padding-right:20px;">'
+            + dept_buildToggle(cActive, cDisabled, 'dept_baToggleCat(' + di + ',' + ci + ')', 34, 18)
+          + '</td>'
+          + '</tr>';
+      });
+    }
+
+    h += '<tr><td colspan="3" style="padding:0;height:6px;background:var(--bg);border:none;"></td></tr>';
+  });
+
+  document.getElementById('deptTableBody').innerHTML = h;
+}
+
+function dept_buildToggle(isOn, disabled, onclick, w, h) {
+  var knob = h - 4;
+  return '<div style="display:inline-flex;align-items:center;gap:8px;cursor:' + (disabled ? 'not-allowed' : 'pointer') + ';" onclick="' + (disabled ? '' : onclick) + '">'
+    + '<div style="position:relative;width:' + w + 'px;height:' + h + 'px;flex-shrink:0;">'
+      + '<div style="position:absolute;inset:0;border-radius:' + h + 'px;background:' + (isOn ? 'var(--teal-500)' : 'var(--gray-300)') + ';opacity:' + (disabled ? '.4' : '1') + ';transition:background .2s;"></div>'
+      + '<div style="position:absolute;top:2px;left:' + (isOn ? (w - knob - 2) + 'px' : '2px') + ';width:' + knob + 'px;height:' + knob + 'px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);opacity:' + (disabled ? '.4' : '1') + ';"></div>'
+    + '</div>'
+    + '<span style="font-size:' + (h >= 22 ? '13' : '11') + 'px;font-weight:700;min-width:' + (h >= 22 ? '52' : '44') + 'px;color:' + (isOn && !disabled ? 'var(--teal-600)' : 'var(--text-4)') + ';opacity:' + (disabled ? '.5' : '1') + ';">' + (isOn && !disabled ? 'Active' : 'Inactive') + '</span>'
+  + '</div>';
+}
+
+function dept_toggleHTML(id, isActive, disabled, onclick) {
+  return dept_buildToggle(isActive, disabled, onclick, 44, 24);
+}
+
+function dept_baToggleDept(di) {
+  var dept     = DEPT.all[di];
+  if (!dept || dept.master_active == 0) return;
+  var newVal   = dept.branch_active == 1 ? 0 : 1;
+  var snapshot = JSON.parse(JSON.stringify(DEPT.all));
+
+  dept.branch_active = newVal;
+  if (newVal == 0 && dept.categories) {
+    dept.categories.forEach(function(c){ c.branch_active = 0; });
+  }
+  dept_renderBranchView();
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) { DEPT.all = snapshot; dept_renderBranchView(); toast('error', r.message || 'Failed.'); return; }
+      toast('success', dept.department_name + ' ' + (newVal ? 'activated' : 'deactivated') + ' for your branch.');
+    })
+    .withFailureHandler(function(e) { DEPT.all = snapshot; dept_renderBranchView(); toast('error', e.message); })
+    .setBranchDeptStatus(DEPT.branchId, dept.dept_id, newVal);
+}
+
+function dept_baToggleCat(di, ci) {
+  var dept   = DEPT.all[di];
+  var cat    = dept && dept.categories && dept.categories[ci];
+  if (!cat || dept.master_active == 0 || dept.branch_active == 0) return;
+  var newVal   = cat.branch_active == 1 ? 0 : 1;
+  var snapshot = JSON.parse(JSON.stringify(DEPT.all));
+
+  cat.branch_active = newVal;
+  dept_renderBranchView();
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) { DEPT.all = snapshot; dept_renderBranchView(); toast('error', r.message || 'Failed.'); return; }
+      toast('success', cat.category_name + ' ' + (newVal ? 'activated' : 'deactivated') + '.');
+    })
+    .withFailureHandler(function(e) { DEPT.all = snapshot; dept_renderBranchView(); toast('error', e.message); })
+    .setBranchCatStatus(DEPT.branchId, cat.cat_id, newVal);
+}
+</script>

@@ -1,0 +1,1135 @@
+<!-- ══ TECH DASHBOARD PAGE ══ -->
+<div class="page-view" id="page-tech-dashboard">
+
+  <!-- Hero -->
+  <div class="dash-hero">
+    <div class="dash-hero-grid"></div>
+    <div class="dash-hero-text">
+      <div class="dash-hero-greeting" id="techHeroGreeting">Good morning ☀️</div>
+      <div class="dash-hero-name" id="techHeroName">Welcome back</div>
+      <div class="dash-hero-sub" id="techHeroSub">Your workload for today. <span id="techHeroDate" style="color:rgba(255,255,255,.4);"></span></div>
+    </div>
+    <div class="dash-hero-right">
+      <button class="dash-hero-btn dash-hero-btn-secondary" onclick="techdash_load()">↺ Refresh</button>
+    </div>
+  </div>
+
+  <!-- Stat cards — clicking navigates to Queue page with filter -->
+  <div class="stat-grid" style="margin-bottom:20px;">
+    <div class="stat-card" onclick="techdash_goQueue('IN_QUEUE')" style="cursor:pointer;">
+      <div class="stat-card-accent" style="background:var(--teal-500);"></div>
+      <div class="stat-icon" style="background:rgba(16,168,168,.1);">
+        <svg width="20" height="20" fill="none" stroke="var(--teal-600)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+      <div class="stat-val" id="techStatPaid">—</div>
+      <div class="stat-label">In Queue</div>
+      <div class="stat-delta delta-neutral" style="font-size:11px;">→ Waiting to process</div>
+    </div>
+    <div class="stat-card" onclick="techdash_goQueue('IN_PROGRESS')" style="cursor:pointer;">
+      <div class="stat-card-accent" style="background:var(--info);"></div>
+      <div class="stat-icon" style="background:var(--info-bg);">
+        <svg width="20" height="20" fill="none" stroke="var(--info)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+      </div>
+      <div class="stat-val" id="techStatInProg">—</div>
+      <div class="stat-label">In Progress</div>
+      <div class="stat-delta delta-neutral" style="font-size:11px;">→ Currently processing</div>
+    </div>
+    <div class="stat-card" onclick="techdash_goQueue('FOR_RELEASE')" style="cursor:pointer;">
+      <div class="stat-card-accent" style="background:#7c3aed;"></div>
+      <div class="stat-icon" style="background:rgba(124,58,237,.1);">
+        <svg width="20" height="20" fill="none" stroke="#7c3aed" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <div class="stat-val" id="techStatForRel">—</div>
+      <div class="stat-label">For Release</div>
+      <div class="stat-delta delta-neutral" style="font-size:11px;">→ Results ready</div>
+    </div>
+    <div class="stat-card" onclick="techdash_goQueue('RELEASED')" style="cursor:pointer;">
+      <div class="stat-card-accent" style="background:var(--success);"></div>
+      <div class="stat-icon" style="background:var(--success-bg);">
+        <svg width="20" height="20" fill="none" stroke="var(--success)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <div class="stat-val" id="techStatRelToday">—</div>
+      <div class="stat-label">Released Today</div>
+      <div class="stat-delta delta-neutral" style="font-size:11px;">→ Handed to patient</div>
+    </div>
+    <div class="stat-card" onclick="techdash_goQueue('')" style="cursor:pointer;">
+      <div class="stat-card-accent" style="background:var(--warning);"></div>
+      <div class="stat-icon" style="background:var(--warning-bg);">
+        <svg width="20" height="20" fill="none" stroke="var(--warning)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      </div>
+      <div class="stat-val" id="techStatTotal">—</div>
+      <div class="stat-label">Total Orders</div>
+      <div class="stat-delta delta-neutral" style="font-size:11px;">→ All statuses</div>
+    </div>
+  </div>
+
+  <!-- Quick-access button to queue -->
+  <div class="card" style="padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div style="width:44px;height:44px;border-radius:12px;background:rgba(16,168,168,.1);border:1px solid rgba(0,96,176,.15);display:flex;align-items:center;justify-content:center;font-size:20px;" id="techQueueShortcutIcon">🔬</div>
+      <div>
+        <div style="font-size:14px;font-weight:800;color:var(--text-1);" id="techQueueShortcutTitle">Lab Queue</div>
+        <div style="font-size:12px;color:var(--text-3);">Process specimens and encode results</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="navigateTo('tech-queue')">
+      Open Queue
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+
+</div>
+
+<!-- ══ TECH QUEUE PAGE ══ -->
+<div class="page-view" id="page-tech-queue">
+
+  <!-- Split Panel Layout -->
+  <div id="techSplitPanel" style="display:grid;grid-template-columns:380px 1fr;gap:16px;align-items:start;min-height:520px;">
+
+    <!-- LEFT: Order Queue -->
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:var(--text-1);" id="techQueueTitle">Queue</div>
+          <div style="font-size:11px;color:var(--text-3);" id="techQueueSub">Pending orders</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <select id="techQueueFilter" class="f-inp" style="font-size:11px;padding:4px 8px;height:auto;width:auto;min-width:100px;cursor:pointer;" onchange="techdash_applyFilter()">
+            <option value="">All Active</option>
+            <option value="IN_QUEUE">In Queue</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="FOR_RELEASE">For Release</option>
+          </select>
+          <button onclick="techdash_load()" style="width:28px;height:28px;border-radius:6px;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-3);" title="Refresh">↺</button>
+        </div>
+      </div>
+      <!-- Search -->
+      <div style="padding:8px 12px;border-bottom:1px solid var(--border);background:var(--gray-50);">
+        <input type="text" id="techQueueSearch" class="f-inp" style="font-size:12px;padding:6px 10px;height:auto;" placeholder="Search patient or order no…" oninput="techdash_applyFilter()">
+      </div>
+      <!-- Order list -->
+      <div id="techQueueList" style="max-height:620px;overflow-y:auto;">
+        <div style="padding:28px;text-align:center;color:var(--text-4);">
+          <span class="spinner spinner-teal" style="display:inline-block;width:18px;height:18px;border-width:2px;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Service Steps Panel -->
+    <div id="techServicePanel">
+      <!-- Empty state when nothing selected -->
+      <div id="techPanelEmpty" class="card" style="padding:40px 24px;text-align:center;">
+        <div style="font-size:44px;margin-bottom:12px;" id="techPanelEmptyIcon">🔬</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:6px;">Select an order</div>
+        <div style="font-size:12px;color:var(--text-4);">Click any order from the queue on the left to view its processing steps.</div>
+      </div>
+
+      <!-- Service detail panel (shown when service is selected) -->
+      <div id="techPanelDetail" style="display:none;flex-direction:column;gap:14px;">
+
+        <!-- Order + Patient header -->
+        <div class="card" style="padding:16px 20px;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:10px;font-weight:800;color:var(--text-4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;" id="panelOrderNo">—</div>
+              <div style="font-size:16px;font-weight:800;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="panelPatientName">—</div>
+              <div style="display:none;" id="panelServiceName"></div> <!-- Hidden, as we now have the tab list -->
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">
+              <div id="panelServiceTypeBadge"></div>
+              <div id="panelPayStatusBadge"></div>
+              <div id="panelOrderStatusBadge"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2-column Layout for Services and Steps -->
+        <div style="display:grid;grid-template-columns:240px 1fr;gap:14px;align-items:start;">
+          
+          <!-- Left Column: Services -->
+          <div class="card" style="padding:16px 14px;">
+            <div style="font-size:11px;font-weight:800;color:var(--text-4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;padding-left:4px;">Services</div>
+            <div id="panelOtherServices" style="display:flex;flex-direction:column;gap:6px;"></div>
+          </div>
+
+          <!-- Right Column: Processing Steps -->
+          <div class="card" style="padding:16px 20px;">
+            <div style="font-size:11px;font-weight:800;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">Processing Steps</div>
+            <div id="panelSteps" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;"></div>
+            <div id="panelEncodeSection"></div>
+          </div>
+        </div>
+
+        <!-- Release button (shown when FOR_RELEASE) -->
+        <div id="panelReleaseCard" style="display:none;" class="card">
+          <div style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--text-1);">✅ Results are ready for release</div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:2px;">All items encoded. Release to patient when ready.</div>
+            </div>
+            <button class="btn btn-primary" id="panelReleaseBtn" onclick="techdash_releaseOrder()">Release to Patient</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .tech-order-item {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .12s;
+    background: var(--white);
+  }
+  .tech-order-item:hover { background: var(--gray-50); }
+  .tech-order-item.active { background: rgba(16,168,168,.07); border-left: 3px solid var(--teal-500); }
+
+  .tech-svc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all .12s;
+  }
+  .tech-svc-chip.encoded { background: rgba(22,163,74,.1); color: #16a34a; border-color: rgba(22,163,74,.2); }
+  .tech-svc-chip.draft-chip { background: var(--gray-100); color: var(--text-3); border-color: var(--border); }
+  .tech-svc-chip.active-chip { background: rgba(16,168,168,.1); color: var(--teal-600); border-color: rgba(16,168,168,.3); }
+  .tech-svc-chip.selected-chip { background: var(--teal-600); color: #fff; border-color: var(--teal-600); }
+
+  .tech-tab-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all .12s;
+  }
+  .tech-tab-item.encoded-item { background: rgba(22,163,74,.06); color: #16a34a; border-color: rgba(22,163,74,.2); }
+  .tech-tab-item.pending-item { background: transparent; color: var(--text-2); }
+  .tech-tab-item.pending-item:hover { background: var(--gray-50); border-color: var(--border); }
+  .tech-tab-item.selected-item { background: var(--teal-600); color: #fff; border-color: var(--teal-600); box-shadow: 0 2px 4px rgba(13,148,136,.3); }
+
+  .step-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    background: var(--gray-50);
+  }
+  .step-row.done { background: rgba(22,163,74,.06); border-color: rgba(22,163,74,.2); }
+  .step-row.pending { background: var(--white); }
+
+  .step-num {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800;
+    flex-shrink: 0;
+  }
+  .step-num.done { background: #16a34a; color: #fff; }
+  .step-num.pending { background: var(--gray-100); color: var(--text-3); border: 1.5px solid var(--border); }
+
+  .td-encode-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .td-encode-table th { padding: 6px 8px; background: var(--gray-50); font-weight: 700; color: var(--text-3); text-align: left; border-bottom: 1.5px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; }
+  .td-encode-table td { padding: 5px 4px; border-bottom: 1px solid var(--border); }
+  .td-encode-table input, .td-encode-table textarea {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 5px;
+    padding: 4px 7px; font-size: 12px; font-family: var(--font); background: var(--white); color: var(--text-1);
+  }
+  .td-encode-table input:focus, .td-encode-table textarea:focus { outline: none; border-color: var(--teal-500); }
+
+  @keyframes tech-skel-anim {
+    0% { background-position: -200px 0; }
+    100% { background-position: calc(200px + 100%) 0; }
+  }
+  .tech-skel {
+    background-color: var(--gray-100);
+    background-image: linear-gradient(90deg, rgba(255,255,255,0) 0px, rgba(255,255,255,.6) 40px, rgba(255,255,255,0) 80px);
+    background-size: 200px 100%;
+    background-repeat: no-repeat;
+    animation: tech-skel-anim 1.2s infinite linear;
+  }
+</style>
+
+<script>
+var TDASH = {
+  branchId: null,
+  techRole: '',
+  isRad: false,
+  allOrders: [],
+  filteredOrders: [],
+  selectedOrderId: null,
+  selectedItemId: null,
+  selectedItem: null,
+  selectedOrderItems: [],
+  selectedOrder: null,
+  drafts: {},
+  draftDirty: {}
+};
+
+function techdash_load() {
+  var branchId = APP.user && APP.user.branch_ids ? APP.user.branch_ids.split(',')[0].trim() : '';
+  var techRole = APP.user ? (APP.user.tech_role || 'Medical Technologist') : 'Medical Technologist';
+  TDASH.branchId = branchId;
+  TDASH.techRole = techRole;
+  TDASH.isRad = techRole.toLowerCase().indexOf('radiolog') !== -1;
+  if (!branchId) return;
+
+  var qLabel = TDASH.isRad ? 'X-Ray Queue' : 'Lab Queue';
+
+  // Update role-specific UI on both pages
+  var emptyIcon = document.getElementById('techPanelEmptyIcon');
+  var qTitle    = document.getElementById('techQueueTitle');
+  var qSub      = document.getElementById('techQueueSub');
+  var shortcutIcon  = document.getElementById('techQueueShortcutIcon');
+  var shortcutTitle = document.getElementById('techQueueShortcutTitle');
+  if (emptyIcon)      emptyIcon.textContent = TDASH.isRad ? '🩻' : '🔬';
+  if (qTitle)         qTitle.textContent    = qLabel;
+  if (qSub)           qSub.textContent      = TDASH.isRad ? 'Pending X-Ray orders' : 'Pending lab orders';
+  if (shortcutIcon)   shortcutIcon.textContent = TDASH.isRad ? '🩻' : '🔬';
+  if (shortcutTitle)  shortcutTitle.textContent = qLabel;
+
+  // Update sidebar label
+  var sbLabel = document.getElementById('sbTechQueueLabel');
+  if (sbLabel) sbLabel.textContent = TDASH.isRad ? '🩻 X-Ray Queue' : '🔬 Lab Queue';
+
+  // Update topbar breadcrumb for current page
+  var qPage = TDASH.isRad ? 'X-Ray Queue' : 'Lab Queue';
+  if (typeof PAGES !== 'undefined') {
+    if (PAGES['tech-queue']) {
+      PAGES['tech-queue'].label = qPage;
+      PAGES['tech-queue'].path  = 'A-Lab / ' + qPage;
+    }
+  }
+
+  // Hero greeting
+  var h = new Date().getHours();
+  var g = h < 12 ? 'Good morning ☀️' : h < 18 ? 'Good afternoon 🌤️' : 'Good evening 🌙';
+  var heroGreet = document.getElementById('techHeroGreeting');
+  var heroName  = document.getElementById('techHeroName');
+  var heroDate  = document.getElementById('techHeroDate');
+  if (heroGreet) heroGreet.textContent = g;
+  if (heroName)  heroName.textContent  = (APP.user && APP.user.display_name) ? APP.user.display_name : 'Welcome back';
+  if (heroDate)  heroDate.textContent  = new Date().toLocaleDateString('en-PH', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+
+  // Stats skeleton
+  ['techStatPaid','techStatInProg','techStatForRel','techStatRelToday','techStatTotal']
+    .forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent='…'; });
+
+  var qList = document.getElementById('techQueueList');
+  if (qList) {
+    qList.innerHTML = '<div style="padding:16px 12px;display:flex;flex-direction:column;gap:10px;">' +
+      [1,2,3,4].map(function(){ return '<div style="padding:12px 14px;border:1px solid rgba(0,0,0,.05);border-radius:6px;background:var(--white);box-shadow:0 1px 2px rgba(0,0,0,.02);">' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="tech-skel" style="height:12px;width:110px;border-radius:4px;"></div><div class="tech-skel" style="height:14px;width:55px;border-radius:10px;"></div></div>' +
+        '<div class="tech-skel" style="height:16px;width:65%;border-radius:4px;margin-bottom:10px;"></div>' +
+        '<div style="display:flex;gap:6px;"><div class="tech-skel" style="height:13px;width:40px;border-radius:4px;"></div><div class="tech-skel" style="height:13px;width:40px;border-radius:4px;"></div></div>' +
+        '</div>'; }).join('') +
+      '</div>';
+  }
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r || !r.success) {
+        if (qList) qList.innerHTML =
+          '<div style="padding:20px;text-align:center;color:var(--danger);font-size:12px;">Failed to load. <a href="javascript:void(0)" onclick="techdash_load()" style="color:var(--teal-600);">Retry</a></div>';
+        return;
+      }
+      var s = r.stats;
+      document.getElementById('techStatPaid').textContent      = s.paid;
+      document.getElementById('techStatInProg').textContent    = s.in_progress;
+      document.getElementById('techStatForRel').textContent    = s.for_release;
+      document.getElementById('techStatRelToday').textContent  = s.released_today || 0;
+      document.getElementById('techStatTotal').textContent     = s.total;
+
+      TDASH.allOrders = r.recent_orders || [];
+      techdash_applyFilter();
+    })
+    .withFailureHandler(function(e) {
+      if (qList) qList.innerHTML =
+        '<div style="padding:20px;text-align:center;color:var(--danger);font-size:12px;">Error: ' + _e((e&&e.message)||'Connection failed') + '</div>';
+    })
+    .getTechDashboardStats(branchId, techRole);
+}
+
+// Navigate to queue page with optional status filter
+function techdash_goQueue(status) {
+  navigateTo('tech-queue');
+  if (typeof status !== 'undefined') {
+    var filterEl = document.getElementById('techQueueFilter');
+    if (filterEl) filterEl.value = status;
+    techdash_applyFilter();
+  }
+}
+
+function techdash_applyFilter() {
+  var filterEl = document.getElementById('techQueueFilter');
+  var searchEl = document.getElementById('techQueueSearch');
+  var statusFilter = filterEl ? filterEl.value : '';
+  var q = (searchEl ? searchEl.value : '').trim().toLowerCase();
+
+  TDASH.filteredOrders = TDASH.allOrders.filter(function(o) {
+    if (statusFilter) {
+      if (o.status !== statusFilter) return false;
+    } else {
+      // "All Active" = IN_QUEUE + PAID + IN_PROGRESS + FOR_RELEASE
+      if (['IN_QUEUE','PAID','IN_PROGRESS','FOR_RELEASE'].indexOf(o.status) === -1) return false;
+    }
+    if (q) {
+      var hay = [o.order_no, o.patient_name].join(' ').toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+  techdash_renderQueue();
+}
+
+function techdash_renderQueue() {
+  var list = document.getElementById('techQueueList');
+  if (!list) return;
+  if (!TDASH.filteredOrders.length) {
+    list.innerHTML = '<div style="padding:32px 20px;text-align:center;color:var(--text-4);">'
+      + '<div style="font-size:30px;margin-bottom:8px;">' + (TDASH.isRad ? '🩻' : '🔬') + '</div>'
+      + '<div style="font-weight:700;color:var(--text-2);margin-bottom:4px;">All clear!</div>'
+      + '<div style="font-size:12px;">No active orders in queue.</div></div>';
+    return;
+  }
+
+  var statusColors = {
+    IN_QUEUE:'#0d9488', PAID:'#0d9488', IN_PROGRESS:'#2563eb', FOR_RELEASE:'#7c3aed', RELEASED:'#0060b0'
+  };
+  var payColors = { UNPAID:'#dc2626', PARTIAL:'#ca8a04', PAID:'#16a34a' };
+
+  list.innerHTML = TDASH.filteredOrders.map(function(o) {
+    var sc = statusColors[o.status] || '#64748b';
+    var statusLabel = o.status === 'IN_QUEUE' ? 'IN QUEUE' : (o.status||'').replace(/_/g,' ');
+    var isActive = TDASH.selectedOrderId === o.order_id;
+    var payStatus = o.payment_status || 'UNPAID';
+    var payDot = payStatus !== 'PAID'
+      ? '<span style="width:7px;height:7px;border-radius:50%;background:' + (payColors[payStatus]||'#dc2626') + ';display:inline-block;margin-left:4px;" title="' + payStatus + '"></span>'
+      : '';
+
+    return '<div class="tech-order-item' + (isActive ? ' active' : '') + '" onclick="techdash_selectOrder(\'' + _e(o.order_id) + '\')">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">'
+      + '<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--teal-600);">' + _e(o.order_no) + '</span>'
+      + '<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:' + sc + '22;color:' + sc + ';">' + statusLabel + '</span>'
+      + '</div>'
+      + '<div style="font-size:13px;font-weight:700;color:var(--text-1);">' + _e(o.patient_name || '—') + payDot + '</div>'
+      + '<div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap;">'
+      + (o.order_types||'lab').split(',').map(function(t){ return t.trim() === 'xray'
+          ? '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(14,165,233,.1);color:#0ea5e9;">🩻 X-Ray</span>'
+          : '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(16,168,168,.1);color:var(--teal-600);">🔬 Lab</span>';
+        }).join('')
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function techdash_selectOrder(orderId) {
+  TDASH.selectedOrderId = orderId;
+  TDASH.selectedItemId = null;
+  TDASH.selectedItem = null;
+  TDASH.selectedOrderItems = [];
+  TDASH.selectedOrder = TDASH.allOrders.find(function(o){ return o.order_id === orderId; }) || null;
+  techdash_renderQueue();
+
+  document.getElementById('techPanelEmpty').style.display = 'none';
+  document.getElementById('techPanelDetail').style.display = 'flex';
+  document.getElementById('panelOrderNo').textContent     = TDASH.selectedOrder ? TDASH.selectedOrder.order_no : orderId;
+  var dob = TDASH.selectedOrder ? TDASH.selectedOrder.patient_dob : '';
+  var sex = TDASH.selectedOrder ? TDASH.selectedOrder.patient_sex : '';
+  var addr = TDASH.selectedOrder ? TDASH.selectedOrder.patient_address : '';
+  var ageStr = '';
+  var dobFormatted = '';
+  if (dob) {
+    try {
+      var d = new Date(dob);
+      if (!isNaN(d)) {
+        var diff = Date.now() - d.getTime();
+        var age = new Date(diff).getUTCFullYear() - 1970;
+        ageStr = age + ' yrs';
+        dobFormatted = d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+      }
+    } catch(e){}
+  }
+  
+  var infoParts = [];
+  if (ageStr) infoParts.push(ageStr + ' (' + dobFormatted + ')');
+  if (sex) infoParts.push(sex);
+  if (addr) infoParts.push(addr);
+  var infoStr = infoParts.join(' • ');
+
+  document.getElementById('panelPatientName').innerHTML = TDASH.selectedOrder ? 
+    _e(TDASH.selectedOrder.patient_name) 
+    + (infoStr ? '<div style="font-size:12px;color:var(--text-3);font-weight:600;margin-top:4px;">' + _e(infoStr) + '</div>' : '') 
+    : '';
+  document.getElementById('panelServiceName').textContent = 'Loading…';
+  document.getElementById('panelSteps').innerHTML         = '';
+  document.getElementById('panelEncodeSection').innerHTML = '';
+  document.getElementById('panelOtherServices').innerHTML = '';
+  document.getElementById('panelReleaseCard').style.display = 'none';
+
+  var o = TDASH.selectedOrder;
+  if (o) {
+    var statusColors = { IN_QUEUE:'#0d9488', PAID:'#0d9488', IN_PROGRESS:'#2563eb', FOR_RELEASE:'#7c3aed', RELEASED:'#0060b0' };
+    var sc = statusColors[o.status] || '#64748b';
+    var statusLabel = o.status === 'IN_QUEUE' ? 'IN QUEUE' : (o.status||'').replace(/_/g,' ');
+    document.getElementById('panelOrderStatusBadge').innerHTML =
+      '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:' + sc + '22;color:' + sc + ';">' + statusLabel + '</span>';
+    var payColors = { UNPAID:'#dc2626', PARTIAL:'#ca8a04', PAID:'#16a34a' };
+    var ps = o.payment_status || 'UNPAID';
+    var pc = payColors[ps] || '#dc2626';
+    document.getElementById('panelPayStatusBadge').innerHTML =
+      '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:' + pc + '22;color:' + pc + ';">' + ps + '</span>';
+    var isRad = (o.order_types || '').indexOf('xray') !== -1;
+    document.getElementById('panelServiceTypeBadge').innerHTML = isRad
+      ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(14,165,233,.1);color:#0ea5e9;">🩻 X-Ray</span>'
+      : '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(16,168,168,.1);color:var(--teal-600);">🔬 Lab</span>';
+    if (o.status === 'FOR_RELEASE') document.getElementById('panelReleaseCard').style.display = '';
+  }
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r || !r.success) { toast('error', 'Could not load order items.'); return; }
+      TDASH.selectedOrderItems = r.data || [];
+      techdash_renderItemChips();
+      if (TDASH.selectedOrderItems.length) {
+        techdash_selectItem(TDASH.selectedOrderItems[0].order_item_id);
+      }
+    })
+    .withFailureHandler(function(e){ toast('error', (e && e.message) || 'Failed to load items.'); })
+    .getItemCheckpoints(TDASH.branchId, orderId);
+}
+
+function techdash_renderItemChips() {
+  var items = TDASH.selectedOrderItems;
+  var container = document.getElementById('panelOtherServices');
+  if (!container) return;
+  if (!items.length) { container.innerHTML = ''; return; }
+  container.innerHTML = items.map(function(item) {
+      var isDone     = !!item.encoded_at;
+      var isDirty    = TDASH.draftDirty[item.order_item_id];
+      var isSelected = TDASH.selectedItemId === item.order_item_id;
+      var cls  = isSelected ? 'selected-item' : (isDone ? 'encoded-item' : 'pending-item');
+      var dot  = isDirty ? ' <span style="width:6px;height:6px;border-radius:50%;background:#f59e0b;display:inline-block;margin-left:auto;flex-shrink:0;" title="Unsaved draft"></span>' : '';
+      var icon = item.service_type === 'xray' ? '🩻 ' : '🔬 ';
+      var check = isDone ? '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-left:auto;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : '';
+      
+      var isExtracted = !!item.extracted_at;
+      var isProcessed = !!item.processed_at;
+      var stepStr = '';
+      if (item.service_type === 'xray') {
+        if (!isExtracted) stepStr = 'Capture';
+        else if (!isProcessed) stepStr = 'Processing';
+        else if (!isDone) stepStr = 'Encoding';
+        else stepStr = 'For Release';
+      } else {
+        if (!isExtracted) stepStr = 'Extraction';
+        else if (!isProcessed) stepStr = 'Processing';
+        else if (!isDone) stepStr = 'Encoding';
+        else stepStr = 'For Release';
+      }
+
+      return '<div class="tech-tab-item ' + cls + '" onclick="techdash_selectItem(\'' + _e(item.order_item_id) + '\')">'
+        + '<span style="margin-right:10px;font-size:16px;flex-shrink:0;opacity:' + (isSelected ? '1' : '0.6') + ';">' + icon + '</span>' 
+        + '<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">'
+        + '<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;" title="' + _e(item.lab_name) + '">' + _e(item.lab_name) + '</span>' 
+        + '<span style="font-size:9px;font-weight:700;opacity:' + (isDone ? '1' : '0.6') + ';text-transform:uppercase;letter-spacing:0.05em;color:' + (isDone && !isSelected ? '#16a34a' : 'inherit') + ';">' + (isDone ? '✓ ' : '→ ') + stepStr + '</span>'
+        + '</span>' 
+        + check + dot + '</div>';
+  }).join('');
+}
+
+function techdash_selectItem(itemId) {
+  TDASH.selectedItemId = itemId;
+  TDASH.selectedItem   = TDASH.selectedOrderItems.find(function(i){ return i.order_item_id === itemId; });
+  techdash_renderItemChips();
+  techdash_renderServicePanel();
+}
+
+function techdash_renderStepsOnly() {
+  var item = TDASH.selectedItem;
+  if (!item) return;
+
+  var isXray = item.service_type === 'xray';
+  var isAllowed = TDASH.isRad ? isXray : !isXray;
+
+  var stepsEl = document.getElementById('panelSteps');
+  if (!stepsEl) return;
+  
+  var extDone = !!item.extracted_at;
+  var procDone = !!item.processed_at;
+
+  var strExt = isXray ? 'Capture' : 'Extraction';
+  var descExt = isXray ? 'Taking the X-Ray image' : 'Specimen is collected from the patient';
+  var descProc = isXray ? 'Processing / developing the image' : 'Specimen is analyzed in the laboratory';
+
+  stepsEl.innerHTML = techdash_stepRow(1, strExt, descExt, extDone, item.order_item_id, 'extracted', isAllowed)
+    + techdash_stepRow(2, 'Processing', descProc, procDone, item.order_item_id, 'processed', extDone && isAllowed)
+    + '<div class="step-row" style="background:rgba(16,168,168,.04);border-color:rgba(16,168,168,.25);' + (procDone && isAllowed ? '' : 'opacity:0.5;pointer-events:none;') + '">'
+    + '<div class="step-num" style="background:var(--teal-600);color:#fff;">3</div>'
+    + '<div style="flex:1;"><div style="font-size:12px;font-weight:700;color:var(--teal-600);">Encoding</div>'
+    + '<div style="font-size:11px;color:var(--text-4);">' + (isXray ? 'Fill in the form below' : 'Fill in the results below') + '</div></div>'
+    + (item.encoded_at ? '<span style="font-size:11px;font-weight:700;color:#16a34a;">✓ Done</span>' : '')
+    + '</div>';
+
+  var encSec = document.getElementById('panelEncodeSection');
+  if (encSec) {
+    var enable = procDone && isAllowed;
+    encSec.style.opacity       = enable ? '1'    : '0.5';
+    encSec.style.pointerEvents = enable ? 'auto' : 'none';
+
+    // Also unlock inner wrapper divs that had disabled styles baked in at render time
+    if (enable && TDASH.selectedItem && !TDASH.selectedItem.encoded_at) {
+      var iid = TDASH.selectedItem.order_item_id;
+      // Lab fields wrapper
+      var labFields = document.getElementById('labFields_' + iid);
+      if (labFields) {
+        labFields.style.opacity       = '';
+        labFields.style.pointerEvents = '';
+      }
+      // Xray fields wrapper (first unlabelled div with opacity baked in)
+      encSec.querySelectorAll('div[style*="opacity:.5"]').forEach(function(el) {
+        el.style.opacity       = '';
+        el.style.pointerEvents = '';
+      });
+      // Re-enable all disabled inputs, textareas, selects, buttons inside encSec
+      encSec.querySelectorAll('input:disabled, textarea:disabled, select:disabled, button:disabled').forEach(function(el) {
+        el.disabled = false;
+      });
+    }
+  }
+}
+
+function techdash_renderServicePanel() {
+  var item = TDASH.selectedItem;
+  if (!item) return;
+
+  var isXray = item.service_type === 'xray';
+  var isAllowed = TDASH.isRad ? isXray : !isXray;
+
+  techdash_renderStepsOnly();
+
+  var encSec = document.getElementById('panelEncodeSection');
+
+  if (!isAllowed) {
+    encSec.innerHTML = '<div style="padding:14px;border-top:1.5px solid var(--border);margin-top:4px;color:#92400e;background:#fff7ed;border-radius:6px;font-size:12px;">' +
+      '⚠️ This is a <b>' + (isXray ? 'Radiology' : 'Laboratory') + '</b> service. Only ' + (isXray ? 'Radiologic Technologist' : 'Medical Technologist') + ' can process and encode this item.' +
+      '</div>';
+    return;
+  }
+  
+  // Show skeleton loader in encSec
+  encSec.innerHTML = '<div style="padding:14px;border-top:1.5px solid var(--border);margin-top:4px;">' +
+    '<div class="tech-skel" style="height:12px;width:120px;border-radius:4px;margin-bottom:12px;"></div>' +
+    '<div class="tech-skel" style="height:28px;width:100%;border-radius:6px;margin-bottom:8px;"></div>' +
+    '<div class="tech-skel" style="height:28px;width:100%;border-radius:6px;margin-bottom:8px;"></div>' +
+    '</div>';
+
+  var borderStyle = 'border-top:1.5px solid var(--border);padding-top:14px;margin-top:4px;';
+
+  if (isXray) {
+    techdash_renderXrayEncoding(encSec, item, borderStyle);
+  } else {
+    techdash_renderSheetLink(encSec, item, borderStyle);
+  }
+}
+
+function techdash_stepRow(num, label, desc, isDone, itemId, checkpoint, isEligible) {
+  var cls = isDone ? 'done' : 'pending';
+  var opacityStyle = isEligible ? '' : ' opacity:0.5; pointer-events:none;';
+  var disabledAttr = isEligible ? '' : ' disabled';
+
+  return '<div class="step-row ' + cls + '" style="' + opacityStyle + '">'
+    + '<label style="display:flex;align-items:center;gap:12px;cursor:' + (isEligible?'pointer':'not-allowed') + ';width:100%;">'
+    + '<div class="step-num ' + cls + '">'
+    + (isDone ? '<svg width="12" height="12" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : num)
+    + '</div>'
+    + '<div style="flex:1;">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--text-1);">' + num + '. ' + label + '</div>'
+    + '<div style="font-size:11px;color:var(--text-3);">' + desc + '</div>'
+    + '</div>'
+    + '<input type="checkbox"' + (isDone ? ' checked' : '') + disabledAttr + ' style="width:16px;height:16px;accent-color:var(--teal-600);cursor:' + (isEligible?'pointer':'not-allowed') + ';flex-shrink:0;" onchange="techdash_updateCheckpoint(\'' + _e(itemId) + '\',\'' + checkpoint + '\',this.checked)">'
+    + '</label>'
+    + '</div>';
+}
+
+function techdash_updateCheckpoint(itemId, checkpoint, checked) {
+  var item = TDASH.selectedOrderItems.find(function(i){ return i.order_item_id === itemId; });
+  if (item) {
+     item[checkpoint + '_at'] = checked ? new Date().toISOString() : null;
+     if (checkpoint === 'extracted' && !checked) item.processed_at = null; // cascade uncheck
+  }
+  
+  techdash_renderItemChips();
+  techdash_renderStepsOnly();
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r || !r.success) {
+        toast('error', (r && r.message) || 'Failed to update checkpoint.');
+        if (item) {
+          item[checkpoint + '_at'] = !checked ? new Date().toISOString() : null;
+        }
+        techdash_renderItemChips();
+        techdash_renderStepsOnly();
+        return; 
+      }
+      if (item) {
+        item[checkpoint + '_at'] = checked ? new Date().toISOString() : null;
+        if (checkpoint === 'extracted' && !checked) item.processed_at = null; 
+      }
+      if (r.order_status) {
+        var ord = TDASH.allOrders.find(function(o){ return o.order_id === TDASH.selectedOrderId; });
+        if (ord) {
+          ord.status = r.order_status;
+          if (ord.status === 'FOR_RELEASE') document.getElementById('panelReleaseCard').style.display = '';
+          else document.getElementById('panelReleaseCard').style.display = 'none';
+        }
+      }
+      techdash_renderItemChips();
+      techdash_renderStepsOnly();
+    })
+    .withFailureHandler(function(e){ toast('error', e.message || 'Error.'); })
+    .updateItemCheckpoint(TDASH.branchId, TDASH.selectedOrderId, itemId, checkpoint, checked);
+}
+
+// ─── Lab Result Encoding (in-app form → PDF) ─────────────────
+function techdash_renderSheetLink(container, item, borderStyle) {
+  var iid = item.order_item_id;
+
+  // Load existing PDF result + service params in parallel
+  var existingPdf = null;
+  var serviceParams = [];
+  var loaded = 0;
+
+  function onBothLoaded() {
+    loaded++;
+    if (loaded < 2) return;
+    techdash_buildLabForm(container, item, borderStyle, existingPdf, serviceParams);
+  }
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      var row = r && r.success && r.data && r.data.length ? r.data[0] : null;
+      existingPdf = (row && row.unit === 'LAB_PDF') ? row.result_value : null;
+      onBothLoaded();
+    })
+    .withFailureHandler(function() { onBothLoaded(); })
+    .getItemEncoding(TDASH.branchId, TDASH.selectedOrderId, iid);
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      serviceParams = (r && r.success && r.data) ? r.data : [];
+      onBothLoaded();
+    })
+    .withFailureHandler(function() { onBothLoaded(); })
+    .getLabServiceParams(item.serv_id);
+}
+
+function techdash_buildLabForm(container, item, borderStyle, existingPdf, params) {
+  var iid     = _e(item.order_item_id);
+  var encDone = !!item.encoded_at;
+
+  var html = '<div style="' + borderStyle + '">'
+    + '<div style="font-size:11px;font-weight:800;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Lab Result</div>';
+
+  if (encDone) {
+    html += '<div style="font-size:11px;color:#16a34a;font-weight:700;margin-bottom:12px;padding:6px 10px;background:rgba(22,163,74,.08);border-radius:6px;border:1px solid rgba(22,163,74,.2);">✓ Result encoded and ready for release.</div>';
+  }
+
+  if (existingPdf) {
+    html += '<div style="display:flex;align-items:center;gap:12px;background:var(--gray-50);padding:12px;border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:12px;">'
+      + '<div style="font-size:24px;">📄</div>'
+      + '<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text-1);">PDF Result Ready</div>'
+      + '<div style="font-size:11px;color:var(--text-3);">Saved to patient folder.</div></div>'
+      + '<a href="' + _e(existingPdf) + '" target="_blank" class="btn btn-primary btn-sm">View PDF</a>'
+      + '</div>'
+      + '<div style="display:flex;justify-content:flex-end;">'
+      + '<button class="btn btn-secondary btn-sm" style="color:var(--danger);border-color:rgba(239,68,68,.3);" onclick="techdash_editResult(\'' + iid + '\',\'lab\')">'
+      + '<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>'
+      + 'Edit Result</button>'
+      + '</div>';
+  }
+
+  if (!existingPdf || !encDone) {
+    var procDone = !!item.processed_at;
+    var disabled = procDone ? '' : ' disabled';
+    var opacity  = procDone ? '' : 'opacity:.5;pointer-events:none;';
+
+    if (!params.length) {
+      html += '<div style="' + opacity + 'padding:14px;border:1.5px dashed var(--border);border-radius:8px;text-align:center;font-size:12px;color:var(--text-3);">'
+        + 'No result fields configured for this service.<br>'
+        + '<span style="font-size:11px;color:var(--text-4);">An admin can add them via Lab Services → Params.</span>'
+        + '</div>';
+    } else {
+      html += '<div style="' + opacity + 'display:flex;flex-direction:column;gap:8px;" id="labFields_' + iid + '">';
+
+      params.forEach(function(p, idx) {
+        var ft = p.field_type || 'numeric';
+
+        // Section header — no input, just a styled label
+        if (ft === 'header') {
+          html += '<div style="margin-top:10px;margin-bottom:2px;padding:6px 10px;background:rgba(99,102,241,.08);border-left:3px solid #6366f1;border-radius:4px;">'
+            + '<span style="font-size:11px;font-weight:800;color:#4f46e5;text-transform:uppercase;letter-spacing:.05em;">' + _e(p.param_name) + '</span>'
+            + '</div>';
+          return;
+        }
+
+        // Sub-section — italic label, indented
+        if (ft === 'subheader') {
+          html += '<div style="margin-top:6px;margin-bottom:2px;padding:4px 10px 4px 18px;">'
+            + '<span style="font-size:11px;font-style:italic;font-weight:700;color:var(--text-2);">' + _e(p.param_name) + '</span>'
+            + '</div>';
+          return;
+        }
+
+        // Data row
+        html += '<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;">'
+          + '<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:6px;">'
+          + '<span style="font-size:12px;font-weight:700;color:var(--text-1);">' + _e(p.param_name) + '</span>';
+        if (p.unit) html += '<span style="font-size:10px;color:var(--text-3);">' + _e(p.unit) + '</span>';
+        if (p.reference_range) html += '<span style="font-size:10px;color:var(--text-4);">ref: ' + _e(p.reference_range) + '</span>';
+        html += '</div>';
+
+        var inputId = 'labInp_' + iid + '_' + idx;
+        if (ft === 'numeric') {
+          html += '<input type="number" id="' + inputId + '" class="f-inp" style="font-size:13px;padding:6px 9px;" placeholder="Enter value"' + disabled + '>';
+        } else if (ft === 'text') {
+          html += '<textarea id="' + inputId + '" class="f-inp" rows="2" style="font-size:13px;padding:6px 9px;resize:vertical;" placeholder="Enter result"' + disabled + '></textarea>';
+        } else if (ft === 'pos_neg') {
+          html += '<select id="' + inputId + '" class="f-inp" style="font-size:13px;padding:6px 9px;"' + disabled + '>'
+            + '<option value="">— Select —</option>'
+            + '<option>Positive</option><option>Negative</option>'
+            + '</select>';
+        } else if (ft === 'reactive') {
+          html += '<select id="' + inputId + '" class="f-inp" style="font-size:13px;padding:6px 9px;"' + disabled + '>'
+            + '<option value="">— Select —</option>'
+            + '<option>Non-Reactive</option><option>Reactive</option>'
+            + '</select>';
+        } else if (ft === 'selection') {
+          var opts = (p.options || '').split(',').map(function(o){ return o.trim(); }).filter(Boolean);
+          html += '<select id="' + inputId + '" class="f-inp" style="font-size:13px;padding:6px 9px;"' + disabled + '>'
+            + '<option value="">— Select —</option>'
+            + opts.map(function(o){ return '<option>' + _e(o) + '</option>'; }).join('')
+            + '</select>';
+        }
+
+        html += '</div>';
+      });
+
+      html += '</div>'
+        + '<div id="labEncodeErr_' + iid + '" style="display:none;margin-top:8px;font-size:11px;color:var(--danger);background:var(--danger-bg);border-radius:6px;padding:6px 10px;"></div>'
+        + '<div style="display:flex;justify-content:flex-end;margin-top:12px;">'
+        + '<button id="labSaveBtn_' + iid + '" class="btn btn-primary"' + disabled + ' onclick="techdash_saveLabResult(\'' + iid + '\')">'
+        + '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>'
+        + ' Save &amp; Generate PDF</button>'
+        + '</div>';
+    }
+  }
+
+  html += '</div>';
+  container.innerHTML = html;
+
+  // Store params on TDASH for use during save
+  TDASH._labParams = TDASH._labParams || {};
+  TDASH._labParams[item.order_item_id] = params;
+}
+
+function techdash_reEncodeLabForm(itemId) {
+  var item = TDASH.selectedItem;
+  if (!item) return;
+  var encSec      = document.getElementById('panelEncodeSection');
+  var borderStyle = 'border-top:1.5px solid var(--border);padding-top:14px;margin-top:4px;';
+  var params = (TDASH._labParams && TDASH._labParams[itemId]) || [];
+  techdash_buildLabForm(encSec, item, borderStyle, null, params);
+}
+
+function techdash_editResult(itemId, type) {
+  if (!confirm('This will permanently delete the existing PDF result. The technologist will need to re-encode and regenerate it.\n\nContinue?')) return;
+
+  var item = TDASH.selectedItem;
+  if (!item) return;
+
+  var encSec = document.getElementById('panelEncodeSection');
+  if (encSec) {
+    encSec.innerHTML = '<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-4);">Deleting PDF…</div>';
+  }
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r || !r.success) {
+        toast('error', r && r.message ? r.message : 'Failed to delete result.');
+        techdash_renderServicePanel();
+        return;
+      }
+
+      // Clear encoded state in memory
+      item.encoded_at = null;
+      techdash_renderItemChips();
+      techdash_renderStepsOnly();
+
+      // Update order status in memory (may have regressed from FOR_RELEASE)
+      var ord = TDASH.allOrders.find(function(o){ return o.order_id === TDASH.selectedOrderId; });
+      if (ord && ord.status === 'FOR_RELEASE') {
+        ord.status = 'PROCESSING';
+        document.getElementById('panelReleaseCard').style.display = 'none';
+        techdash_renderQueue();
+      }
+
+      // Re-render the encoding panel and pre-fill xray fields if available
+      if (type === 'xray') {
+        techdash_renderXrayEncoding(encSec, item, 'border-top:1.5px solid var(--border);padding-top:14px;margin-top:4px;');
+        // Pre-fill after short delay to let the async render complete
+        if (r.clinical_data || r.findings || r.impression) {
+          TDASH._xrayPrefill = TDASH._xrayPrefill || {};
+          TDASH._xrayPrefill[itemId] = { cd: r.clinical_data, fn: r.findings, im: r.impression };
+        }
+      } else {
+        var borderStyle = 'border-top:1.5px solid var(--border);padding-top:14px;margin-top:4px;';
+        var params = (TDASH._labParams && TDASH._labParams[itemId]) || [];
+        techdash_buildLabForm(encSec, item, borderStyle, null, params);
+      }
+
+      toast('success', 'Result deleted. You can now re-encode.');
+    })
+    .withFailureHandler(function(e) {
+      toast('error', e.message || 'Connection error.');
+      techdash_renderServicePanel();
+    })
+    .deleteItemResult(TDASH.branchId, TDASH.selectedOrderId, itemId);
+}
+
+function techdash_saveLabResult(itemId) {
+  var btn   = document.getElementById('labSaveBtn_' + itemId);
+  var errEl = document.getElementById('labEncodeErr_' + itemId);
+  if (errEl) errEl.style.display = 'none';
+
+  var params   = (TDASH._labParams && TDASH._labParams[itemId]) || [];
+  var results  = [];
+  var hasError = false;
+
+  params.forEach(function(p, idx) {
+    var ft  = p.field_type || 'numeric';
+    var val = '';
+    if (ft !== 'header' && ft !== 'subheader') {
+      var inp = document.getElementById('labInp_' + itemId + '_' + idx);
+      val = inp ? inp.value.trim() : '';
+    }
+    results.push({
+      param_name:      p.param_name,
+      result_value:    val,
+      unit:            p.unit            || '',
+      reference_range: p.reference_range || '',
+      field_type:      ft,
+      remarks:         ''
+    });
+  });
+
+  var item = TDASH.selectedOrderItems.find(function(i){ return i.order_item_id === itemId; });
+  if (!item) return;
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating PDF…'; }
+
+  var encodedBy = APP.user ? APP.user.admin_id : '';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save &amp; Generate PDF'; }
+      if (!r || !r.success) {
+        if (errEl) { errEl.textContent = r && r.message ? r.message : 'Save failed.'; errEl.style.display = ''; }
+        return;
+      }
+      item.encoded_at = new Date().toISOString();
+      var ord = TDASH.allOrders.find(function(o){ return o.order_id === TDASH.selectedOrderId; });
+      if (ord && r.order_status) ord.status = r.order_status;
+      techdash_renderItemChips();
+      techdash_renderServicePanel();
+      techdash_renderQueue();
+      if (ord && ord.status === 'FOR_RELEASE') document.getElementById('panelReleaseCard').style.display = '';
+      toast('success', 'Lab result saved and PDF generated!');
+    })
+    .withFailureHandler(function(e) {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save &amp; Generate PDF'; }
+      if (errEl) { errEl.textContent = e.message || 'Error.'; errEl.style.display = ''; }
+    })
+    .saveLabResultAndPdf(
+      TDASH.branchId, TDASH.selectedOrderId, itemId,
+      item.serv_id, item.lab_name, results, encodedBy,
+      TDASH.selectedOrder ? TDASH.selectedOrder.order_no : ''
+    );
+}
+
+
+// ─── X-Ray Encoding UI ───────────────────────────────────────
+function techdash_renderXrayEncoding(container, item, borderStyle) {
+  var iid = item.order_item_id;
+  google.script.run
+    .withSuccessHandler(function(r) {
+      var existing = (r && r.success && r.data && r.data.length) ? r.data[0] : null;
+      var pdfUrl = existing && existing.unit === 'XRAY_PDF' ? existing.result_value : '';
+      var procDone = !!item.processed_at;
+      var encDone  = !!item.encoded_at;
+      var html = '<div style="' + borderStyle + '">'
+        + '<div style="font-size:11px;font-weight:800;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">X-Ray Result</div>';
+
+      if (pdfUrl) {
+        // Already encoded — show view + print
+        if (encDone) {
+          html += '<div style="font-size:11px;color:#16a34a;font-weight:700;margin-bottom:12px;padding:6px 10px;background:rgba(22,163,74,.08);border-radius:6px;border:1px solid rgba(22,163,74,.2);">✓ Result encoded and ready for release.</div>';
+        }
+        html += '<div style="display:flex;align-items:center;gap:12px;background:var(--gray-50);padding:12px;border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:12px;">'
+          + '<div style="font-size:24px;">📄</div>'
+          + '<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text-1);">PDF Result Ready</div>'
+          + '<div style="font-size:11px;color:var(--text-3);">Saved to patient folder.</div></div>'
+          + '<a href="' + _e(pdfUrl) + '" target="_blank" class="btn btn-primary btn-sm">View PDF</a>'
+          + '<button class="btn btn-secondary btn-sm" onclick="techdash_printPdf(\'' + _e(pdfUrl) + '\')">🖨 Print</button>'
+          + '</div>'
+          + '<div style="display:flex;justify-content:flex-end;margin-bottom:10px;">'
+          + '<button class="btn btn-secondary btn-sm" style="color:var(--danger);border-color:rgba(239,68,68,.3);" onclick="techdash_editResult(\'' + _e(iid) + '\',\'xray\')">'
+          + '<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>'
+          + 'Edit Result</button>'
+          + '</div>';
+      } else {
+        // Not yet encoded — show form
+        var disabledAttr = procDone ? '' : ' disabled';
+        var opacityStyle = procDone ? '' : 'opacity:.5;pointer-events:none;';
+        html += '<div style="' + opacityStyle + 'display:flex;flex-direction:column;gap:10px;">'
+          + '<div>'
+          + '<label class="f-label" style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;">Clinical Data</label>'
+          + '<textarea id="xrayCD_' + _e(iid) + '" class="f-inp" rows="3" placeholder="Enter clinical data…" style="resize:vertical;font-size:13px;"' + disabledAttr + '></textarea>'
+          + '</div>'
+          + '<div>'
+          + '<label class="f-label" style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;">Findings <span style="color:var(--danger);">*</span></label>'
+          + '<textarea id="xrayFN_' + _e(iid) + '" class="f-inp" rows="4" placeholder="Enter findings…" style="resize:vertical;font-size:13px;"' + disabledAttr + '></textarea>'
+          + '</div>'
+          + '<div>'
+          + '<label class="f-label" style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;">Impression <span style="color:var(--danger);">*</span></label>'
+          + '<textarea id="xrayIM_' + _e(iid) + '" class="f-inp" rows="3" placeholder="Enter impression…" style="resize:vertical;font-size:13px;"' + disabledAttr + '></textarea>'
+          + '</div>'
+          + '<div id="xrayErr_' + _e(iid) + '" style="display:none;font-size:11px;color:var(--danger);background:var(--danger-bg);border-radius:6px;padding:6px 10px;"></div>'
+          + '<div style="display:flex;justify-content:flex-end;">'
+          + '<button id="xraySaveBtn_' + _e(iid) + '" class="btn btn-primary"' + disabledAttr + ' onclick="techdash_saveXrayResult(\'' + _e(iid) + '\')">'
+          + '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>'
+          + ' Save &amp; Generate PDF</button>'
+          + '</div>'
+          + '</div>';
+      }
+      html += '</div>';
+      container.innerHTML = html;
+
+      // Pre-fill previous values if coming from an edit (delete + re-encode flow)
+      var prefill = TDASH._xrayPrefill && TDASH._xrayPrefill[iid];
+      if (prefill) {
+        var cdEl2 = document.getElementById('xrayCD_' + iid);
+        var fnEl2 = document.getElementById('xrayFN_' + iid);
+        var imEl2 = document.getElementById('xrayIM_' + iid);
+        if (cdEl2 && prefill.cd) cdEl2.value = prefill.cd;
+        if (fnEl2 && prefill.fn) fnEl2.value = prefill.fn;
+        if (imEl2 && prefill.im) imEl2.value = prefill.im;
+        delete TDASH._xrayPrefill[iid];
+      }
+    })
+    .withFailureHandler(function() {
+      container.innerHTML = '<div style="' + borderStyle + 'color:var(--danger);font-size:12px;">Failed to load x-ray result.</div>';
+    })
+    .getItemEncoding(TDASH.branchId, TDASH.selectedOrderId, item.order_item_id);
+}
+
+function techdash_saveXrayResult(itemId) {
+  var btn    = document.getElementById('xraySaveBtn_' + itemId);
+  var errEl  = document.getElementById('xrayErr_' + itemId);
+  var cdEl   = document.getElementById('xrayCD_' + itemId);
+  var fnEl   = document.getElementById('xrayFN_' + itemId);
+  var imEl   = document.getElementById('xrayIM_' + itemId);
+  if (!fnEl || !imEl) return;
+
+  var findings   = fnEl.value.trim();
+  var impression = imEl.value.trim();
+  if (!findings)   { if (errEl) { errEl.textContent = 'Findings is required.';   errEl.style.display = ''; } return; }
+  if (!impression) { if (errEl) { errEl.textContent = 'Impression is required.'; errEl.style.display = ''; } return; }
+
+  if (errEl) errEl.style.display = 'none';
+  if (btn)   { btn.disabled = true; btn.textContent = 'Generating PDF…'; }
+
+  var item     = TDASH.selectedOrderItems.find(function(i) { return i.order_item_id === itemId; });
+  var order    = TDASH.selectedOrder;
+  var encodedBy = APP.user ? APP.user.admin_id : '';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r || !r.success) {
+        if (btn)  { btn.disabled = false; btn.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save &amp; Generate PDF'; }
+        if (errEl) { errEl.textContent = r.message || 'Generation failed.'; errEl.style.display = ''; }
+        return;
+      }
+      if (item) item.encoded_at = new Date().toISOString();
+      var ord = TDASH.allOrders.find(function(o) { return o.order_id === TDASH.selectedOrderId; });
+      if (ord && r.order_status) ord.status = r.order_status;
+      techdash_renderItemChips();
+      techdash_renderServicePanel();
+      techdash_renderQueue();
+      if (ord && ord.status === 'FOR_RELEASE') document.getElementById('panelReleaseCard').style.display = '';
+      toast('success', 'X-Ray result saved and PDF generated!');
+    })
+    .withFailureHandler(function(e) {
+      if (btn)  { btn.disabled = false; btn.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save &amp; Generate PDF'; }
+      if (errEl) { errEl.textContent = e.message || 'Error.'; errEl.style.display = ''; }
+    })
+    .saveXrayResultAndPdf(
+      TDASH.branchId,
+      TDASH.selectedOrderId,
+      itemId,
+      item ? item.serv_id : '',
+      item ? item.lab_name : '',
+      cdEl ? cdEl.value.trim() : '',
+      findings,
+      impression,
+      encodedBy,
+      order ? order.order_no : ''
+    );
+}
+
+function techdash_printPdf(url) {
+  var win = window.open(url, '_blank');
+  if (win) win.addEventListener('load', function() { win.print(); });
+}
+
+// Tech dashboard handlers completed
+
+function techdash_markDirty(itemId) {
+  TDASH.draftDirty[itemId] = true;
+  techdash_renderItemChips();
+}
+
+function techdash_releaseOrder() {
+  if (!TDASH.selectedOrderId) return;
+  if (!confirm('Release this order to the patient? This marks all results as released.')) return;
+  var releasedBy = APP.user ? APP.user.admin_id : '';
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r || !r.success) { toast('error', r.message || 'Failed to release.'); return; }
+      var ord = TDASH.allOrders.find(function(o){ return o.order_id === TDASH.selectedOrderId; });
+      if (ord) ord.status = 'RELEASED';
+      document.getElementById('panelReleaseCard').style.display = 'none';
+      techdash_renderQueue();
+      techdash_applyFilter();
+      toast('success', '✅ Order released to patient!');
+      techdash_load();
+    })
+    .withFailureHandler(function(e){ toast('error', e.message || 'Error.'); })
+    .releaseOrder(TDASH.branchId, TDASH.selectedOrderId, releasedBy);
+}
+</script>

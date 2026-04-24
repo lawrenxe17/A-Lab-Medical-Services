@@ -1,0 +1,565 @@
+<!-- ADMINS -->
+      <div class="page-view" id="page-admins">
+
+        <div class="section-header">
+          <div>
+            <div class="section-title" style="font-size:20px;">Admins</div>
+            <div class="section-sub" id="admSubtitle">Manage branch administrators</div>
+          </div>
+          <div id="admAddBtnWrap" style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-secondary btn-sm" onclick="adm_load()" id="admRefreshBtn">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="admRefreshIcon">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Refresh
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="adm_openModal()">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+              </svg>
+              Add Admin
+            </button>
+          </div>
+        </div>
+
+        <!-- Search + filter -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+          <div style="position:relative;flex:1;min-width:200px;">
+            <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-4);" width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+            </svg>
+            <input type="text" id="admSearch" class="f-inp" style="padding-left:34px;font-size:13px;"
+              placeholder="Search name, username, email…" oninput="adm_applyFilter()">
+          </div>
+          <select id="admFilterRole" class="f-inp" style="width:auto;font-size:13px;cursor:pointer;" onchange="adm_applyFilter()">
+            <option value="">All Roles</option>
+            <option value="Super Admin">Super Admin</option>
+            <option value="Branch Admin">Branch Admin</option>
+          </select>
+          <select id="admFilterStatus" class="f-inp" style="width:auto;font-size:13px;cursor:pointer;" onchange="adm_applyFilter()">
+            <option value="">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Assigned Branch(es)</th>
+                  <th>Status</th>
+                  <th style="text-align:center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══ ADMIN MODAL ══ -->
+      <div id="admModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
+        <div style="background:var(--white);border-radius:var(--radius-xl);width:100%;max-width:520px;box-shadow:var(--shadow-xl);max-height:90vh;overflow-y:auto;animation:modalIn .22s cubic-bezier(.34,1.2,.64,1);">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);">
+            <div>
+              <div style="font-size:16px;font-weight:800;color:var(--text-1);" id="admModalTitle">Add Admin</div>
+              <div style="font-size:12px;color:var(--text-3);margin-top:2px;font-family:var(--mono);" id="admModalSub">Fill in admin details</div>
+            </div>
+            <button onclick="adm_closeModal()" style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <div style="padding:24px;">
+            <input type="hidden" id="admModalId">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+              <div style="grid-column:1/-1;">
+                <label class="f-label">Full Name <span style="color:var(--danger);">*</span></label>
+                <input type="text" id="admFldName" class="f-inp" placeholder="e.g. Juan dela Cruz">
+              </div>
+              <div>
+                <label class="f-label">Username <span style="color:var(--danger);">*</span></label>
+                <input type="text" id="admFldUser" class="f-inp" placeholder="e.g. juan.delacruz" style="font-family:var(--mono);">
+              </div>
+              <div>
+                <label class="f-label">Email</label>
+                <input type="email" id="admFldEmail" class="f-inp" placeholder="e.g. juan@alab.com">
+              </div>
+              <div>
+                <label class="f-label">Password <span style="color:var(--danger);" id="admPassReqMark">*</span></label>
+                <input type="password" id="admFldPass" class="f-inp" placeholder="Set password" autocomplete="new-password">
+              </div>
+              <div>
+                <label class="f-label">Status</label>
+                <select id="admFldStatus" class="f-inp" style="cursor:pointer;">
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+              <div style="grid-column:1/-1;">
+                <label class="f-label">Role <span style="color:var(--danger);">*</span></label>
+                <div style="display:flex;gap:8px;">
+                  <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:var(--radius);border:1.5px solid var(--border);cursor:pointer;transition:all .15s;" id="admRolePillSA">
+                    <input type="radio" name="admRole" value="Super Admin" onchange="adm_onRoleChange()" style="accent-color:var(--teal-600);">
+                    <div>
+                      <div style="font-size:13px;font-weight:700;color:var(--text-1);">Super Admin</div>
+                      <div style="font-size:11px;color:var(--text-3);">Full access to all branches</div>
+                    </div>
+                  </label>
+                  <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:var(--radius);border:1.5px solid var(--border);cursor:pointer;transition:all .15s;" id="admRolePillBA">
+                    <input type="radio" name="admRole" value="Branch Admin" onchange="adm_onRoleChange()" style="accent-color:var(--teal-600);">
+                    <div>
+                      <div style="font-size:13px;font-weight:700;color:var(--text-1);">Branch Admin</div>
+                      <div style="font-size:11px;color:var(--text-3);">Access to assigned branch(es) only</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Branch assignment — shown only for Branch Admin -->
+              <div style="grid-column:1/-1;" id="admBranchWrap">
+                <label class="f-label">Assign Branch(es) <span style="color:var(--danger);">*</span></label>
+                <div style="border:1.5px solid var(--border);border-radius:var(--radius);max-height:160px;overflow-y:auto;background:var(--gray-50);" id="admBranchList">
+                  <div style="padding:12px;text-align:center;font-size:12px;color:var(--text-4);font-family:var(--mono);">Loading branches…</div>
+                </div>
+                <div style="font-size:11px;color:var(--text-3);margin-top:5px;font-family:var(--mono);" id="admBranchCount">0 branches selected</div>
+              </div>
+            </div>
+
+            <div id="admModalErr" style="display:none;margin-top:14px;font-size:12px;color:var(--danger);background:var(--danger-bg);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:9px 12px;"></div>
+          </div>
+
+          <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;">
+            <button class="btn btn-secondary" onclick="adm_closeModal()">Cancel</button>
+            <button class="btn btn-primary" id="admSaveBtn" onclick="adm_save()">
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              Save Admin
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ DELETE CONFIRM ══ -->
+      <div id="admDeleteModal" style="display:none;position:fixed;inset:0;z-index:501;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;padding:20px;">
+        <div style="background:var(--white);border-radius:24px 24px 0 0;width:100%;max-width:440px;box-shadow:var(--shadow-xl);padding:28px 24px;animation:slideup .22s ease;">
+          <div style="display:flex;gap:14px;margin-bottom:20px;align-items:flex-start;">
+            <div style="width:42px;height:42px;border-radius:50%;background:var(--danger-bg);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" fill="none" stroke="var(--danger)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </div>
+            <div>
+              <div style="font-size:16px;font-weight:800;color:var(--text-1);margin-bottom:4px;">Remove Admin?</div>
+              <div style="font-size:13px;color:var(--text-2);line-height:1.6;" id="admDeleteMsg">This action cannot be undone.</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button class="btn btn-danger" style="width:100%;justify-content:center;padding:13px;" onclick="adm_confirmDelete()">Yes, Remove Admin</button>
+            <button class="btn btn-secondary" style="width:100%;justify-content:center;padding:13px;" onclick="adm_closeDeleteModal()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+<script>
+/* ════════════════════════════════════
+   ADMINS MODULE
+════════════════════════════════════ */
+var ADM = {
+  all:      [],
+  filtered: [],
+  editingId: null,
+  branches: []   // cached branch list for the assignment picker
+};
+
+var _admDeleteId = null;
+
+/* ── Skeleton ── */
+function adm_skeleton() {
+  var row = '<tr>';
+  for (var i = 0; i < 7; i++) {
+    row += '<td><div style="height:14px;border-radius:6px;background:linear-gradient(90deg,#f0f2f7 25%,#e4e8f0 50%,#f0f2f7 75%);background-size:400px 100%;animation:shimmer 1.3s infinite;"></div></td>';
+  }
+  return row + '</tr>' + row + row + row;
+}
+
+/* ── Load ── */
+function adm_load() {
+  var icon = document.getElementById('admRefreshIcon');
+  if (icon) icon.style.animation = 'spin .8s linear infinite';
+  document.getElementById('admSubtitle').textContent = 'Loading…';
+  document.getElementById('admTableBody').innerHTML  = adm_skeleton();
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (icon) icon.style.animation = '';
+      if (!r.success) { toast('error', r.message || 'Failed to load admins.'); return; }
+      ADM.all      = r.admins   || [];
+      ADM.branches = r.branches || [];
+      adm_applyFilter();
+    })
+    .withFailureHandler(function(e) {
+      if (icon) icon.style.animation = '';
+      toast('error', e.message || 'Connection error.');
+      document.getElementById('admTableBody').innerHTML =
+        '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--danger);font-size:13px;">Error. <a href="javascript:void(0)" onclick="adm_load()" style="color:var(--teal-600);">Retry</a></td></tr>';
+    })
+    .getAdmins();
+}
+
+/* ── Filter + Render ── */
+function adm_applyFilter() {
+  var q  = (document.getElementById('admSearch').value || '').trim().toLowerCase();
+  var rf = (document.getElementById('admFilterRole').value   || '');
+  var sf = (document.getElementById('admFilterStatus').value || '');
+  ADM.filtered = ADM.all.filter(function(a) {
+    if (rf && a.role   !== rf) return false;
+    if (sf && a.status !== sf) return false;
+    if (q) {
+      var hay = [a.name, a.username, a.email, a.role, a.branches_display].join(' ').toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+  adm_render();
+}
+
+function adm_render() {
+  var count = ADM.filtered.length;
+  document.getElementById('admSubtitle').textContent =
+    count + ' admin' + (count !== 1 ? 's' : '') +
+    (count !== ADM.all.length ? ' (filtered from ' + ADM.all.length + ')' : ' total');
+
+  if (!count) {
+    document.getElementById('admTableBody').innerHTML =
+      '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-4);font-family:var(--mono);font-size:13px;">No admins found.</td></tr>';
+    return;
+  }
+
+  var isSA = APP.user && APP.user.role === 'Super Admin';
+  var h = '';
+  ADM.filtered.forEach(function(a) {
+    var isActive  = a.status === 'Active';
+    var isSARole  = a.role   === 'Super Admin';
+    var roleBadge = isSARole
+      ? '<span class="badge badge-teal" style="font-family:var(--mono);">Super Admin</span>'
+      : '<span class="badge badge-blue" style="font-family:var(--mono);">Branch Admin</span>';
+    var branchCell = isSARole
+      ? '<span style="font-size:11px;color:var(--text-4);font-family:var(--mono);">All Branches</span>'
+      : (a.branches_display
+          ? '<span style="font-size:12px;color:var(--text-2);">' + _e(a.branches_display) + '</span>'
+          : '<span style="font-size:11px;color:var(--text-4);">—</span>');
+
+    // Actions — only Super Admin can edit/delete; also prevent self-delete
+    var isSelf    = APP.user && APP.user.username === a.username;
+    var actBtns   = '';
+    if (isSA) {
+      actBtns += '<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();adm_openEdit(\'' + _e(a.admin_id) + '\')" style="padding:5px 10px;" title="Edit">'
+        + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>'
+        + '</button>';
+      if (!isSelf) {
+        actBtns += '<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();adm_openDelete(\'' + _e(a.admin_id) + '\')" style="padding:5px 10px;" title="Delete">'
+          + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>'
+          + '</button>';
+      }
+    }
+
+    h += '<tr id="adm-row-' + _e(a.admin_id) + '" style="cursor:pointer;" onclick="adm_openProfile(\'' + _e(a.admin_id) + '\')">'
+      + '<td>'
+        + '<div style="display:flex;align-items:center;gap:10px;">'
+          + _avatar(a.photo_url, a.name || a.username, 32)
+          + '<div>'
+            + '<div style="font-weight:700;color:var(--text-1);font-size:13px;">' + _e(a.name) + '</div>'
+            + (isSelf ? '<div style="font-size:10px;color:var(--teal-600);font-family:var(--mono);margin-top:1px;">● you</div>' : '')
+          + '</div>'
+        + '</div>'
+      + '</td>'
+      + '<td style="font-family:var(--mono);font-size:12px;color:var(--text-2);">' + _e(a.username) + '</td>'
+      + '<td style="font-size:12px;color:var(--text-2);">' + _e(a.email || '—') + '</td>'
+      + '<td>' + roleBadge + '</td>'
+      + '<td>' + branchCell + '</td>'
+      + '<td><span class="badge ' + (isActive ? 'badge-green' : 'badge-gray') + '" style="font-family:var(--mono);">' + (isActive ? '● Active' : '○ Inactive') + '</span></td>'
+      + '<td style="text-align:center;"><div style="display:flex;gap:5px;justify-content:center;">' + actBtns + '</div></td>'
+      + '</tr>';
+  });
+  document.getElementById('admTableBody').innerHTML = h; if(typeof _avatarLazyLoad==='function') _avatarLazyLoad();
+
+  // Hide Add button for non-super admins
+  var addWrap = document.getElementById('admAddBtnWrap');
+  if (addWrap) addWrap.style.display = isSA ? 'flex' : 'none';
+}
+
+/* ── Role change handler ── */
+function adm_onRoleChange() {
+  var role = document.querySelector('input[name="admRole"]:checked');
+  var wrap = document.getElementById('admBranchWrap');
+  if (!role || !wrap) return;
+  var isBranch = role.value === 'Branch Admin';
+  wrap.style.display = isBranch ? 'block' : 'none';
+
+  // Update pill styles
+  var pillSA = document.getElementById('admRolePillSA');
+  var pillBA = document.getElementById('admRolePillBA');
+  if (pillSA) pillSA.style.borderColor = !isBranch ? 'var(--teal-500)' : 'var(--border)';
+  if (pillBA) pillBA.style.borderColor =  isBranch ? 'var(--teal-500)' : 'var(--border)';
+  if (pillSA) pillSA.style.background  = !isBranch ? 'rgba(16,168,168,.05)' : '';
+  if (pillBA) pillBA.style.background  =  isBranch ? 'rgba(16,168,168,.05)' : '';
+
+  if (isBranch) adm_renderBranchPicker([]);
+}
+
+/* ── Branch picker ── */
+function adm_renderBranchPicker(selected) {
+  var wrap = document.getElementById('admBranchList');
+  if (!wrap) return;
+  if (!ADM.branches.length) {
+    wrap.innerHTML = '<div style="padding:12px;text-align:center;font-size:12px;color:var(--text-4);font-family:var(--mono);">No branches available.</div>';
+    return;
+  }
+  var h = '';
+  ADM.branches.forEach(function(b) {
+    var checked = selected.indexOf(b.branch_id) !== -1;
+    h += '<label style="display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;" onchange="adm_updateBranchCount()">'
+      + '<input type="checkbox" value="' + _e(b.branch_id) + '" ' + (checked ? 'checked' : '') + ' style="accent-color:var(--teal-600);width:15px;height:15px;flex-shrink:0;">'
+      + '<div>'
+        + '<div style="font-size:13px;font-weight:700;color:var(--text-1);">' + _e(b.branch_name) + '</div>'
+        + '<div style="font-size:11px;color:var(--text-3);font-family:var(--mono);">' + _e(b.branch_code) + ' · ' + _e(b.address || '') + '</div>'
+      + '</div>'
+      + '</label>';
+  });
+  wrap.innerHTML = h;
+  adm_updateBranchCount();
+}
+
+function adm_updateBranchCount() {
+  var cbs  = document.querySelectorAll('#admBranchList input[type=checkbox]:checked');
+  var cnt  = document.getElementById('admBranchCount');
+  if (cnt) cnt.textContent = cbs.length + ' branch' + (cbs.length !== 1 ? 'es' : '') + ' selected';
+}
+
+function adm_getSelectedBranches() {
+  var cbs = document.querySelectorAll('#admBranchList input[type=checkbox]:checked');
+  return Array.from(cbs).map(function(cb){ return cb.value; });
+}
+
+/* ── Open Modal: Add ── */
+function adm_openModal() {
+  ADM.editingId = null;
+  document.getElementById('admModalTitle').textContent = 'Add Admin';
+  document.getElementById('admModalSub').textContent   = 'Fill in admin details';
+  document.getElementById('admSaveBtn').textContent    = 'Save Admin';
+  document.getElementById('admPassReqMark').style.display = 'inline';
+  ['admModalId','admFldName','admFldUser','admFldEmail','admFldPass'].forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('admFldStatus').value = 'Active';
+  // Default to Branch Admin
+  var radios = document.querySelectorAll('input[name="admRole"]');
+  radios.forEach(function(r){ r.checked = r.value === 'Branch Admin'; });
+  adm_onRoleChange();
+  adm_hideModalErr();
+  document.getElementById('admModal').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('admFldName').focus(); }, 80);
+}
+
+/* ── Open Modal: Edit ── */
+function adm_openEdit(id) {
+  var a = ADM.all.find(function(x){ return x.admin_id === id; });
+  if (!a) { toast('error', 'Admin not found.'); return; }
+  ADM.editingId = id;
+  document.getElementById('admModalTitle').textContent = 'Edit Admin';
+  document.getElementById('admModalSub').textContent   = a.name;
+  document.getElementById('admSaveBtn').textContent    = 'Update Admin';
+  document.getElementById('admPassReqMark').style.display = 'none'; // password optional on edit
+  document.getElementById('admModalId').value    = a.admin_id;
+  document.getElementById('admFldName').value    = a.name     || '';
+  document.getElementById('admFldUser').value    = a.username || '';
+  document.getElementById('admFldEmail').value   = a.email    || '';
+  document.getElementById('admFldPass').value    = '';  // blank = no change
+  document.getElementById('admFldStatus').value  = a.status || 'Active';
+  var radios = document.querySelectorAll('input[name="admRole"]');
+  radios.forEach(function(r){ r.checked = r.value === a.role; });
+  adm_onRoleChange();
+  // Pre-select assigned branches
+  if (a.role === 'Branch Admin') {
+    var assigned = a.branch_ids ? a.branch_ids.split(',').map(function(s){ return s.trim(); }) : [];
+    adm_renderBranchPicker(assigned);
+  }
+  adm_hideModalErr();
+  document.getElementById('admModal').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('admFldName').focus(); }, 80);
+}
+
+function adm_closeModal() {
+  document.getElementById('admModal').style.display = 'none';
+  ADM.editingId = null;
+}
+function adm_showModalErr(msg) {
+  var el = document.getElementById('admModalErr');
+  el.textContent = msg; el.style.display = 'block';
+}
+function adm_hideModalErr() {
+  document.getElementById('admModalErr').style.display = 'none';
+}
+
+/* ── Save (Optimistic) ── */
+function adm_save() {
+  var name   = document.getElementById('admFldName').value.trim();
+  var user   = document.getElementById('admFldUser').value.trim();
+  var email  = document.getElementById('admFldEmail').value.trim();
+  var pass   = document.getElementById('admFldPass').value.trim();
+  var status = document.getElementById('admFldStatus').value;
+  var roleEl = document.querySelector('input[name="admRole"]:checked');
+  var role   = roleEl ? roleEl.value : '';
+  var isEdit = !!ADM.editingId;
+
+  if (!name)              { adm_showModalErr('Full name is required.'); return; }
+  if (!user)              { adm_showModalErr('Username is required.'); return; }
+  if (!role)              { adm_showModalErr('Please select a role.'); return; }
+  if (!isEdit && !pass)   { adm_showModalErr('Password is required.'); return; }
+
+  var branchIds = [];
+  if (role === 'Branch Admin') {
+    branchIds = adm_getSelectedBranches();
+    if (!branchIds.length) { adm_showModalErr('Assign at least one branch for Branch Admin.'); return; }
+  }
+
+  // Build branches_display from ADM.branches
+  var branchDisplay = branchIds.map(function(bid) {
+    var b = ADM.branches.find(function(x){ return x.branch_id === bid; });
+    return b ? b.branch_name : bid;
+  }).join(', ');
+
+  var payload = {
+    admin_id:   ADM.editingId || '',
+    name:       name, username: user, email: email,
+    password:   pass, status: status, role: role,
+    branch_ids: branchIds.join(',')
+  };
+
+  var snapshot = ADM.all.slice();
+
+  if (isEdit) {
+    var idx = ADM.all.findIndex(function(a){ return a.admin_id === ADM.editingId; });
+    if (idx !== -1) {
+      ADM.all[idx] = Object.assign({}, ADM.all[idx], {
+        name: name, username: user, email: email, status: status,
+        role: role, branch_ids: branchIds.join(','), branches_display: branchDisplay
+      });
+    }
+  } else {
+    ADM.all.unshift({
+      admin_id: 'ADM-PENDING', name: name, username: user, email: email,
+      status: status, role: role, branch_ids: branchIds.join(','),
+      branches_display: branchDisplay
+    });
+  }
+
+  adm_applyFilter();
+  adm_closeModal();
+  toast('info', isEdit ? 'Saving changes…' : 'Adding admin…');
+
+  var fn = isEdit ? 'updateAdmin' : 'createAdmin';
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) {
+        ADM.all = snapshot;
+        adm_applyFilter();
+        toast('error', r.message || 'Failed to save.');
+        setTimeout(function(){
+          if (isEdit) adm_openEdit(payload.admin_id);
+          else        adm_openModal();
+          document.getElementById('admFldName').value   = name;
+          document.getElementById('admFldUser').value   = user;
+          document.getElementById('admFldEmail').value  = email;
+          document.getElementById('admFldStatus').value = status;
+          var radios = document.querySelectorAll('input[name="admRole"]');
+          radios.forEach(function(rd){ rd.checked = rd.value === role; });
+          adm_onRoleChange();
+          if (role === 'Branch Admin') adm_renderBranchPicker(branchIds);
+          adm_showModalErr(r.message || 'Failed to save.');
+        }, 200);
+        return;
+      }
+      if (!isEdit && r.admin_id) {
+        var ti = ADM.all.findIndex(function(a){ return a.admin_id === 'ADM-PENDING'; });
+        if (ti !== -1) ADM.all[ti].admin_id = r.admin_id;
+        adm_applyFilter();
+      }
+      toast('success', isEdit ? 'Admin updated!' : 'Admin created!');
+    })
+    .withFailureHandler(function(e) {
+      ADM.all = snapshot; adm_applyFilter();
+      toast('error', e.message || 'Connection error.');
+    })
+    [fn](payload);
+}
+
+/* ── Delete (Optimistic) ── */
+function adm_openDelete(id) {
+  var a = ADM.all.find(function(x){ return x.admin_id === id; });
+  if (!a) return;
+  _admDeleteId = id;
+  document.getElementById('admDeleteMsg').textContent =
+    'Remove "' + a.name + '" (' + a.role + ')? This cannot be undone.';
+  document.getElementById('admDeleteModal').style.display = 'flex';
+}
+function adm_closeDeleteModal() {
+  document.getElementById('admDeleteModal').style.display = 'none';
+  _admDeleteId = null;
+}
+function adm_confirmDelete() {
+  if (!_admDeleteId) return;
+  var id       = _admDeleteId;
+  var snapshot = ADM.all.slice();
+  adm_closeDeleteModal();
+
+  var row = document.getElementById('adm-row-' + id);
+  if (row) { row.style.transition = 'opacity .25s,transform .25s'; row.style.opacity = '0'; row.style.transform = 'translateX(8px)'; }
+  setTimeout(function() { ADM.all = ADM.all.filter(function(a){ return a.admin_id !== id; }); adm_applyFilter(); }, 260);
+  toast('info', 'Removing admin…');
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) { ADM.all = snapshot; adm_applyFilter(); toast('error', r.message || 'Failed.'); return; }
+      toast('success', 'Admin removed.');
+    })
+    .withFailureHandler(function(e) { ADM.all = snapshot; adm_applyFilter(); toast('error', e.message || 'Error.'); })
+    .deleteAdmin(id);
+}
+
+/* ── Profile View ── */
+function adm_openProfile(id) {
+  var a = ADM.all.find(function(x){ return x.admin_id === id; });
+  if (!a) return;
+  var isSA = APP.user && APP.user.role === 'Super Admin';
+  var branchNames = a.branches_display || (a.branch_ids ? a.branch_ids : '');
+  openProfileModal({
+    id:        id,
+    name:      a.name || a.username,
+    role:      a.role,
+    subtitle:  a.admin_id,
+    photo_url: a.photo_url || '',
+    fields: [
+      { label: 'Username',   value: a.username,        mono: true },
+      { label: 'Email',      value: a.email },
+      { label: 'Role',       value: a.role },
+      { label: 'Branch(es)', value: branchNames },
+      { label: 'Status',     value: a.status },
+      { label: 'Created',    value: a.created_at ? new Date(a.created_at).toLocaleDateString('en-PH') : '' }
+    ],
+    editFn:   isSA ? function(i){ adm_openEdit(i); } : null,
+    deleteFn: isSA ? function(i){ adm_openDelete(i); } : null
+  });
+}
+
+/* ── Backdrop close ── */
+document.getElementById('admModal').addEventListener('click', function(e){ if(e.target===this) adm_closeModal(); });
+document.getElementById('admDeleteModal').addEventListener('click', function(e){ if(e.target===this) adm_closeDeleteModal(); });
+</script>

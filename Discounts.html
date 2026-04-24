@@ -1,0 +1,433 @@
+<!-- DISCOUNTS -->
+      <div class="page-view" id="page-discounts">
+
+        <div class="section-header">
+          <div>
+            <div class="section-title" style="font-size:20px;">Discounts</div>
+            <div class="section-sub" id="discSubtitle">Manage discount types and rates</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-secondary btn-sm" onclick="disc_load()" id="discRefreshBtn">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="discRefreshIcon">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Refresh
+            </button>
+            <button class="btn btn-primary btn-sm" id="discAddBtn" onclick="disc_openModal()">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+              </svg>
+              Add Discount
+            </button>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+          <div style="position:relative;flex:1;min-width:200px;">
+            <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-4);" width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+            </svg>
+            <input type="text" id="discSearch" class="f-inp" style="padding-left:34px;font-size:13px;"
+              placeholder="Search discount name…" oninput="disc_applyFilter()">
+          </div>
+          <select id="discFilterType" class="f-inp" style="width:auto;font-size:13px;cursor:pointer;" onchange="disc_applyFilter()">
+            <option value="">All Types</option>
+            <option value="percentage">Percentage</option>
+            <option value="fixed">Fixed Amount</option>
+          </select>
+        </div>
+
+        <!-- Branch Admin info note -->
+        <div id="discBANote" style="display:none;margin-bottom:16px;padding:10px 14px;background:rgba(16,168,168,.06);border:1px solid rgba(16,168,168,.15);border-radius:var(--radius);align-items:center;gap:8px;">
+          <svg width="14" height="14" fill="none" stroke="var(--teal-600)" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span style="font-size:12px;color:var(--teal-700);">Discounts are managed globally by Super Admin.</span>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Discount ID</th>
+                  <th>Name</th>
+                  <th>Description</th>
+                  <th>Type</th>
+                  <th>Value</th>
+                  <th>Status</th>
+                  <th id="discActionsHeader" style="text-align:center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="discTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══ DISCOUNT MODAL ══ -->
+      <div id="discModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
+        <div style="background:var(--white);border-radius:var(--radius-xl);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-xl);animation:modalIn .22s cubic-bezier(.34,1.2,.64,1);">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);">
+            <div>
+              <div style="font-size:16px;font-weight:800;color:var(--text-1);" id="discModalTitle">Add Discount</div>
+              <div style="font-size:12px;color:var(--text-3);margin-top:2px;font-family:var(--mono);" id="discModalSub">Fill in discount details</div>
+            </div>
+            <button onclick="disc_closeModal()" style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <div style="padding:24px;">
+            <input type="hidden" id="discModalId">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+              <div style="grid-column:1/-1;">
+                <label class="f-label">Discount Name <span style="color:var(--danger);">*</span></label>
+                <input type="text" id="discFldName" class="f-inp" placeholder="e.g. Senior Citizen">
+              </div>
+
+              <div style="grid-column:1/-1;">
+                <label class="f-label">Description <span style="font-size:10px;color:var(--text-4);font-weight:400;">(optional)</span></label>
+                <input type="text" id="discFldDesc" class="f-inp" placeholder="e.g. 20% off for senior citizens">
+              </div>
+
+              <div style="grid-column:1/-1;">
+                <label class="f-label">Type <span style="color:var(--danger);">*</span></label>
+                <div style="display:flex;gap:8px;">
+                  <label style="flex:1;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius);border:1.5px solid var(--border);cursor:pointer;transition:all .15s;" id="discTypePillPct">
+                    <input type="radio" name="discType" value="percentage" checked onchange="disc_onTypeChange()" style="accent-color:var(--teal-600);">
+                    <div>
+                      <div style="font-size:13px;font-weight:700;color:var(--text-1);">Percentage</div>
+                      <div style="font-size:11px;color:var(--text-3);">e.g. 20%</div>
+                    </div>
+                  </label>
+                  <label style="flex:1;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius);border:1.5px solid var(--border);cursor:pointer;transition:all .15s;" id="discTypePillFixed">
+                    <input type="radio" name="discType" value="fixed" onchange="disc_onTypeChange()" style="accent-color:var(--teal-600);">
+                    <div>
+                      <div style="font-size:13px;font-weight:700;color:var(--text-1);">Fixed Amount</div>
+                      <div style="font-size:11px;color:var(--text-3);">e.g. ₱50.00</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div style="grid-column:1/-1;">
+                <label class="f-label" id="discValueLabel">Value (%) <span style="color:var(--danger);">*</span></label>
+                <div style="position:relative;">
+                  <span id="discValuePrefix" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:14px;color:var(--text-3);display:none;">₱</span>
+                  <input type="number" id="discFldValue" class="f-inp" placeholder="e.g. 20" min="0" step="0.01"
+                    style="font-family:var(--mono);" oninput="disc_onValueInput()">
+                  <span id="discValueSuffix" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:13px;color:var(--text-3);">%</span>
+                </div>
+                <div id="discValueNote" style="font-size:11px;color:var(--text-4);margin-top:4px;"></div>
+              </div>
+
+            </div>
+            <div id="discModalErr" style="display:none;margin-top:14px;font-size:12px;color:var(--danger);background:var(--danger-bg);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:9px 12px;"></div>
+          </div>
+
+          <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;">
+            <button class="btn btn-secondary" onclick="disc_closeModal()">Cancel</button>
+            <button class="btn btn-primary" id="discSaveBtn" onclick="disc_save()">
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              Save Discount
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ DELETE CONFIRM ══ -->
+      <div id="discDeleteModal" style="display:none;position:fixed;inset:0;z-index:501;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;padding:20px;">
+        <div style="background:var(--white);border-radius:24px 24px 0 0;width:100%;max-width:440px;box-shadow:var(--shadow-xl);padding:28px 24px;animation:slideup .22s ease;">
+          <div style="display:flex;gap:14px;margin-bottom:20px;align-items:flex-start;">
+            <div style="width:42px;height:42px;border-radius:50%;background:var(--danger-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" fill="none" stroke="var(--danger)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </div>
+            <div>
+              <div style="font-size:16px;font-weight:800;color:var(--text-1);margin-bottom:4px;">Delete Discount?</div>
+              <div style="font-size:13px;color:var(--text-2);line-height:1.6;" id="discDeleteMsg">This cannot be undone.</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button class="btn btn-danger" style="width:100%;justify-content:center;padding:13px;" onclick="disc_confirmDelete()">Yes, Delete Discount</button>
+            <button class="btn btn-secondary" style="width:100%;justify-content:center;padding:13px;" onclick="disc_closeDeleteModal()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+<script>
+/* ════════════════════════════════════
+   DISCOUNTS MODULE
+════════════════════════════════════ */
+var DISC = {
+  all:       [],
+  filtered:  [],
+  editingId: null
+};
+var _discDeleteId = null;
+
+/* ── Skeleton ── */
+function disc_skeleton() {
+  var row = '<tr>';
+  for (var i = 0; i < 7; i++)
+    row += '<td><div style="height:13px;border-radius:6px;background:linear-gradient(90deg,#f0f2f7 25%,#e4e8f0 50%,#f0f2f7 75%);background-size:400px 100%;animation:shimmer 1.3s infinite;"></div></td>';
+  return row + '</tr>' + row + row + row;
+}
+
+/* ── Load ── */
+function disc_load() {
+  var isSA = APP.user && APP.user.role === 'Super Admin';
+  var addBtn  = document.getElementById('discAddBtn');
+  var baNote  = document.getElementById('discBANote');
+  var actHdr  = document.getElementById('discActionsHeader');
+  if (addBtn) addBtn.style.display  = isSA ? '' : 'none';
+  if (baNote) baNote.style.display  = !isSA ? 'flex' : 'none';
+  if (actHdr) actHdr.style.display  = isSA ? '' : 'none';
+
+  var icon = document.getElementById('discRefreshIcon');
+  if (icon) icon.style.animation = 'spin .8s linear infinite';
+  document.getElementById('discSubtitle').textContent = 'Loading…';
+  document.getElementById('discTableBody').innerHTML  = disc_skeleton();
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (icon) icon.style.animation = '';
+      if (!r.success) { toast('error', r.message || 'Failed to load.'); return; }
+      DISC.all = r.data || [];
+      disc_applyFilter();
+    })
+    .withFailureHandler(function(e) {
+      if (icon) icon.style.animation = '';
+      toast('error', e.message || 'Connection error.');
+      document.getElementById('discTableBody').innerHTML =
+        '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--danger);font-size:13px;">Error. <a href="javascript:void(0)" onclick="disc_load()" style="color:var(--teal-600);">Retry</a></td></tr>';
+    })
+    .getDiscounts();
+}
+
+/* ── Filter + Render ── */
+function disc_applyFilter() {
+  var q  = (document.getElementById('discSearch').value || '').trim().toLowerCase();
+  var tf = (document.getElementById('discFilterType').value || '');
+  DISC.filtered = DISC.all.filter(function(d) {
+    if (tf && d.type !== tf) return false;
+    if (q && d.discount_name.toLowerCase().indexOf(q) === -1) return false;
+    return true;
+  });
+  disc_render();
+}
+
+function disc_render() {
+  var isSA  = APP.user && APP.user.role === 'Super Admin';
+  var count = DISC.filtered.length;
+  document.getElementById('discSubtitle').textContent =
+    count + ' discount' + (count !== 1 ? 's' : '') +
+    (count !== DISC.all.length ? ' (filtered from ' + DISC.all.length + ')' : ' total');
+
+  if (!count) {
+    document.getElementById('discTableBody').innerHTML =
+      '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-4);font-family:var(--mono);font-size:13px;">No discounts found.</td></tr>';
+    return;
+  }
+
+  var h = '';
+  DISC.filtered.forEach(function(d) {
+    var isActive = d.is_active == 1;
+    var isPct    = d.type === 'percentage';
+    var valDisplay = isPct
+      ? '<span style="font-family:var(--mono);font-weight:700;color:var(--text-1);">' + _e(String(d.value)) + '%</span>'
+      : '<span style="font-family:var(--mono);font-weight:700;color:var(--text-1);">₱' + Number(d.value||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}) + '</span>';
+    var typeBadge = isPct
+      ? '<span class="badge badge-blue" style="font-family:var(--mono);">% Percentage</span>'
+      : '<span class="badge badge-teal" style="font-family:var(--mono);">₱ Fixed</span>';
+
+    h += '<tr id="disc-row-' + _e(d.discount_id) + '">'
+      + '<td><span style="font-family:var(--mono);font-size:11px;color:var(--text-3);">' + _e(d.discount_id) + '</span></td>'
+      + '<td><span style="font-weight:700;color:var(--text-1);">' + _e(d.discount_name) + '</span></td>'
+      + '<td style="font-size:12px;color:var(--text-3);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + _e(d.description||'') + '">' + _e(d.description || '—') + '</td>'
+      + '<td>' + typeBadge + '</td>'
+      + '<td>' + valDisplay + '</td>'
+      + '<td><span class="badge ' + (isActive ? 'badge-green' : 'badge-gray') + '" style="font-family:var(--mono);">' + (isActive ? '● Active' : '○ Inactive') + '</span></td>'
+      + '<td style="text-align:center;">'
+        + (isSA
+          ? '<div style="display:flex;gap:5px;justify-content:center;">'
+            + '<button class="btn btn-sm btn-secondary" onclick="disc_openEdit(\'' + _e(d.discount_id) + '\')" style="padding:5px 10px;" title="Edit">'
+              + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>'
+              + '</button>'
+            + '<button class="btn btn-sm btn-danger" onclick="disc_openDelete(\'' + _e(d.discount_id) + '\')" style="padding:5px 10px;" title="Delete">'
+              + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>'
+              + '</button>'
+          + '</div>'
+          : '<span style="font-size:11px;color:var(--text-4);">—</span>')
+      + '</td>'
+      + '</tr>';
+  });
+  document.getElementById('discTableBody').innerHTML = h;
+}
+
+/* ══════════════════════════════════════
+   MODAL
+══════════════════════════════════════ */
+function disc_onTypeChange() {
+  var type     = document.querySelector('input[name="discType"]:checked');
+  var isPct    = type && type.value === 'percentage';
+  var label    = document.getElementById('discValueLabel');
+  var suffix   = document.getElementById('discValueSuffix');
+  var prefix   = document.getElementById('discValuePrefix');
+  var note     = document.getElementById('discValueNote');
+  var pillPct  = document.getElementById('discTypePillPct');
+  var pillFix  = document.getElementById('discTypePillFixed');
+  var inp      = document.getElementById('discFldValue');
+
+  if (label)  label.innerHTML  = (isPct ? 'Value (%)' : 'Value (₱)') + ' <span style="color:var(--danger);">*</span>';
+  if (suffix) suffix.style.display = isPct  ? 'block' : 'none';
+  if (prefix) prefix.style.display = !isPct ? 'block' : 'none';
+  if (inp)    { inp.style.paddingLeft = !isPct ? '30px' : '14px'; inp.placeholder = isPct ? 'e.g. 20' : 'e.g. 50.00'; inp.max = isPct ? '100' : ''; }
+  if (note)   note.textContent  = isPct ? 'Max 100%' : 'Fixed peso amount deducted from total';
+  if (pillPct)  { pillPct.style.borderColor = isPct ? 'var(--teal-500)' : 'var(--border)'; pillPct.style.background = isPct ? 'rgba(16,168,168,.05)' : ''; }
+  if (pillFix)  { pillFix.style.borderColor = !isPct ? 'var(--teal-500)' : 'var(--border)'; pillFix.style.background = !isPct ? 'rgba(16,168,168,.05)' : ''; }
+}
+
+function disc_onValueInput() {
+  var type  = document.querySelector('input[name="discType"]:checked');
+  var isPct = type && type.value === 'percentage';
+  var val   = parseFloat(document.getElementById('discFldValue').value);
+  var note  = document.getElementById('discValueNote');
+  if (isPct && val > 100 && note) note.textContent = '⚠ Cannot exceed 100%';
+  else if (note) note.textContent = isPct ? 'Max 100%' : 'Fixed peso amount deducted from total';
+}
+
+function disc_openModal() {
+  DISC.editingId = null;
+  document.getElementById('discModalTitle').textContent = 'Add Discount';
+  document.getElementById('discModalSub').textContent   = 'Fill in discount details';
+  document.getElementById('discSaveBtn').textContent    = 'Save Discount';
+  document.getElementById('discModalId').value  = '';
+  document.getElementById('discFldName').value  = '';
+  document.getElementById('discFldDesc').value  = '';
+  document.getElementById('discFldValue').value = '';
+  document.querySelector('input[name="discType"][value="percentage"]').checked = true;
+  disc_onTypeChange();
+  disc_hideModalErr();
+  document.getElementById('discModal').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('discFldName').focus(); }, 80);
+}
+
+function disc_openEdit(id) {
+  var d = DISC.all.find(function(x){ return x.discount_id === id; });
+  if (!d) { toast('error', 'Discount not found.'); return; }
+  DISC.editingId = id;
+  document.getElementById('discModalTitle').textContent = 'Edit Discount';
+  document.getElementById('discModalSub').textContent   = d.discount_name;
+  document.getElementById('discSaveBtn').textContent    = 'Update Discount';
+  document.getElementById('discModalId').value          = d.discount_id;
+  document.getElementById('discFldName').value          = d.discount_name || '';
+  document.getElementById('discFldDesc').value          = d.description   || '';
+  document.getElementById('discFldValue').value         = d.value         || '';
+  document.querySelector('input[name="discType"][value="' + (d.type||'percentage') + '"]').checked = true;
+  disc_onTypeChange();
+  disc_hideModalErr();
+  document.getElementById('discModal').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('discFldName').focus(); }, 80);
+}
+
+function disc_closeModal() {
+  document.getElementById('discModal').style.display = 'none';
+  DISC.editingId = null;
+}
+function disc_showModalErr(msg) { var el = document.getElementById('discModalErr'); el.textContent = msg; el.style.display = 'block'; }
+function disc_hideModalErr()    { document.getElementById('discModalErr').style.display = 'none'; }
+
+/* ── Save (Optimistic) ── */
+function disc_save() {
+  var name    = document.getElementById('discFldName').value.trim();
+  var desc    = document.getElementById('discFldDesc').value.trim();
+  var typeEl  = document.querySelector('input[name="discType"]:checked');
+  var type    = typeEl ? typeEl.value : 'percentage';
+  var val     = parseFloat(document.getElementById('discFldValue').value);
+  var isEdit  = !!DISC.editingId;
+
+  if (!name)              { disc_showModalErr('Discount name is required.'); return; }
+  if (isNaN(val) || val < 0) { disc_showModalErr('Valid value is required.'); return; }
+  if (type === 'percentage' && val > 100) { disc_showModalErr('Percentage cannot exceed 100.'); return; }
+
+  var payload  = { discount_id: DISC.editingId || '', discount_name: name, description: desc, type: type, value: val };
+  var snapshot = JSON.parse(JSON.stringify(DISC.all));
+
+  if (isEdit) {
+    var idx = DISC.all.findIndex(function(d){ return d.discount_id === DISC.editingId; });
+    if (idx !== -1) DISC.all[idx] = Object.assign({}, DISC.all[idx], { discount_name: name, description: desc, type: type, value: val });
+  } else {
+    DISC.all.unshift({ discount_id: 'DISC-PENDING', discount_name: name, description: desc, type: type, value: val, is_active: 1, created_at: new Date().toISOString() });
+  }
+
+  disc_applyFilter();
+  disc_closeModal();
+  toast('info', isEdit ? 'Saving changes…' : 'Adding discount…');
+
+  var fn = isEdit ? 'updateDiscount' : 'createDiscount';
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) {
+        DISC.all = snapshot; disc_applyFilter();
+        toast('error', r.message || 'Failed.');
+        setTimeout(function(){
+          if (isEdit) disc_openEdit(payload.discount_id);
+          else        disc_openModal();
+          document.getElementById('discFldName').value  = name;
+          document.getElementById('discFldDesc').value  = desc;
+          document.getElementById('discFldValue').value = val;
+          document.querySelector('input[name="discType"][value="' + type + '"]').checked = true;
+          disc_onTypeChange();
+          disc_showModalErr(r.message || 'Failed. Please try again.');
+        }, 200);
+        return;
+      }
+      if (!isEdit && r.discount_id) {
+        var ti = DISC.all.findIndex(function(d){ return d.discount_id === 'DISC-PENDING'; });
+        if (ti !== -1) DISC.all[ti].discount_id = r.discount_id;
+        disc_applyFilter();
+      }
+      toast('success', isEdit ? 'Discount updated!' : 'Discount created!');
+    })
+    .withFailureHandler(function(e) { DISC.all = snapshot; disc_applyFilter(); toast('error', e.message || 'Error.'); })
+    [fn](payload);
+}
+
+/* ── Delete (Optimistic) ── */
+function disc_openDelete(id) {
+  var d = DISC.all.find(function(x){ return x.discount_id === id; });
+  if (!d) return;
+  _discDeleteId = id;
+  document.getElementById('discDeleteMsg').textContent = 'Delete "' + d.discount_name + '"? Cannot be undone.';
+  document.getElementById('discDeleteModal').style.display = 'flex';
+}
+function disc_closeDeleteModal() { document.getElementById('discDeleteModal').style.display = 'none'; _discDeleteId = null; }
+
+function disc_confirmDelete() {
+  if (!_discDeleteId) return;
+  var id       = _discDeleteId;
+  var snapshot = JSON.parse(JSON.stringify(DISC.all));
+  disc_closeDeleteModal();
+
+  var row = document.getElementById('disc-row-' + id);
+  if (row) { row.style.transition = 'opacity .25s,transform .25s'; row.style.opacity = '0'; row.style.transform = 'translateX(8px)'; }
+  setTimeout(function(){ DISC.all = DISC.all.filter(function(d){ return d.discount_id !== id; }); disc_applyFilter(); }, 260);
+  toast('info', 'Deleting discount…');
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) { DISC.all = snapshot; disc_applyFilter(); toast('error', r.message || 'Failed.'); return; }
+      toast('success', 'Discount deleted.');
+    })
+    .withFailureHandler(function(e) { DISC.all = snapshot; disc_applyFilter(); toast('error', e.message); })
+    .deleteDiscount(id);
+}
+
+/* Backdrop close */
+// document.getElementById('discModal').addEventListener('click', function(e){ if(e.target===this) disc_closeModal(); });
+// document.getElementById('discDeleteModal').addEventListener('click', function(e){ if(e.target===this) disc_closeDeleteModal(); });
+</script>

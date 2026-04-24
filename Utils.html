@@ -1,0 +1,532 @@
+<script>
+/* ════════════════════════════════════
+   STATE
+════════════════════════════════════ */
+var APP = {
+  user: null,
+  queueRouting: null,
+  currentPage: 'dashboard',
+  sidebarCollapsed: false,
+  toastTimer: null
+};
+
+var PAGES = {
+  'dashboard':          { label: 'Dashboard',        path: 'A-Lab / Dashboard' },
+  'doctor-dashboard':   { label: 'Dashboard',        path: 'A-Lab / Dashboard' },
+  'tech-dashboard':     { label: 'Dashboard',         path: 'A-Lab / Dashboard' },
+  'tech-queue':         { label: 'Queue',             path: 'A-Lab / Queue' },
+  'rec-dashboard':      { label: 'Dashboard',        path: 'A-Lab / Dashboard' },
+  'liaison-dashboard':  { label: 'Dashboard',        path: 'A-Lab / Dashboard' },
+  'reports':            { label: 'Reports',           path: 'A-Lab / Reports' },
+  'my-referrals':       { label: 'My Referrals',     path: 'A-Lab / My Referrals' },
+  'my-patients':        { label: 'My Patients',      path: 'A-Lab / My Patients' },
+  'consultations':      { label: 'Consultations',    path: 'A-Lab / Consultations' },
+  'orders':             { label: 'Orders',           path: 'A-Lab / Orders' },
+  'lab-services':       { label: 'Lab Services',     path: 'A-Lab / Catalog / Lab Services' },
+  'packages':           { label: 'Packages',         path: 'A-Lab / Catalog / Packages' },
+  'discounts':          { label: 'Discounts',        path: 'A-Lab / Catalog / Discounts' },
+  'doctors':            { label: 'Doctors',          path: 'A-Lab / People / Doctors' },
+  'patients':           { label: 'Patients',         path: 'A-Lab / People / Patients' },
+  'technologists':      { label: 'Technologists',    path: 'A-Lab / People / Technologists' },
+  'departments':        { label: 'Departments',      path: 'A-Lab / Admin / Departments' },
+  'branches':           { label: 'Branches',         path: 'A-Lab / Admin / Branches' },
+  'admins':             { label: 'Admins',           path: 'A-Lab / Admin / Admins' },
+  'configurations':     { label: 'Configurations',   path: 'A-Lab / Admin / Configurations' },
+  'branch-settings':    { label: 'Branch Settings',  path: 'A-Lab / Branch Settings' },
+  'bulkimport':         { label: 'Bulk Import',          path: 'A-Lab / Admin / Bulk Import' },
+  'bulkimport-packages':{ label: 'Bulk Import Packages', path: 'A-Lab / Admin / Bulk Import Packages' },
+};
+
+/* ─── VIEW SWITCHER ─── */
+function showView(id) {
+  ['viewLogin','viewApp'].forEach(function(v) {
+    var el = document.getElementById(v);
+    if (v === id) { el.classList.remove('hidden'); el.classList.add('visible'); }
+    else          { el.classList.remove('visible'); el.classList.add('hidden'); }
+  });
+}
+
+/* ─── BOOT ─── */
+window.addEventListener('load', function() {
+  var now = new Date();
+  var h = now.getHours();
+  var greet = h < 12 ? 'Good morning ☀️' : h < 17 ? 'Good afternoon 🌤' : 'Good evening 🌙';
+  var eg = document.getElementById('heroGreeting'); if (eg) eg.textContent = greet;
+  var hd = document.getElementById('heroDate');
+  if (hd) hd.textContent = now.toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  // ── Restore session on reload ──
+  try {
+    var saved = sessionStorage.getItem('alab_user');
+    if (saved) {
+      APP.user = JSON.parse(saved);
+      document.getElementById('loaderText').textContent = 'restoring session…';
+      // If session was cached before tech_role was stored, re-fetch it
+      if (APP.user.role === 'Technologist' && !APP.user.tech_role) {
+        google.script.run
+          .withSuccessHandler(function(r) {
+            if (r.success) {
+              APP.user.tech_role = r.tech_role;
+              try { sessionStorage.setItem('alab_user', JSON.stringify(APP.user)); } catch(e) {}
+            }
+            document.getElementById('appLoader').style.display = 'none';
+            mountApp(true);
+          })
+          .withFailureHandler(function() {
+            document.getElementById('appLoader').style.display = 'none';
+            mountApp(true);
+          })
+          .getTechRoleById(APP.user.admin_id);
+        return;
+      }
+      setTimeout(function() {
+        document.getElementById('appLoader').style.display = 'none';
+        mountApp(true);
+      }, 300);
+      return;
+    }
+  } catch(e) { /* sessionStorage unavailable (e.g. GAS sandbox) — fall through to login */ }
+
+  document.getElementById('loaderText').textContent = 'ready to sign in';
+  setTimeout(function() {
+    document.getElementById('appLoader').style.display = 'none';
+    showView('viewLogin');
+    setTimeout(function() { var u = document.getElementById('lUser'); if(u) u.focus(); }, 100);
+  }, 400);
+});
+
+/* ─── AUTH ─── */
+function doLogin() {
+  var user = (document.getElementById('lUser').value || '').trim();
+  var pass = (document.getElementById('lPass').value || '').trim();
+  if (!user || !pass) { showLoginErr('Please enter your username/email and password.'); return; }
+  var btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="border-color:rgba(255,255,255,.3);border-top-color:#fff;"></span> Signing in…';
+  hideLoginErr();
+  google.script.run
+    .withSuccessHandler(function(r) {
+      btn.disabled = false; btn.innerHTML = 'Sign In';
+      if (!r || !r.success) { showLoginErr(r ? r.message : 'Login failed.'); return; }
+      APP.user = {
+        admin_id:   r.admin_id,
+        name:       r.name       || r.username,
+        username:   r.username,
+        email:      r.email      || user,
+        role:       r.role       || 'Branch Admin',
+        tech_role:  r.tech_role  || '',
+        branch_ids: r.branch_ids || '',
+        photo_url:  r.photo_url  || ''
+      };
+      try { sessionStorage.setItem('alab_user', JSON.stringify(APP.user)); } catch(e) {}
+      mountApp();
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false; btn.innerHTML = 'Sign In';
+      showLoginErr(e.message || 'Connection error.');
+    })
+    .loginAdmin(user, pass);
+}
+function showLoginErr(msg) {
+  var el = document.getElementById('loginErr');
+  document.getElementById('loginErrText').textContent = msg;
+  el.classList.add('show');
+}
+function hideLoginErr() { document.getElementById('loginErr').classList.remove('show'); }
+
+/* ─── MOUNT ─── */
+function mountApp(silent) {
+  var u            = APP.user;
+  var isSA         = u.role === 'Super Admin';
+  var isDoctor     = u.role === 'Doctor';
+  var isTech       = u.role === 'Technologist';
+  var isReception  = u.role === 'Receptionist';
+  var isLiaison    = u.role === 'Liaison Officer';
+  var isBA         = u.role === 'Branch Admin';
+  var initials = (u.name || u.username || 'U').split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().substring(0,2);
+
+  document.getElementById('tbAvatar').textContent   = initials;
+  document.getElementById('tbUserName').textContent = u.name || u.username || 'Admin';
+  document.getElementById('tbUserRole').textContent = u.role || 'Branch Admin';
+
+  // ── Role-based nav section visibility ──
+  var secDoctor      = document.getElementById('sbSectionDoctor');
+  var secTech        = document.getElementById('sbSectionTech');
+  var secReception   = document.getElementById('sbSectionReceptionist');
+  var secLiaison     = document.getElementById('sbSectionLiaison');
+  var secOverview    = document.getElementById('sbSectionOverview');
+  var secOperations  = document.getElementById('sbSectionOperations');
+  var secCatalog     = document.getElementById('sbSectionCatalog');
+  var secPeople      = document.getElementById('sbSectionPeople');
+  var secAdmin       = document.getElementById('sbSectionAdmin');
+  var secImport      = document.getElementById('sbSectionImport');
+  var secSettings    = document.getElementById('sbSectionSettings');
+  var dashNavLabel   = document.getElementById('sbTechQueueLabel');
+
+  // Hide all first
+  [secTech, secDoctor, secReception, secLiaison, secOverview, secOperations, secCatalog, secPeople, secAdmin, secImport, secSettings].forEach(function(s){ if(s) s.style.display = 'none'; });
+
+  var branchSettingsNavItem = document.getElementById('sbNavBranchSettings');
+  if (branchSettingsNavItem) branchSettingsNavItem.style.display = 'none'; // reset
+
+  var h = new Date().getHours();
+  var greeting = h < 12 ? 'Good morning ☀️' : h < 18 ? 'Good afternoon 🌤️' : 'Good evening 🌙';
+  var dateStr  = new Date().toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  if (isTech) {
+    if (secTech) secTech.style.display = '';
+    var techRole = u.tech_role || 'Medical Technologist';
+    var isRad    = techRole.toLowerCase().indexOf('radiolog') !== -1;
+    var techHN = document.getElementById('techHeroName');
+    var techGr = document.getElementById('techHeroGreeting');
+    var techDt = document.getElementById('techHeroDate');
+    if (techHN) techHN.textContent = 'Welcome back, ' + (u.name || u.username || techRole);
+    if (techGr) techGr.textContent = greeting;
+    if (techDt) techDt.textContent = dateStr;
+    // Update sidebar label to reflect RadTech vs MedTech
+    if (dashNavLabel) dashNavLabel.textContent = isRad ? '🩻 X-Ray Queue' : '🔬 Lab Queue';
+
+    // Show Branch Settings for Tech, hide Global Settings (Configurations)
+    if (secSettings) secSettings.style.display = '';
+    if (branchSettingsNavItem) branchSettingsNavItem.style.display = '';
+    var configNavItemTech = document.querySelector('.sb-nav-item[data-page="configurations"]');
+    if (configNavItemTech) configNavItemTech.style.display = 'none';
+
+  } else if (isReception) {
+    if (secReception) secReception.style.display = '';
+    var recHN = document.getElementById('recHeroName');
+    var recGr = document.getElementById('recHeroGreeting');
+    var recDt = document.getElementById('recHeroDate');
+    if (recHN) recHN.textContent = 'Welcome back, ' + (u.name || u.username || 'Receptionist');
+    if (recGr) recGr.textContent = greeting;
+    if (recDt) recDt.textContent = dateStr;
+
+  } else if (isLiaison) {
+    if (secLiaison) secLiaison.style.display = '';
+    var liaHN = document.getElementById('liaHeroName');
+    var liaGr = document.getElementById('liaHeroGreeting');
+    var liaDt = document.getElementById('liaHeroDate');
+    if (liaHN) liaHN.textContent = 'Welcome back, ' + (u.name || u.username || 'Liaison Officer');
+    if (liaGr) liaGr.textContent = greeting;
+    if (liaDt) liaDt.textContent = dateStr;
+
+  } else if (isDoctor) {
+    if (secDoctor) secDoctor.style.display = '';
+    var drHN = document.getElementById('drHeroName');
+    var drGr = document.getElementById('drHeroGreeting');
+    var drDt = document.getElementById('drHeroDate');
+    if (drHN) drHN.textContent = 'Welcome back, ' + (u.name || u.username || 'Doctor');
+    if (drGr) drGr.textContent = greeting;
+    if (drDt) drDt.textContent = dateStr;
+
+  } else {
+    // SA, BA
+    if (secOverview)   secOverview.style.display   = '';
+    if (secOperations) secOperations.style.display = '';
+    if (secCatalog)    secCatalog.style.display    = '';
+    if (secPeople)     secPeople.style.display     = '';
+    if (secAdmin)      secAdmin.style.display      = '';
+    if (secImport)     secImport.style.display     = '';
+    if (secSettings)   secSettings.style.display   = '';
+    var adminsNavItem   = document.querySelector('.sb-nav-item[data-page="admins"]');
+    var branchesNavItem = document.querySelector('.sb-nav-item[data-page="branches"]');
+    var configNavItem   = document.querySelector('.sb-nav-item[data-page="configurations"]');
+    var branchSettingsNavItem = document.getElementById('sbNavBranchSettings');
+    if (adminsNavItem)   adminsNavItem.style.display   = isSA ? '' : 'none';
+    if (branchesNavItem) branchesNavItem.style.display = isSA ? '' : 'none';
+    if (configNavItem)   configNavItem.style.display   = isSA ? '' : 'none';
+    if (branchSettingsNavItem) branchSettingsNavItem.style.display = isSA || u.role === 'Branch Admin' ? '' : 'none';
+    var hn = document.getElementById('heroName');
+    if (hn) hn.textContent = 'Welcome back, ' + (u.name || u.username || 'Admin');
+  }
+
+  showView('viewApp');
+  var startPage = isTech      ? 'tech-dashboard'
+    : isReception ? 'rec-dashboard'
+    : isLiaison   ? 'liaison-dashboard'
+    : isDoctor    ? 'doctor-dashboard'
+    : 'dashboard';
+  navigateTo(startPage);
+  if (!silent) toast('success', 'Signed in as ' + (u.name || u.username));
+  if (typeof settings_loadPrefs  === 'function') settings_loadPrefs();
+  if (typeof settings_applyAvatar === 'function') settings_applyAvatar();
+  // Load queue routing config for roles that need it
+  if (isTech || isLiaison) {
+    google.script.run
+      .withSuccessHandler(function(r) {
+        if (!r.success) return;
+        APP.queueRouting = {};
+        r.data.forEach(function(row) { APP.queueRouting[row.role] = row; });
+        // Re-apply order filter now that routing config is ready
+        if (typeof ord_applyFilter === 'function') ord_applyFilter();
+      })
+      .withFailureHandler(function(){})
+      .getQueueRoutingConfig();
+  }
+
+  // Fetch and cache branch name for BA/Tech/Receptionist/Liaison
+  if ((isBA || isTech || isReception || isLiaison) && u.branch_ids && !u.branch_name) {
+    var bid = u.branch_ids.split(',')[0].trim();
+    google.script.run
+      .withSuccessHandler(function(r) {
+        if (r.success && r.data && r.data.length) {
+          APP.user.branch_name = r.data[0].branch_name;
+          try { sessionStorage.setItem('alab_user', JSON.stringify(APP.user)); } catch(e) {}
+        }
+      })
+      .withFailureHandler(function(){})
+      .getBranchesForPatientView(bid);
+  }
+}
+
+/* ─── LOGOUT ─── */
+function doLogout() {
+  APP.user = null;
+  try { sessionStorage.removeItem('alab_user'); } catch(e) {}
+
+  // Reset all module states so they re-fetch fresh on next login
+  if (typeof BR   !== 'undefined') { BR.all   = []; BR.filtered   = []; }
+  if (typeof ADM  !== 'undefined') { ADM.all  = []; ADM.filtered  = []; }
+  if (typeof DEPT !== 'undefined') { DEPT.all = []; DEPT.filtered = []; DEPT.isBranchView = false; DEPT.branchId = null; }
+  if (typeof LS   !== 'undefined') { LS.all   = []; LS.filtered   = []; LS.isBranchView = false; LS.branchId = null; LS.cats = []; LS.editingId = null; }
+  if (typeof PKG  !== 'undefined') { PKG.all  = []; PKG.filtered  = []; PKG.allBranchPkgs = []; PKG.branchGlobal = []; PKG.branchOwn = []; PKG.servs = []; PKG.editingId = null; PKG.branchId = null; }
+  if (typeof DISC !== 'undefined') { DISC.all = []; DISC.filtered = []; DISC.editingId = null; }
+  if (typeof DR   !== 'undefined') { DR.all   = []; DR.filtered   = []; DR.branches = []; DR.editingId = null; }
+  if (typeof TECH !== 'undefined') { TECH.all = []; TECH.filtered = []; TECH.branches = []; TECH.editingId = null; }
+  if (typeof PAT  !== 'undefined') { PAT.all  = []; PAT.filtered  = []; PAT.discounts = []; PAT.branches = []; PAT.branchId = null; PAT.editingId = null; }
+  if (typeof ORD  !== 'undefined') { ORD.all  = []; ORD.filtered  = []; ORD.branchId  = null; ORD.branches = []; ORD.tab = ''; }
+  if (typeof REF   !== 'undefined') { REF.all   = []; REF.filtered   = []; REF.loaded   = false; }
+  if (typeof MYPAT !== 'undefined') { MYPAT.all = []; MYPAT.filtered = []; }
+  if (typeof RPT   !== 'undefined') { RPT.data = null; RPT.services = []; RPT.branchId = null; RPT.branches = []; }
+  // Clear liaison state if exists
+  if (typeof LIA   !== 'undefined') { LIA.all = []; LIA.branchId = null; }
+
+  document.getElementById('lUser').value = '';
+  document.getElementById('lPass').value = '';
+  document.getElementById('loginBtn').disabled = false;
+  document.getElementById('loginBtn').innerHTML = 'Sign In';
+  hideLoginErr();
+  showView('viewLogin');
+  setTimeout(function() { document.getElementById('lUser').focus(); }, 120);
+  toast('info', 'Signed out successfully.');
+}
+
+/* ─── ROUTER ─── */
+function navigateTo(page) {
+  if (!PAGES[page]) { console.warn('navigateTo: unknown page —', page); return; }
+  // Force-clear all active page views
+  document.querySelectorAll('.page-view').forEach(function(el){
+    el.classList.remove('active');
+    el.style.display = '';
+  });
+  var next = document.getElementById('page-' + page);
+  if (next) {
+    next.classList.add('active');
+    next.style.display = 'block';
+  } else {
+    console.warn('navigateTo: page element not found — page-' + page);
+  }
+  APP.currentPage = page;
+  document.getElementById('tbPage').textContent = PAGES[page].label;
+  document.getElementById('tbPath').textContent = PAGES[page].path;
+  document.querySelectorAll('.sb-nav-item').forEach(function(item) {
+    item.classList.toggle('active', item.getAttribute('data-page') === page);
+  });
+  closeMobileSidebar();
+  var main = document.querySelector('.app-main');
+  if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // ── Per-module lazy load ──
+  if (page === 'dashboard'         && typeof dash_init     === 'function') dash_init();
+  if (page === 'tech-dashboard'    && typeof techdash_load === 'function') techdash_load();
+  if (page === 'tech-queue'        && typeof techdash_load === 'function') techdash_load();
+  if (page === 'doctor-dashboard'  && typeof drdash_load   === 'function') drdash_load();
+  if (page === 'rec-dashboard'     && typeof recdash_load  === 'function') recdash_load();
+  if (page === 'liaison-dashboard' && typeof liaisondash_load === 'function') liaisondash_load();
+  if (page === 'reports'           && typeof rpt_init      === 'function') rpt_init();
+  if (page === 'my-referrals'      && typeof ref_init      === 'function') ref_init();
+  if (page === 'my-patients'       && typeof mypat_init    === 'function') mypat_init();
+  if (page === 'consultations'     && typeof con_init      === 'function') con_init();
+  if (page === 'branch-settings') {
+    if (typeof branchSettings_initPicker === 'function') branchSettings_initPicker();
+    var isSA = APP.user && APP.user.role === 'super_admin';
+    if (!isSA && typeof branchSettings_load === 'function') branchSettings_load();
+  }
+  if (page === 'configurations') {
+    if (!APP.user || APP.user.role !== 'Super Admin') return;
+    if (typeof CFG !== 'undefined') cfg_load();
+    if (typeof tpl_load === 'function') tpl_load();
+  }
+  // Always reload on navigate — view differs between SA and Branch Admin
+  if (page === 'branches'      && typeof BR   !== 'undefined') br_load();
+  if (page === 'admins'        && typeof ADM  !== 'undefined') adm_load();
+  if (page === 'departments'   && typeof DEPT !== 'undefined') dept_load();
+  if (page === 'lab-services'  && typeof LS   !== 'undefined') ls_load();
+  if (page === 'packages'      && typeof PKG  !== 'undefined') pkg_load();
+  if (page === 'discounts'     && typeof DISC !== 'undefined') disc_load();
+  if (page === 'doctors'       && typeof DR   !== 'undefined') dr_load();
+  if (page === 'technologists' && typeof TECH !== 'undefined') tech_load();
+  if (page === 'orders'        && typeof ORD  !== 'undefined') ord_init();
+  if (page === 'patients'      && typeof PAT  !== 'undefined') pat_init();
+}
+
+/* ─── SIDEBAR ─── */
+function toggleSidebar() {
+  APP.sidebarCollapsed = !APP.sidebarCollapsed;
+  document.getElementById('sidebar').classList.toggle('collapsed', APP.sidebarCollapsed);
+}
+function toggleMobileSidebar() {
+  var sb  = document.getElementById('sidebar');
+  var ovl = document.getElementById('sbOverlay');
+  var isOpen = sb.classList.toggle('mobile-open');
+  if (ovl) { isOpen ? ovl.classList.add('open') : ovl.classList.remove('open'); }
+}
+function closeMobileSidebar() {
+  var sb  = document.getElementById('sidebar');
+  var ovl = document.getElementById('sbOverlay');
+  sb.classList.remove('mobile-open');
+  if (ovl) ovl.classList.remove('open');
+}
+
+/* ─── TOAST ─── */
+function toast(type, msg) {
+  clearTimeout(APP.toastTimer);
+  var t = document.getElementById('toast');
+  var icon = document.getElementById('toastIcon');
+  document.getElementById('toastMsg').textContent = msg;
+  var icons = {
+    success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>',
+    error:   '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
+    info:    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+  };
+  icon.innerHTML = icons[type] || icons.info;
+  t.className = 'show t-' + type;
+  APP.toastTimer = setTimeout(function() { t.className = ''; }, 4000);
+}
+
+/* ─── SHARED HTML ESCAPE ─── */
+function _e(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* ── Philippine phone number helpers ── */
+// Accepts: 09XXXXXXXXX, 9XXXXXXXXX, +639XXXXXXXXX, 639XXXXXXXXX
+// Normalizes to 09XXXXXXXXX (digits only)
+function _phoneNormalize(val) {
+  var v = String(val||'').replace(/\D/g,'');
+  if (v.startsWith('63') && v.length === 12) v = '0' + v.slice(2);
+  if (v.length === 10 && v.startsWith('9'))  v = '0' + v;
+  return v;
+}
+function _phoneValid(val) {
+  var v = _phoneNormalize(val.replace(/\s/g,''));
+  return /^09\d{9}$/.test(v);
+}
+// Called oninput — formats as 09XX XXX XXXX
+function _phoneInput(el) {
+  var raw    = el.value.replace(/\D/g,'');
+  // Auto-convert +63/63 prefix
+  if (raw.startsWith('639') && raw.length > 10) raw = '0' + raw.slice(2);
+  if (raw.startsWith('9')   && !raw.startsWith('09')) raw = '0' + raw;
+  // Limit to 11 digits
+  if (raw.length > 11) raw = raw.slice(0, 11);
+  // Format: 09XX XXX XXXX
+  var formatted = raw;
+  if (raw.length > 4 && raw.length <= 7)       formatted = raw.slice(0,4) + ' ' + raw.slice(4);
+  else if (raw.length > 7)                      formatted = raw.slice(0,4) + ' ' + raw.slice(4,7) + ' ' + raw.slice(7);
+  el.value = formatted;
+  // Live hint
+  var wrap = el.parentNode;
+  var hint = wrap && wrap.querySelector('.ph-hint');
+  if (hint) {
+    if (!raw)                  { hint.textContent = ''; }
+    else if (_phoneValid(raw)) { hint.textContent = '✓ Valid'; hint.style.color = 'var(--success)'; }
+    else                       { hint.textContent = '09XX XXX XXXX'; hint.style.color = 'var(--warning)'; }
+  }
+}
+// Format a stored 09XXXXXXXXX number for display in input field
+function _phoneDisplay(val) {
+  var raw = String(val||'').replace(/\D/g,'');
+  if (raw.length === 11 && raw.startsWith('09'))
+    return raw.slice(0,4) + ' ' + raw.slice(4,7) + ' ' + raw.slice(7);
+  return val || '';
+}
+// Strip spaces before reading value in save functions
+function _phoneRaw(el) {
+  return el.value.replace(/\s/g,'');
+}
+
+// Render an avatar circle — initials immediately, photo lazy-loaded
+// Pass onclick string to make it zoomable
+function _avatar(photoUrl, name, size, onclick) {
+  size = size || 32;
+  var parts    = (name || 'U').trim().split(/\s+/).filter(Boolean);
+  var initials = parts.length >= 2
+    ? (parts[0][0] + parts[parts.length-1][0]).toUpperCase()
+    : (parts[0] || 'U').substring(0,2).toUpperCase();
+  var fs     = Math.round(size * 0.38);
+  var cursor = onclick ? 'cursor:pointer;' : '';
+  var clickAttr = onclick ? ' onclick="' + onclick + '"' : '';
+  var css    = 'width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:var(--teal-600);display:flex;align-items:center;justify-content:center;font-size:' + fs + 'px;font-weight:800;color:#fff;font-family:var(--mono);flex-shrink:0;' + cursor;
+
+  if (photoUrl) {
+    // Render initials first, lazy-load photo via IntersectionObserver
+    return '<div class="av-lazy" data-photo="' + _e(photoUrl) + '" data-initials="' + _e(initials) + '" data-fs="' + fs + '" style="' + css + '"' + clickAttr + '>' + initials + '</div>';
+  }
+  return '<div style="' + css + '"' + clickAttr + '>' + initials + '</div>';
+}
+
+// Call after any table render to lazy-load avatar photos
+function _avatarLazyLoad() {
+  var els = document.querySelectorAll('.av-lazy[data-photo]');
+  if (!els.length) return;
+  // Use IntersectionObserver if available, else just load all
+  var load = function(el) {
+    var url = el.getAttribute('data-photo');
+    if (!url || el.getAttribute('data-loaded')) return;
+    el.setAttribute('data-loaded', '1');
+    var img = new Image();
+    img.onload = function() {
+      el.innerHTML = '';
+      el.style.background = 'transparent';
+      el.style.fontSize   = '';
+      var imgEl = document.createElement('img');
+      imgEl.src = url;
+      imgEl.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+      imgEl.onerror = function() {
+        el.style.background = 'var(--teal-600)';
+        el.textContent = el.getAttribute('data-initials') || '?';
+        el.style.fontSize = el.getAttribute('data-fs') + 'px';
+      };
+      el.appendChild(imgEl);
+    };
+    img.onerror = function() { el.setAttribute('data-loaded', ''); };
+    img.src = url;
+  };
+  if (window.IntersectionObserver) {
+    var obs = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) { if (e.isIntersecting) { load(e.target); obs.unobserve(e.target); } });
+    }, { rootMargin: '100px' });
+    els.forEach(function(el) { obs.observe(el); });
+  } else {
+    els.forEach(load);
+  }
+}
+
+/* ─── GAS STUB (remove in production) ─── */
+if (typeof google === 'undefined') {
+  window.google = { script: { run: {
+    withSuccessHandler: function(cb) {
+      return {
+        withFailureHandler: function() { return this; },
+        loginSuperAdmin: function(u,p) { setTimeout(function(){ cb(u&&p?{success:true,username:u.split('@')[0],role:'Super Admin',email:u}:{success:false,message:'Invalid credentials.'}); },900); },
+        getBranches:     function()    { setTimeout(function(){ cb({success:true,data:[]}); },600); },
+        createBranch:    function()    { setTimeout(function(){ cb({success:true}); },600); },
+        updateBranch:    function()    { setTimeout(function(){ cb({success:true}); },600); },
+        deleteBranch:    function()    { setTimeout(function(){ cb({success:true}); },600); }
+      };
+    },
+    withFailureHandler: function() { return this; }
+  }}};
+}
+</script>

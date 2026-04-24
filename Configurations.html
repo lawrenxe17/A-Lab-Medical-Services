@@ -1,0 +1,628 @@
+<!-- CONFIGURATIONS -->
+      <div class="page-view" id="page-configurations">
+
+        <div class="section-header">
+          <div>
+            <div class="section-title" style="font-size:20px;">Configurations</div>
+            <div class="section-sub" id="cfgSubtitle">Global system settings — Super Admin only</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="cfg_load()" id="cfgRefreshBtn">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="cfgRefreshIcon">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Refresh
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="cfg_save()" id="cfgSaveBtn" style="display:none;">
+              Save Changes
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading skeleton -->
+        <div id="cfgSkeleton" style="display:flex;flex-direction:column;gap:12px;">
+          <div class="card" style="padding:20px 24px;">
+            <div style="height:14px;width:180px;border-radius:6px;background:linear-gradient(90deg,#f0f2f7 25%,#e4e8f0 50%,#f0f2f7 75%);background-size:400px 100%;animation:shimmer 1.3s infinite;margin-bottom:16px;"></div>
+            <div style="height:12px;width:100%;border-radius:4px;background:linear-gradient(90deg,#f0f2f7 25%,#e4e8f0 50%,#f0f2f7 75%);background-size:400px 100%;animation:shimmer 1.3s infinite;margin-bottom:8px;"></div>
+            <div style="height:40px;border-radius:8px;background:linear-gradient(90deg,#f0f2f7 25%,#e4e8f0 50%,#f0f2f7 75%);background-size:400px 100%;animation:shimmer 1.3s infinite;"></div>
+          </div>
+        </div>
+
+        <!-- Settings cards -->
+        <div id="cfgContent" style="display:none;flex-direction:column;gap:16px;">
+
+          <!-- PhilHealth Settings Group -->
+          <div class="card" style="padding:0;overflow:hidden;">
+            <div style="padding:16px 24px;border-bottom:1px solid var(--border);background:var(--gray-50);">
+              <div style="font-size:13px;font-weight:800;color:var(--text-1);">PhilHealth Settings</div>
+              <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Configure PhilHealth billing and benefit limits</div>
+            </div>
+            <div id="cfgGroupPhilhealth" style="padding:20px 24px;display:flex;flex-direction:column;gap:20px;"></div>
+          </div>
+
+          <!-- Queue Routing Group -->
+          <div class="card" style="padding:0;overflow:hidden;">
+            <div style="padding:16px 24px;border-bottom:1px solid var(--border);background:var(--gray-50);display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-size:13px;font-weight:800;color:var(--text-1);">Queue Routing</div>
+                <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Control which orders each role can see and manage</div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="qr_save()">Save Routing</button>
+            </div>
+            <div id="qrBody" style="padding:20px 24px;display:flex;flex-direction:column;gap:16px;">
+              <div style="font-size:12px;color:var(--text-3);">Loading...</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ══ X-RAY RESULT TEMPLATE ══ -->
+        <div style="margin-top:28px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div>
+              <div style="font-size:16px;font-weight:800;color:var(--text-1);">🩻 X-Ray Result Template</div>
+              <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Paste your Google Doc template link. Used for all X-Ray result PDFs.</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="tpl_saveDocLink()">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              Save
+            </button>
+          </div>
+
+          <div class="card" style="padding:20px 24px;">
+            <label class="f-label">Google Doc Template Link or ID</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="tplDocLink" class="f-inp" style="font-size:13px;font-family:var(--mono);"
+                placeholder="Paste Google Doc link or ID here…">
+              <a id="tplDocPreviewBtn" href="#" target="_blank" style="display:none;" class="btn btn-secondary btn-sm" style="white-space:nowrap;">👁 Open</a>
+            </div>
+            <div style="font-size:11px;color:var(--text-4);margin-top:8px;line-height:1.6;">
+              Open your Google Doc template → Share → Copy link → paste above.<br>
+              Make sure the doc is shared so the system email can read it.
+            </div>
+            <div id="tplDocStatus" style="display:none;margin-top:10px;font-size:12px;padding:6px 10px;border-radius:6px;"></div>
+
+            <div style="margin-top:16px;padding:12px 16px;background:rgba(16,168,168,.04);border:1px solid rgba(0,96,176,.12);border-radius:var(--radius);">
+              <div style="font-size:11px;font-weight:800;color:var(--teal-600);margin-bottom:6px;">TEMPLATE PLACEHOLDERS</div>
+              <div style="font-size:11px;color:var(--text-3);line-height:2;font-family:var(--mono);">
+                {{PATIENT_NAME}} &nbsp;·&nbsp; {{AGE_SEX}} &nbsp;·&nbsp; {{PATIENT_NO}} &nbsp;·&nbsp; {{BIRTHDATE}}<br>
+                {{PHYSICIAN}} &nbsp;·&nbsp; {{DATE}} &nbsp;·&nbsp; {{SERVICE_NAME}}<br>
+                {{CLINICAL_DATA}} &nbsp;·&nbsp; {{FINDINGS}} &nbsp;·&nbsp; {{IMPRESSION}}<br>
+                {{RADTECH_NAME}} &nbsp;·&nbsp; {{RADTECH_CRED}} &nbsp;·&nbsp; {{RADIOLOGIST_NAME}} &nbsp;·&nbsp; {{RADIOLOGIST_CRED}}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ LAB RESULT TEMPLATE ══ -->
+        <div style="margin-top:28px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div>
+              <div style="font-size:16px;font-weight:800;color:var(--text-1);">🧪 Lab Result Template</div>
+              <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Paste your Google Doc template link. Used for all in-app laboratory result PDFs.</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="labTpl_save()">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              Save
+            </button>
+          </div>
+
+          <div class="card" style="padding:20px 24px;">
+            <label class="f-label">Google Doc Template Link or ID</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="labTplDocLink" class="f-inp" style="font-size:13px;font-family:var(--mono);"
+                placeholder="Paste Google Doc link or ID here…">
+              <a id="labTplDocPreviewBtn" href="#" target="_blank" style="display:none;" class="btn btn-secondary btn-sm">👁 Open</a>
+            </div>
+            <div style="font-size:11px;color:var(--text-4);margin-top:8px;line-height:1.6;">
+              Open your Google Doc template → Share → Copy link → paste above.<br>
+              The system inserts a results table where <code>{{RESULTS_TABLE}}</code> is placed in the document.
+            </div>
+            <div id="labTplDocStatus" style="display:none;margin-top:10px;font-size:12px;padding:6px 10px;border-radius:6px;"></div>
+
+            <div style="margin-top:16px;padding:12px 16px;background:rgba(16,168,168,.04);border:1px solid rgba(0,96,176,.12);border-radius:var(--radius);">
+              <div style="font-size:11px;font-weight:800;color:var(--teal-600);margin-bottom:6px;">TEMPLATE PLACEHOLDERS</div>
+              <div style="font-size:11px;color:var(--text-3);line-height:2;font-family:var(--mono);">
+                {{PATIENT_NAME}} &nbsp;·&nbsp; {{AGE_SEX}} &nbsp;·&nbsp; {{PATIENT_NO}} &nbsp;·&nbsp; {{BIRTHDATE}}<br>
+                {{PHYSICIAN}} &nbsp;·&nbsp; {{DATE}} &nbsp;·&nbsp; {{SERVICE_NAME}}<br>
+                {{RESULTS_TABLE}} &nbsp;← results table will be inserted here<br>
+                {{MEDTECH_NAME}} &nbsp;·&nbsp; {{MEDTECH_CRED}} &nbsp;·&nbsp; {{PATHOLOGIST_NAME}} &nbsp;·&nbsp; {{PATHOLOGIST_CRED}}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ A-LAB ROOT FOLDER ══ -->
+        <div style="margin-top:28px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div>
+              <div style="font-size:16px;font-weight:800;color:var(--text-1);">📁 A-Lab System Root Folder</div>
+              <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Paste the link to your A-Lab System root Google Drive folder.</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="cfg_saveRootFolder()">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              Save & Initialize
+            </button>
+          </div>
+
+          <div class="card" style="padding:20px 24px;">
+            <label class="f-label">Root Folder Link or ID</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="cfgRootFolderLink" class="f-inp" style="font-size:13px;font-family:var(--mono);"
+                placeholder="https://drive.google.com/drive/folders/XXXXXXXXXXXX...">
+            </div>
+            <div style="font-size:11px;color:var(--text-4);margin-top:8px;line-height:1.6;">
+              When provided, the system will automatically create the required structure:<br><br>
+              <strong>A-Lab System</strong><br>
+              &nbsp;&nbsp;└── <strong>Database</strong><br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <strong>Branches Database</strong> (Stores branch spreadsheets and patient folders)<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── <strong>Global Database</strong> (Global files)<br><br>
+              New branches and their patients will be automatically organized here. Wait a few seconds after saving.
+            </div>
+            <div id="cfgRootFolderStatus" style="display:none;margin-top:10px;font-size:12px;padding:6px 10px;border-radius:6px;"></div>
+          </div>
+        </div>
+
+        <!-- Success/Error banner -->
+        <div id="cfgBanner" style="display:none;position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:var(--radius);font-size:13px;font-weight:700;box-shadow:var(--shadow-lg);z-index:200;"></div>
+
+      </div>
+
+<script>
+/* ════════════════════════════════════
+   CONFIGURATIONS MODULE
+════════════════════════════════════ */
+var CFG = {
+  data:    [],  // all settings from server
+  dirty:   {},  // { key: newValue } — unsaved changes
+  loading: false
+};
+
+/* ── Load ── */
+function cfg_load() {
+  var icon = document.getElementById('cfgRefreshIcon');
+  if (icon) icon.style.animation = 'spin .8s linear infinite';
+  document.getElementById('cfgSkeleton').style.display = 'flex';
+  document.getElementById('cfgContent').style.display  = 'none';
+  document.getElementById('cfgSaveBtn').style.display  = 'none';
+  CFG.dirty = {};
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (icon) icon.style.animation = '';
+      if (!r.success) {
+        document.getElementById('cfgSkeleton').style.display = 'none';
+        cfg_showBanner('error', r.message || 'Failed to load settings.');
+        return;
+      }
+      CFG.data = r.data || [];
+      cfg_render();
+      document.getElementById('cfgSkeleton').style.display = 'none';
+      document.getElementById('cfgContent').style.display  = 'flex';
+      qr_load();
+    })
+    .withFailureHandler(function(e) {
+      if (icon) icon.style.animation = '';
+      document.getElementById('cfgSkeleton').style.display = 'none';
+      cfg_showBanner('error', e.message || 'Connection error.');
+    })
+    .getSystemSettings();
+}
+
+/* ── Render ── */
+function cfg_render() {
+  var philGroup = document.getElementById('cfgGroupPhilhealth');
+  philGroup.innerHTML = '';
+
+  // Group keys by category prefix
+  var philSettings = CFG.data.filter(function(s){ return s.key.startsWith('philhealth'); });
+
+  if (!philSettings.length) {
+    philGroup.innerHTML = '<div style="font-size:12px;color:var(--text-4);">No PhilHealth settings found.</div>';
+    return;
+  }
+
+  philSettings.forEach(function(s) {
+    philGroup.appendChild(cfg_renderField(s));
+  });
+}
+
+/* ── Render single field ── */
+function cfg_renderField(s) {
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'display:grid;grid-template-columns:1fr 260px;gap:24px;align-items:start;padding-bottom:18px;border-bottom:1px solid var(--border);';
+
+  var labelHtml = '<div>'
+    + '<div style="font-size:13px;font-weight:700;color:var(--text-1);margin-bottom:4px;">' + _e(s.label || s.key) + '</div>'
+    + (s.description ? '<div style="font-size:12px;color:var(--text-3);">' + _e(s.description) + '</div>' : '')
+    + (s.updated_at ? '<div style="font-size:10px;color:var(--text-4);margin-top:4px;font-family:var(--mono);">Last updated: '
+        + new Date(s.updated_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})
+        + (s.updated_by && s.updated_by !== 'system' ? ' by ' + _e(s.updated_by) : '') + '</div>' : '')
+    + '</div>';
+
+  var inputHtml = '';
+  if (s.type === 'boolean') {
+    var isOn = s.value === '1' || s.value === 'true';
+    inputHtml = '<div style="display:flex;align-items:center;gap:12px;">'
+      + '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">'
+        + '<div class="cfg-toggle" id="cfgToggle_' + _e(s.key) + '" onclick="cfg_toggleBool(\'' + _e(s.key) + '\')" '
+          + 'style="width:44px;height:24px;border-radius:12px;background:' + (isOn ? 'var(--teal-600)' : 'var(--gray-300)') + ';position:relative;cursor:pointer;transition:background .2s;" '
+          + 'data-on="' + (isOn?'1':'0') + '">'
+          + '<div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;left:' + (isOn?'23px':'3px') + ';transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);" id="cfgThumb_' + _e(s.key) + '"></div>'
+        + '</div>'
+        + '<span style="font-size:13px;font-weight:700;color:var(--text-1);" id="cfgBoolLabel_' + _e(s.key) + '">' + (isOn ? 'Enabled' : 'Disabled') + '</span>'
+      + '</label>'
+    + '</div>';
+  } else if (s.type === 'number') {
+    inputHtml = '<div style="position:relative;">'
+      + '<span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3);font-family:var(--mono);font-size:13px;">₱</span>'
+      + '<input type="number" id="cfgInput_' + _e(s.key) + '" class="f-inp" '
+        + 'style="padding-left:28px;font-family:var(--mono);font-size:14px;font-weight:700;" '
+        + 'value="' + _e(s.value) + '" min="0" step="1" '
+        + 'oninput="cfg_markDirty(\'' + _e(s.key) + '\', this.value)">'
+    + '</div>';
+  } else {
+    inputHtml = '<input type="text" id="cfgInput_' + _e(s.key) + '" class="f-inp" '
+      + 'value="' + _e(s.value) + '" '
+      + 'oninput="cfg_markDirty(\'' + _e(s.key) + '\', this.value)">';
+  }
+
+  wrap.innerHTML = labelHtml + '<div>' + inputHtml + '</div>';
+  return wrap;
+}
+
+/* ── Toggle boolean ── */
+function cfg_toggleBool(key) {
+  var toggle = document.getElementById('cfgToggle_' + key);
+  var thumb  = document.getElementById('cfgThumb_' + key);
+  var label  = document.getElementById('cfgBoolLabel_' + key);
+  if (!toggle) return;
+  var isOn = toggle.getAttribute('data-on') === '1';
+  var newOn = !isOn;
+  toggle.setAttribute('data-on', newOn ? '1' : '0');
+  toggle.style.background = newOn ? 'var(--teal-600)' : 'var(--gray-300)';
+  thumb.style.left  = newOn ? '23px' : '3px';
+  label.textContent = newOn ? 'Enabled' : 'Disabled';
+  cfg_markDirty(key, newOn ? '1' : '0');
+}
+
+/* ── Mark dirty ── */
+function cfg_markDirty(key, value) {
+  CFG.dirty[key] = value;
+  var saveBtn = document.getElementById('cfgSaveBtn');
+  saveBtn.style.display = Object.keys(CFG.dirty).length ? '' : 'none';
+}
+
+/* ── Save ── */
+function cfg_save() {
+  var dirty = Object.keys(CFG.dirty);
+  if (!dirty.length) return;
+
+  var btn = document.getElementById('cfgSaveBtn');
+  btn.disabled    = true;
+  btn.textContent = 'Saving…';
+
+  var settings = dirty.map(function(key) {
+    return { key: key, value: CFG.dirty[key] };
+  });
+  var updatedBy = APP.user ? (APP.user.name || APP.user.username) : '';
+
+  // Optimistic: update local data
+  settings.forEach(function(s) {
+    var item = CFG.data.find(function(d){ return d.key === s.key; });
+    if (item) item.value = s.value;
+  });
+  CFG.dirty = {};
+  btn.style.display = 'none';
+  btn.disabled    = false;
+  btn.textContent = 'Save Changes';
+  cfg_showBanner('success', 'Settings saved.');
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) {
+        cfg_showBanner('error', r.message || 'Failed to save settings.');
+        cfg_load(); // reload to get accurate state
+      }
+    })
+    .withFailureHandler(function(e) {
+      cfg_showBanner('error', e.message || 'Connection error.');
+      cfg_load();
+    })
+    .saveSystemSettings(settings, updatedBy);
+}
+
+/* ── Banner ── */
+function cfg_showBanner(type, msg) {
+  var el = document.getElementById('cfgBanner');
+  var isSuccess = type === 'success';
+  el.style.background = isSuccess ? 'var(--success)' : 'var(--danger)';
+  el.style.color      = '#fff';
+  el.textContent      = (isSuccess ? '✓ ' : '✕ ') + msg;
+  el.style.display    = 'block';
+  setTimeout(function(){ el.style.display = 'none'; }, 3500);
+}
+
+/* ═══════════════════════════════════
+   QUEUE ROUTING
+═══════════════════════════════════ */
+var QR = { data: [], categories: [] };
+
+function qr_load() {
+  var body = document.getElementById('qrBody');
+  if (!body) return;
+  body.innerHTML = '<div style="font-size:12px;color:var(--text-3);">Loading...</div>';
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) { body.innerHTML = '<div style="color:var(--danger);font-size:12px;">' + (r.message || 'Failed to load.') + '</div>'; return; }
+      QR.data = r.data || [];
+      google.script.run
+        .withSuccessHandler(function(rc) {
+          QR.categories = [];
+          if (rc.success) {
+            (rc.data || []).forEach(function(dept) {
+              (dept.categories || []).forEach(function(cat) {
+                QR.categories.push({ cat_id: cat.cat_id, cat_name: cat.category_name, dept_name: dept.department_name, dept_type: dept.department_type });
+              });
+            });
+          }
+          qr_render();
+        })
+        .withFailureHandler(function() { qr_render(); })
+        .getDepartments();
+    })
+    .withFailureHandler(function(e) { body.innerHTML = '<div style="color:var(--danger);font-size:12px;">' + (e.message || 'Connection error.') + '</div>'; })
+    .getQueueRoutingConfig();
+}
+
+function qr_render() {
+  var body = document.getElementById('qrBody');
+  if (!body) return;
+  var ROLES = ['Medical Technologist', 'Radiologic Technologist', 'Liaison Officer', 'Receptionist'];
+  var DEPT_TYPES = ['lab', 'xray', 'consultation', 'others'];
+  var rowMap = {};
+  QR.data.forEach(function(r) { rowMap[r.role] = r; });
+
+  var html = '';
+  ROLES.forEach(function(role) {
+    var row = rowMap[role] || { role: role, filter_type: 'dept_type', filter_values: '' };
+    var isDeptType = row.filter_type !== 'category';
+    html += '<div style="border:1px solid var(--border);border-radius:10px;padding:16px 18px;" data-qr-role="' + role + '">';
+    html += '<div style="font-size:13px;font-weight:800;color:var(--text-1);margin-bottom:10px;">' + role + '</div>';
+    html += '<div style="display:flex;gap:12px;margin-bottom:10px;align-items:center;">';
+    html += '<label style="font-size:12px;font-weight:600;color:var(--text-2);display:flex;align-items:center;gap:6px;cursor:pointer;">'
+      + '<input type="radio" name="qr_ftype_' + role.replace(/ /g,'_') + '" value="dept_type"' + (isDeptType ? ' checked' : '') + ' onchange="qr_toggleType(this)">'
+      + ' By Department Type</label>';
+    html += '<label style="font-size:12px;font-weight:600;color:var(--text-2);display:flex;align-items:center;gap:6px;cursor:pointer;">'
+      + '<input type="radio" name="qr_ftype_' + role.replace(/ /g,'_') + '" value="category"' + (!isDeptType ? ' checked' : '') + ' onchange="qr_toggleType(this)">'
+      + ' By Category</label>';
+    html += '</div>';
+
+    // Dept type checkboxes
+    html += '<div class="qr-dept-panel" style="display:' + (isDeptType ? 'flex' : 'none') + ';flex-wrap:wrap;gap:8px;">';
+    var selDepts = row.filter_type === 'dept_type' ? row.filter_values.split(',').map(function(v){return v.trim();}) : [];
+    DEPT_TYPES.forEach(function(dt) {
+      html += '<label style="font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;">'
+        + '<input type="checkbox" value="' + dt + '"' + (selDepts.indexOf(dt) !== -1 ? ' checked' : '') + '>'
+        + ' ' + dt.charAt(0).toUpperCase() + dt.slice(1) + '</label>';
+    });
+    html += '</div>';
+
+    // Category panel
+    html += '<div class="qr-cat-panel" style="display:' + (!isDeptType ? 'block' : 'none') + ';">';
+    html += '<div style="font-size:11px;color:var(--text-3);margin-bottom:6px;">Select categories this role can access:</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+    var selCats = row.filter_type === 'category' ? row.filter_values.split(',').map(function(v){return v.trim();}) : [];
+    var labCats = QR.categories.filter(function(c){ return c.dept_type === 'lab'; });
+    labCats.forEach(function(cat) {
+      html += '<label style="font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;">'
+        + '<input type="checkbox" value="' + cat.cat_id + '"' + (selCats.indexOf(cat.cat_id) !== -1 ? ' checked' : '') + '>'
+        + ' ' + cat.cat_name + '</label>';
+    });
+    if (!labCats.length) html += '<span style="font-size:12px;color:var(--text-4);">No lab categories found.</span>';
+    html += '</div></div>';
+
+    html += '</div>';
+  });
+  body.innerHTML = html;
+}
+
+function qr_toggleType(radio) {
+  var panel = radio.closest('[data-qr-role]');
+  panel.querySelector('.qr-dept-panel').style.display = radio.value === 'dept_type' ? 'flex' : 'none';
+  panel.querySelector('.qr-cat-panel').style.display  = radio.value === 'category'  ? 'block' : 'none';
+}
+
+function qr_save() {
+  var body = document.getElementById('qrBody');
+  if (!body) return;
+  var rows = [];
+  body.querySelectorAll('[data-qr-role]').forEach(function(panel) {
+    var role = panel.getAttribute('data-qr-role');
+    var ftype = panel.querySelector('input[type=radio]:checked');
+    if (!ftype) return;
+    var filterType = ftype.value;
+    var vals = [];
+    if (filterType === 'dept_type') {
+      panel.querySelectorAll('.qr-dept-panel input[type=checkbox]:checked').forEach(function(cb){ vals.push(cb.value); });
+    } else {
+      panel.querySelectorAll('.qr-cat-panel input[type=checkbox]:checked').forEach(function(cb){ vals.push(cb.value); });
+    }
+    rows.push({ role: role, filter_type: filterType, filter_values: vals.join(',') });
+  });
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (r.success) {
+        cfg_showBanner('success', 'Queue routing saved.');
+        QR.data = rows;
+        APP.queueRouting = {};
+        rows.forEach(function(row) { APP.queueRouting[row.role] = row; });
+      } else {
+        cfg_showBanner('error', r.message || 'Failed to save.');
+      }
+    })
+    .withFailureHandler(function(e) { cfg_showBanner('error', e.message || 'Connection error.'); })
+    .saveQueueRoutingConfig(rows);
+}
+
+/* ═══════════════════════════════════
+   X-RAY RESULT TEMPLATE — Google Doc link
+═══════════════════════════════════ */
+function tpl_load() {
+  google.script.run
+    .withSuccessHandler(function(r) {
+      var link = (r && r.value) ? r.value : '';
+      var inp = document.getElementById('tplDocLink');
+      if (inp) inp.value = link;
+      tpl_updatePreviewBtn(link);
+    })
+    .getSystemSetting('xray_template_doc_id');
+
+  labTpl_load();
+
+  // Load A-Lab Root Folder
+  google.script.run
+    .withSuccessHandler(function(r) {
+      var link = (r && r.value) ? r.value : '';
+      var inp = document.getElementById('cfgRootFolderLink');
+      if (inp) inp.value = link;
+    })
+    .withFailureHandler(function() {})
+    .getSystemSetting('alab_root_folder_id');
+}
+
+function tpl_updatePreviewBtn(val) {
+  var btn = document.getElementById('tplDocPreviewBtn');
+  if (!btn) return;
+  var id = tpl_extractDocId(val);
+  if (id) {
+    btn.href = 'https://docs.google.com/document/d/' + id + '/edit';
+    btn.style.display = 'inline-flex';
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+function tpl_extractDocId(val) {
+  if (!val) return '';
+  val = val.trim();
+  var m = val.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (m) return m[1];
+  if (/^[a-zA-Z0-9_-]{25,}$/.test(val)) return val;
+  return '';
+}
+
+function tpl_saveDocLink() {
+  var val = (document.getElementById('tplDocLink').value || '').trim();
+  var id = tpl_extractDocId(val);
+  var statusEl = document.getElementById('tplDocStatus');
+
+  if (!val) { toast('error', 'Please paste a Google Doc link or ID.'); return; }
+
+  statusEl.textContent = 'Saving…';
+  statusEl.style.display = 'block';
+  statusEl.style.background = 'var(--gray-100)';
+  statusEl.style.color = 'var(--text-3)';
+
+  var user = APP.user ? APP.user.admin_id : 'system';
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r || !r.success) {
+        statusEl.textContent = '✗ ' + (r && r.message || 'Failed to save.');
+        statusEl.style.background = 'var(--danger-bg)';
+        statusEl.style.color = 'var(--danger)';
+        return;
+      }
+      statusEl.textContent = '✓ Template link saved.';
+      statusEl.style.background = 'rgba(22,163,74,.08)';
+      statusEl.style.color = '#16a34a';
+      tpl_updatePreviewBtn(val);
+      toast('success', 'X-Ray template link saved!');
+    })
+    .withFailureHandler(function(e) {
+      statusEl.textContent = '✗ ' + (e.message || 'Error.');
+      statusEl.style.background = 'var(--danger-bg)';
+      statusEl.style.color = 'var(--danger)';
+    })
+    .saveSystemSetting('xray_template_doc_id', id || val, user);
+}
+
+/* ═══════════════════════════════════
+   LAB RESULT TEMPLATE — Google Doc link
+═══════════════════════════════════ */
+function labTpl_load() {
+  google.script.run
+    .withSuccessHandler(function(r) {
+      var link = (r && r.value) ? r.value : '';
+      var inp = document.getElementById('labTplDocLink');
+      if (inp) inp.value = link;
+      labTpl_updatePreviewBtn(link);
+    })
+    .getSystemSetting('lab_template_doc_id');
+}
+
+function labTpl_updatePreviewBtn(val) {
+  var btn = document.getElementById('labTplDocPreviewBtn');
+  if (!btn) return;
+  var id = tpl_extractDocId(val);
+  if (id) { btn.href = 'https://docs.google.com/document/d/' + id + '/edit'; btn.style.display = 'inline-flex'; }
+  else btn.style.display = 'none';
+}
+
+function labTpl_save() {
+  var val = (document.getElementById('labTplDocLink').value || '').trim();
+  var id = tpl_extractDocId(val);
+  var statusEl = document.getElementById('labTplDocStatus');
+  if (!val) { toast('error', 'Please paste a Google Doc link or ID.'); return; }
+  statusEl.textContent = 'Saving…'; statusEl.style.display = 'block';
+  statusEl.style.background = 'var(--gray-100)'; statusEl.style.color = 'var(--text-3)';
+  var user = APP.user ? APP.user.admin_id : 'system';
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r || !r.success) {
+        statusEl.textContent = '✗ ' + (r && r.message || 'Failed to save.');
+        statusEl.style.background = 'var(--danger-bg)'; statusEl.style.color = 'var(--danger)'; return;
+      }
+      statusEl.textContent = '✓ Lab template link saved.';
+      statusEl.style.background = 'rgba(22,163,74,.08)'; statusEl.style.color = '#16a34a';
+      labTpl_updatePreviewBtn(val);
+      toast('success', 'Lab result template link saved!');
+    })
+    .withFailureHandler(function(e) {
+      statusEl.textContent = '✗ ' + (e.message || 'Error.');
+      statusEl.style.background = 'var(--danger-bg)'; statusEl.style.color = 'var(--danger)';
+    })
+    .saveSystemSetting('lab_template_doc_id', id || val, user);
+}
+
+function cfg_saveRootFolder() {
+  const val = document.getElementById('cfgRootFolderLink').value.trim();
+  const stat = document.getElementById('cfgRootFolderStatus');
+  if (!val) { stat.style.display = 'none'; return; }
+  
+  stat.style.display = 'block';
+  stat.style.background = 'rgba(9,116,211,.1)';
+  stat.style.color = 'var(--text-1)';
+  stat.textContent = 'Saving and initializing folder structure... please wait.';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (r.success) {
+        stat.style.background = 'rgba(16,168,168,.1)';
+        stat.style.color = 'var(--teal-700)';
+        stat.textContent = 'Initialization complete! Root folder linked successfully.';
+        document.getElementById('cfgRootFolderLink').value = r.root_id || val;
+      } else {
+        stat.style.background = 'rgba(239,68,68,.1)';
+        stat.style.color = 'var(--danger)';
+        stat.textContent = 'Error: ' + r.message;
+      }
+    })
+    .withFailureHandler(function(e) {
+      stat.style.background = 'rgba(239,68,68,.1)';
+      stat.style.color = 'var(--danger)';
+      stat.textContent = 'Network error: ' + e.message;
+    })
+    .config_setupRootFolder(val);
+}
+  </script>

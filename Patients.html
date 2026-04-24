@@ -1,0 +1,1017 @@
+<!-- PATIENTS -->
+      <div class="page-view" id="page-patients">
+
+        <div class="section-header">
+          <div>
+            <div class="section-title" style="font-size:20px;">Patients</div>
+            <div class="section-sub" id="patSubtitle">Select a branch to view patients</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-secondary btn-sm" onclick="pat_load()" id="patRefreshBtn" style="display:none;">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="patRefreshIcon">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Refresh
+            </button>
+            <button class="btn btn-primary btn-sm" id="patAddBtn" onclick="pat_openModal()" style="display:none;">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+              </svg>
+              Add Patient
+            </button>
+          </div>
+        </div>
+
+        <!-- Branch selector (SA + BA) -->
+        <div id="patBranchSelector" style="display:none;margin-bottom:16px;">
+          <label class="f-label" style="margin-bottom:6px;display:block;">Select Branch</label>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <select id="patBranchSelect" class="f-inp" style="width:auto;min-width:200px;font-size:13px;cursor:pointer;" onchange="pat_onBranchChange()">
+              <option value="">— Select a branch —</option>
+            </select>
+            <span style="font-size:12px;color:var(--text-4);font-family:var(--mono);" id="patBranchNote">Choose a branch to view its patients</span>
+          </div>
+        </div>
+
+        <!-- BA view-only note -->
+        <div id="patBANote" style="display:none;margin-bottom:16px;padding:10px 14px;background:rgba(16,168,168,.06);border:1px solid rgba(0,96,176,.15);border-radius:var(--radius);align-items:center;gap:8px;">
+          <svg width="14" height="14" fill="none" stroke="var(--teal-600)" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span style="font-size:12px;color:var(--teal-700);">Patients are managed by Technologists. View only.</span>
+        </div>
+
+        <!-- Search -->
+        <div id="patSearchBar" style="display:none;margin-bottom:16px;">
+          <div style="position:relative;">
+            <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-4);" width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+            </svg>
+            <input type="text" id="patSearch" class="f-inp" style="padding-left:34px;font-size:13px;"
+              placeholder="Search name, contact, address…" oninput="pat_applyFilter()">
+          </div>
+        </div>
+
+        <div id="patEmptyState" style="text-align:center;padding:60px 20px;">
+          <div style="width:56px;height:56px;border-radius:14px;background:var(--teal-50);border:1.5px solid rgba(0,96,176,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;" id="patEmptyIcon">
+            <svg width="24" height="24" fill="none" stroke="var(--teal-500)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </div>
+          <div style="font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:6px;" id="patEmptyTitle">Select a branch to view patients</div>
+          <div style="font-size:12px;color:var(--text-4);" id="patEmptyMsg">Patient records are stored per branch.</div>
+        </div>
+
+        <!-- Table -->
+        <div class="card" id="patTableCard" style="display:none;">
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Sex</th>
+                  <th>Date of Birth</th>
+                  <th>Contact</th>
+                  <th>Address</th>
+                  <th>PhilHealth</th>
+                  <th>Discounts</th>
+                  <th style="text-align:center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="patTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══ PATIENT MODAL ══ -->
+      <div id="patModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
+        <div style="background:var(--white);border-radius:var(--radius-xl);width:100%;max-width:580px;box-shadow:var(--shadow-xl);animation:modalIn .22s cubic-bezier(.34,1.2,.64,1);">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);">
+            <div>
+              <div style="font-size:16px;font-weight:800;color:var(--text-1);" id="patModalTitle">Add Patient</div>
+              <div style="font-size:12px;color:var(--text-3);margin-top:2px;font-family:var(--mono);" id="patModalSub">Fill in patient details</div>
+            </div>
+            <button onclick="pat_closeModal()" style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <div style="padding:24px;max-height:75vh;overflow-y:auto;">
+            <input type="hidden" id="patModalId">
+
+            <!-- Name row -->
+            <div style="margin-bottom:14px;">
+              <label class="f-label">Full Name <span style="color:var(--danger);">*</span></label>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                <input type="text" id="patFldLast"   class="f-inp" placeholder="Last name">
+                <input type="text" id="patFldFirst"  class="f-inp" placeholder="First name">
+                <input type="text" id="patFldMiddle" class="f-inp" placeholder="Middle name (opt.)">
+              </div>
+              <div style="font-size:10px;color:var(--text-4);margin-top:4px;font-family:var(--mono);">Last · First · Middle</div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+              <div>
+                <label class="f-label">Sex <span style="color:var(--danger);">*</span></label>
+                <select id="patFldSex" class="f-inp" style="cursor:pointer;">
+                  <option value="">— Select —</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="f-label">Date of Birth <span style="color:var(--danger);">*</span></label>
+                <input type="date" id="patFldDob" class="f-inp" style="font-family:var(--mono);">
+              </div>
+
+              <div>
+                <label class="f-label">Contact <span style="color:var(--danger);">*</span></label>
+                <input type="tel" id="patFldContact" class="f-inp" placeholder="09XX XXX XXXX" maxlength="13" style="font-family:var(--mono);" oninput="_phoneInput(this)">
+                <div class="ph-hint" style="font-size:11px;margin-top:3px;font-family:var(--mono);"></div>
+              </div>
+
+              <div>
+                <label class="f-label">Email <span style="font-size:10px;color:var(--text-4);font-weight:400;">(optional)</span></label>
+                <input type="email" id="patFldEmail" class="f-inp" placeholder="e.g. patient@email.com">
+              </div>
+
+              <div style="grid-column:1/-1;">
+                <label class="f-label">Address <span style="color:var(--danger);">*</span></label>
+                <input type="text" id="patFldAddress" class="f-inp" placeholder="Full address">
+              </div>
+
+              <!-- PhilHealth PIN -->
+              <div style="grid-column:1/-1;">
+                <label class="f-label">PhilHealth PIN <span style="font-size:10px;color:var(--text-4);font-weight:400;">(optional)</span></label>
+                <input type="text" id="patFldPhilPin" class="f-inp" placeholder="e.g. 12-345678901-2" style="font-family:var(--mono);" maxlength="20">
+                <div style="font-size:10px;color:var(--text-4);margin-top:3px;font-family:var(--mono);">Format: XX-XXXXXXXXX-X · Leave blank if not a member</div>
+              </div>
+
+              <!-- Discounts -->
+              <div style="grid-column:1/-1;">
+                <label class="f-label" style="margin-bottom:8px;display:block;">Applicable Discounts</label>
+                <div id="patDiscountList" style="border:1.5px solid var(--border);border-radius:var(--radius);background:var(--gray-50);max-height:160px;overflow-y:auto;">
+                  <div style="padding:12px;text-align:center;font-size:12px;color:var(--text-4);font-family:var(--mono);">Loading discounts…</div>
+                </div>
+                <div style="font-size:11px;color:var(--text-4);margin-top:4px;font-family:var(--mono);" id="patDiscCount">0 discounts selected</div>
+                
+                <!-- Discount ID Number Input (Hidden by default) -->
+                <div id="patDiscIdWrap" style="display:none;margin-top:12px;">
+                  <label class="f-label" style="font-size:11px;font-weight:700;color:var(--teal-700);text-transform:uppercase;">Discount ID Number <span style="color:var(--danger);">*</span></label>
+                  <input type="text" id="patFldDiscId" class="f-inp" placeholder="Enter Senior Citizen / PWD ID" style="border-color:var(--teal-300);background:var(--teal-50);">
+                </div>
+              </div>
+
+              <!-- 4P's Flag -->
+              <div style="grid-column:1/-1;">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--gray-50);">
+                  <input type="checkbox" id="patFld4ps" style="width:16px;height:16px;accent-color:var(--teal-600);cursor:pointer;">
+                  <div>
+                    <div style="font-size:13px;font-weight:700;color:var(--text-1);">4P's Beneficiary</div>
+                    <div style="font-size:11px;color:var(--text-4);margin-top:1px;">Pantawid Pamilyang Pilipino Program — for government reporting</div>
+                  </div>
+                </label>
+              </div>
+
+            </div>
+            <div id="patModalErr" style="display:none;margin-top:14px;font-size:12px;color:var(--danger);background:var(--danger-bg);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:9px 12px;"></div>
+          </div>
+
+          <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;">
+            <button class="btn btn-secondary" onclick="pat_closeModal()">Cancel</button>
+            <button class="btn btn-primary" id="patSaveBtn" onclick="pat_save()">
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              Save Patient
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ACCESS GRANTS (BA only) ══ -->
+      <div id="patGrantsWrap" style="display:none;margin-top:24px;">
+        <div class="card">
+          <div style="padding:16px 20px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:14px;font-weight:800;color:var(--text-1);">Cross-Branch Access Grants</div>
+              <div style="font-size:11px;color:var(--text-4);">Other branches you've granted access to your patients</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="pat_loadGrants()">↺ Refresh</button>
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Patient ID</th>
+                  <th>Granted Branch</th>
+                  <th>Date Granted</th>
+                  <th style="text-align:center;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="patGrantsBody">
+                <tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-4);font-size:13px;">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PATIENT VIEW MODAL ══ -->
+      <div id="patViewModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
+        <div style="background:var(--white);border-radius:var(--radius-xl);width:100%;max-width:600px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-xl);animation:modalIn .22s cubic-bezier(.34,1.2,.64,1);">
+
+          <!-- Teal hero header -->
+          <div style="background:linear-gradient(135deg,var(--teal-900),var(--teal-700));border-radius:var(--radius-xl) var(--radius-xl) 0 0;padding:22px 24px 0;position:relative;flex-shrink:0;">
+            <button onclick="pat_closeViewModal()" style="position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <div style="display:flex;align-items:center;gap:14px;padding-bottom:16px;">
+              <div id="patViewAvatar" style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;font-family:var(--mono);flex-shrink:0;border:2px solid rgba(255,255,255,.2);">P</div>
+              <div>
+                <div id="patViewName" style="font-size:17px;font-weight:800;color:#fff;margin-bottom:2px;"></div>
+                <div id="patViewId" style="font-size:10px;color:rgba(255,255,255,.4);font-family:var(--mono);"></div>
+              </div>
+            </div>
+            <!-- Tab nav -->
+            <div style="display:flex;gap:4px;">
+              <button id="patTabProfile" onclick="pat_switchTab('profile')" style="padding:8px 16px;border:none;background:rgba(255,255,255,.15);color:#fff;border-radius:8px 8px 0 0;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">Profile</button>
+              <button id="patTabResults" onclick="pat_switchTab('results')" style="padding:8px 16px;border:none;background:transparent;color:rgba(255,255,255,.6);border-radius:8px 8px 0 0;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">Lab Results</button>
+            </div>
+          </div>
+
+          <!-- Tab content (scrollable) -->
+          <div style="flex:1;overflow-y:auto;">
+            <!-- Profile tab -->
+            <div id="patTabContentProfile">
+              <div id="patViewBody" style="padding:16px 24px;display:flex;flex-direction:column;gap:0;"></div>
+            </div>
+            <!-- Results tab -->
+            <div id="patTabContentResults" style="display:none;padding:16px 24px;">
+              <div id="patResultsBody"><div style="text-align:center;padding:32px;color:var(--text-4);font-size:13px;">Loading results…</div></div>
+            </div>
+          </div>
+
+          <div style="padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;" id="patViewActions"></div>
+        </div>
+      </div>
+
+      <!-- ══ DELETE CONFIRM ══ -->
+      <div id="patDeleteModal" style="display:none;position:fixed;inset:0;z-index:501;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;padding:20px;">
+        <div style="background:var(--white);border-radius:24px 24px 0 0;width:100%;max-width:440px;box-shadow:var(--shadow-xl);padding:28px 24px;animation:slideup .22s ease;">
+          <div style="display:flex;gap:14px;margin-bottom:20px;align-items:flex-start;">
+            <div style="width:42px;height:42px;border-radius:50%;background:var(--danger-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" fill="none" stroke="var(--danger)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </div>
+            <div>
+              <div style="font-size:16px;font-weight:800;color:var(--text-1);margin-bottom:4px;">Delete Patient?</div>
+              <div style="font-size:13px;color:var(--text-2);line-height:1.6;" id="patDeleteMsg">This cannot be undone.</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button class="btn btn-danger" style="width:100%;justify-content:center;padding:13px;" onclick="pat_confirmDelete()">Yes, Delete Patient</button>
+            <button class="btn btn-secondary" style="width:100%;justify-content:center;padding:13px;" onclick="pat_closeDeleteModal()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+<script>
+/* ════════════════════════════════════
+   PATIENTS MODULE
+════════════════════════════════════ */
+var PAT = {
+  all:        [],
+  filtered:   [],
+  discounts:  [],
+  branches:   [],
+  branchId:   null,
+  branchName: '',
+  editingId:  null,
+  isTech:     false
+};
+var _patDeleteId = null;
+
+/* ── Skeleton ── */
+function pat_skeleton() {
+  var row = '<tr>';
+  for (var i = 0; i < 8; i++)
+    row += '<td><div style="height:13px;border-radius:6px;background:linear-gradient(90deg,#f0f2f7 25%,#e4e8f0 50%,#f0f2f7 75%);background-size:400px 100%;animation:shimmer 1.3s infinite;"></div></td>';
+  return row + '</tr>' + row + row + row;
+}
+
+/* ── Init ── */
+function pat_init() {
+  // Always reset state on every navigate
+  PAT.all        = [];
+  PAT.filtered   = [];
+  PAT.discounts  = [];
+  PAT.branchId   = null;
+  PAT.branchName = '';
+  PAT.editingId  = null;
+
+  // Reset UI to clean state — hide everything first
+  document.getElementById('patTableCard').style.display   = 'none';
+  document.getElementById('patSearchBar').style.display   = 'none';
+  document.getElementById('patRefreshBtn').style.display  = 'none';
+  document.getElementById('patEmptyState').style.display  = '';
+  document.getElementById('patEmptyTitle').textContent    = 'Select a branch to view patients';
+  document.getElementById('patEmptyMsg').textContent      = 'Patient records are stored per branch.';
+  document.getElementById('patSearch').value              = '';
+  document.getElementById('patTableBody').innerHTML       = '';
+  document.getElementById('patSubtitle').textContent      = 'Loading…';
+
+  var role        = APP.user ? APP.user.role : '';
+  var isTech      = role === 'Technologist';
+  var isReception = role === 'Receptionist';
+  var isSA        = role === 'Super Admin';
+  var isBA        = role === 'Branch Admin';
+  var canEdit     = isTech || isReception; // both Tech and Receptionist can manage patients
+  PAT.isTech = canEdit;  // reuse isTech flag for edit permissions
+
+  // SA only gets branch selector — BA, Tech, and Receptionist auto-load
+  document.getElementById('patBranchSelector').style.display = isSA ? '' : 'none';
+  document.getElementById('patBANote').style.display         = isBA ? 'flex' : 'none';
+  document.getElementById('patAddBtn').style.display         = canEdit ? '' : 'none';
+
+  if (isSA) {
+    // SA: load branches into selector, show empty state until selected
+    google.script.run
+      .withSuccessHandler(function(r) {
+        if (!r.success) return;
+        PAT.branches = r.data || [];
+        var sel = document.getElementById('patBranchSelect');
+        sel.innerHTML = '<option value="">— Select a branch —</option>';
+        PAT.branches.forEach(function(b) {
+          sel.innerHTML += '<option value="' + _e(b.branch_id) + '">' + _e(b.branch_name) + ' (' + _e(b.branch_code) + ')</option>';
+        });
+      })
+      .withFailureHandler(function(){})
+      .getBranchesForPatientView('');
+
+  } else if (isBA || isTech || isReception) {
+    var branchId = APP.user.branch_ids ? APP.user.branch_ids.split(',')[0].trim() : '';
+    if (!branchId) {
+      document.getElementById('patEmptyTitle').textContent = 'No branch assigned.';
+      document.getElementById('patEmptyMsg').textContent   = 'Contact your Super Admin.';
+      return;
+    }
+    PAT.branchId = branchId;
+    document.getElementById('patRefreshBtn').style.display  = '';
+    // Show skeleton immediately — don't wait
+    document.getElementById('patEmptyState').style.display  = 'none';
+    document.getElementById('patSearchBar').style.display   = '';
+    document.getElementById('patTableCard').style.display   = '';
+    document.getElementById('patTableBody').innerHTML       = pat_skeleton();
+    pat_load();
+  }
+}
+
+function pat_onBranchChange() {
+  var sel = document.getElementById('patBranchSelect');
+  var id  = sel.value;
+  if (!id) {
+    document.getElementById('patTableCard').style.display  = 'none';
+    document.getElementById('patEmptyState').style.display = '';
+    document.getElementById('patSearchBar').style.display  = 'none';
+    document.getElementById('patRefreshBtn').style.display = 'none';
+    document.getElementById('patSubtitle').textContent     = 'Select a branch to view patients';
+    document.getElementById('patBranchNote').textContent   = 'Choose a branch to view its patients';
+    return;
+  }
+  PAT.branchId = id;
+  var b = PAT.branches.find(function(x){ return x.branch_id === id; });
+  PAT.branchName = b ? b.branch_name : id;
+  document.getElementById('patBranchNote').textContent   = b ? b.branch_name : id;
+  document.getElementById('patRefreshBtn').style.display = '';
+  pat_load();
+}
+
+/* ── Load ── */
+function pat_load() {
+  if (!PAT.branchId) return;
+  var icon = document.getElementById('patRefreshIcon');
+  if (icon) icon.style.animation = 'spin .8s linear infinite';
+  document.getElementById('patSubtitle').textContent = 'Loading…';
+
+  // Show skeleton rows immediately — table stays visible
+  document.getElementById('patEmptyState').style.display = 'none';
+  document.getElementById('patSearchBar').style.display  = '';
+  document.getElementById('patTableCard').style.display  = '';
+  document.getElementById('patTableBody').innerHTML      = pat_skeleton();
+
+  PAT.all      = [];
+  PAT.filtered = [];
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (icon) icon.style.animation = '';
+      if (!r.success) {
+        document.getElementById('patTableCard').style.display  = 'none';
+        document.getElementById('patEmptyState').style.display = '';
+        document.getElementById('patEmptyTitle').textContent   = 'Failed to load patients.';
+        document.getElementById('patEmptyMsg').innerHTML       = _e(r.message || 'Error.') + ' <a href="javascript:void(0)" onclick="pat_load()" style="color:var(--teal-600);font-weight:700;">Retry</a>';
+        return;
+      }
+      PAT.all       = r.data      || [];
+      PAT.discounts = r.discounts || [];
+      document.getElementById('patEmptyState').style.display = 'none';
+      document.getElementById('patTableCard').style.display  = '';
+      document.getElementById('patSearchBar').style.display  = '';
+      pat_applyFilter();
+    })
+    .withFailureHandler(function(e) {
+      if (icon) icon.style.animation = '';
+      document.getElementById('patTableCard').style.display  = 'none';
+      document.getElementById('patEmptyState').style.display = '';
+      document.getElementById('patEmptyTitle').textContent   = 'Connection error.';
+      document.getElementById('patEmptyMsg').innerHTML       = _e(e.message || 'Error.') + ' <a href="javascript:void(0)" onclick="pat_load()" style="color:var(--teal-600);font-weight:700;">Retry</a>';
+    })
+    .getPatients(PAT.branchId);
+}
+
+/* ── Filter + Render ── */
+function pat_applyFilter() {
+  var q = (document.getElementById('patSearch').value || '').trim().toLowerCase();
+  PAT.filtered = PAT.all.filter(function(p) {
+    if (!q) return true;
+    var hay = [p.last_name, p.first_name, p.middle_name, p.contact, p.address, p.patient_id].join(' ').toLowerCase();
+    return hay.indexOf(q) !== -1;
+  });
+  pat_render();
+}
+
+function pat_render() {
+  var count = PAT.filtered.length;
+  var bname = PAT.branchName || PAT.branchId || '';
+  document.getElementById('patSubtitle').textContent =
+    count + ' patient' + (count !== 1 ? 's' : '') +
+    (bname ? ' · ' + bname : '') +
+    (count !== PAT.all.length ? ' (filtered)' : '');
+
+  if (!count) {
+    document.getElementById('patTableBody').innerHTML =
+      '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-4);font-family:var(--mono);font-size:13px;">'
+      + (PAT.all.length === 0 ? 'No patients yet.' : 'No patients match your search.')
+      + '</td></tr>';
+    return;
+  }
+
+  var isTech = PAT.isTech;
+  var h = '';
+  PAT.filtered.forEach(function(p) {
+    var fullName = _e(p.last_name) + ', ' + _e(p.first_name) + (p.middle_name ? ' ' + _e(p.middle_name.charAt(0)) + '.' : '');
+    var age      = p.dob ? pat_calcAge(p.dob) : '—';
+    var dobDisp  = p.dob ? new Date(p.dob).toLocaleDateString('en-PH', {year:'numeric',month:'short',day:'numeric'}) : '—';
+
+    h += '<tr id="pat-row-' + _e(p.patient_id) + '">'
+      + '<td>'
+        + '<div style="font-weight:700;color:var(--text-1);font-size:13px;">' + fullName + '</div>'
+        + '<div style="font-size:10px;color:var(--text-4);font-family:var(--mono);margin-top:1px;">' + _e(p.patient_id) + '</div>'
+      + '</td>'
+      + '<td style="font-size:12px;color:var(--text-2);">' + _e(p.sex || '—') + '</td>'
+      + '<td style="font-size:12px;color:var(--text-2);">'
+        + dobDisp
+        + '<div style="font-size:10px;color:var(--text-4);font-family:var(--mono);">' + age + ' yrs</div>'
+      + '</td>'
+      + '<td style="font-family:var(--mono);font-size:12px;">' + _e(_phoneDisplay(p.contact) || '—') + '</td>'
+      + '<td style="font-size:12px;color:var(--text-2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + _e(p.address||'') + '">' + _e(p.address || '—') + '</td>'
+      + '<td>'
+        + (p.philhealth_pin
+          ? '<span class="badge badge-teal" style="font-family:var(--mono);">✓ ' + _e(p.philhealth_pin) + '</span>'
+          : '<span class="badge badge-gray" style="font-family:var(--mono);">✗ No</span>')
+        + (p.is_4ps == 1 ? ' <span class="badge" style="background:rgba(124,58,237,.1);color:#7c3aed;font-family:var(--mono);font-size:10px;">4P\'s</span>' : '')
+      + '</td>'
+      + '<td style="font-size:12px;color:var(--text-2);">'
+        + (p.discounts_display ? '<span style="font-size:11px;">' + _e(p.discounts_display) + '</span>' : '<span style="color:var(--text-4);">—</span>')
+      + '</td>'
+      + '<td style="text-align:center;">'
+        + '<div style="display:flex;gap:5px;justify-content:center;">'
+          + '<button class="btn btn-sm btn-secondary" onclick="pat_openView(\'' + _e(p.patient_id) + '\')" style="padding:5px 10px;" title="View">'
+            + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>'
+          + '</button>'
+          + (isTech
+            ? '<button class="btn btn-sm btn-secondary" onclick="pat_openEdit(\'' + _e(p.patient_id) + '\')" style="padding:5px 10px;" title="Edit">'
+              + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>'
+              + '</button>'
+              + '<button class="btn btn-sm btn-danger" onclick="pat_openDelete(\'' + _e(p.patient_id) + '\')" style="padding:5px 10px;" title="Delete">'
+              + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>'
+              + '</button>'
+            : '')
+        + '</div>'
+      + '</td>'
+      + '</tr>';
+  });
+  document.getElementById('patTableBody').innerHTML = h;
+}
+
+function pat_calcAge(dob) {
+  try {
+    var d   = new Date(dob);
+    var now = new Date();
+    var age = now.getFullYear() - d.getFullYear();
+    if (now.getMonth() < d.getMonth() || (now.getMonth() === d.getMonth() && now.getDate() < d.getDate())) age--;
+    return age;
+  } catch(e) { return '?'; }
+}
+
+/* ══════════════════════════════════════
+   DISCOUNT PICKER
+══════════════════════════════════════ */
+function pat_renderDiscounts(selectedIds) {
+  var wrap = document.getElementById('patDiscountList');
+  if (!wrap) return;
+  if (!PAT.discounts.length) {
+    wrap.innerHTML = '<div style="padding:12px;text-align:center;font-size:12px;color:var(--text-4);">No active discounts available.</div>';
+    return;
+  }
+  wrap.innerHTML = PAT.discounts.map(function(d) {
+    var checked  = selectedIds.indexOf(d.discount_id) !== -1;
+    var valDisp  = d.type === 'percentage' ? d.value + '%' : '₱' + d.value;
+    return '<label style="display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid var(--border);cursor:pointer;" onchange="pat_updateDiscCount()">'
+      + '<input type="checkbox" value="' + _e(d.discount_id) + '" ' + (checked ? 'checked' : '') + ' style="accent-color:var(--teal-600);width:15px;height:15px;flex-shrink:0;">'
+      + '<div style="flex:1;">'
+        + '<div style="font-size:13px;font-weight:700;color:var(--text-1);">' + _e(d.discount_name) + '</div>'
+      + '</div>'
+      + '<span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal-600);">' + _e(valDisp) + '</span>'
+      + '</label>';
+  }).join('');
+  pat_updateDiscCount();
+}
+
+function pat_updateDiscCount() {
+  var cbs = document.querySelectorAll('#patDiscountList input[type=checkbox]:checked');
+  var el  = document.getElementById('patDiscCount');
+  if (el) el.textContent = cbs.length + ' discount' + (cbs.length !== 1 ? 's' : '') + ' selected';
+  
+  var idWrap = document.getElementById('patDiscIdWrap');
+  if (idWrap) {
+    if (cbs.length > 0) {
+      idWrap.style.display = 'block';
+    } else {
+      idWrap.style.display = 'none';
+    }
+  }
+}
+
+function pat_getSelectedDiscounts() {
+  return Array.from(document.querySelectorAll('#patDiscountList input[type=checkbox]:checked')).map(function(cb){ return cb.value; });
+}
+
+/* ══════════════════════════════════════
+   MODAL
+══════════════════════════════════════ */
+function pat_openModal() {
+  PAT.editingId = null;
+  document.getElementById('patModalTitle').textContent = 'Add Patient';
+  document.getElementById('patModalSub').textContent   = PAT.branchName || 'Fill in patient details';
+  document.getElementById('patSaveBtn').textContent    = 'Save Patient';
+  document.getElementById('patModalId').value    = '';
+  document.getElementById('patFldLast').value    = '';
+  document.getElementById('patFldFirst').value   = '';
+  document.getElementById('patFldMiddle').value  = '';
+  document.getElementById('patFldSex').value     = '';
+  document.getElementById('patFldDob').value     = '';
+  document.getElementById('patFldContact').value = '';
+  document.getElementById('patFldEmail').value   = '';
+  document.getElementById('patFldAddress').value = '';
+  document.getElementById('patFldPhilPin').value = '';
+  document.getElementById('patFld4ps').checked   = false;
+  var idFld = document.getElementById('patFldDiscId');
+  if (idFld) idFld.value = '';
+  pat_renderDiscounts([]);
+  pat_hideModalErr();
+  document.getElementById('patModal').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('patFldLast').focus(); }, 80);
+}
+
+function pat_openEdit(id) {
+  var p = PAT.all.find(function(x){ return x.patient_id === id; });
+  if (!p) { toast('error', 'Patient not found.'); return; }
+  PAT.editingId = id;
+  document.getElementById('patModalTitle').textContent = 'Edit Patient';
+  document.getElementById('patModalSub').textContent   = p.last_name + ', ' + p.first_name;
+  document.getElementById('patSaveBtn').textContent    = 'Update Patient';
+  document.getElementById('patModalId').value    = p.patient_id;
+  document.getElementById('patFldLast').value    = p.last_name    || '';
+  document.getElementById('patFldFirst').value   = p.first_name   || '';
+  document.getElementById('patFldMiddle').value  = p.middle_name  || '';
+  document.getElementById('patFldSex').value     = p.sex          || '';
+  document.getElementById('patFldDob').value     = p.dob          || '';
+  document.getElementById('patFldContact').value = _phoneDisplay(p.contact);
+  document.getElementById('patFldEmail').value   = p.email        || '';
+  document.getElementById('patFldAddress').value = p.address      || '';
+  document.getElementById('patFldPhilPin').value    = p.philhealth_pin || '';
+  document.getElementById('patFld4ps').checked      = p.is_4ps == 1;
+  var selDiscIds = p.discount_ids ? p.discount_ids.split(',').map(function(s){ return s.trim(); }) : [];
+  pat_renderDiscounts(selDiscIds);
+  var idFld = document.getElementById('patFldDiscId');
+  if (idFld) idFld.value = p.discount_id_no || '';
+  pat_hideModalErr();
+  document.getElementById('patModal').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('patFldLast').focus(); }, 80);
+}
+
+function pat_closeModal() {
+  document.getElementById('patModal').style.display = 'none';
+  PAT.editingId = null;
+}
+function pat_showModalErr(msg) { var el = document.getElementById('patModalErr'); el.textContent = msg; el.style.display = 'block'; }
+function pat_hideModalErr()    { document.getElementById('patModalErr').style.display = 'none'; }
+
+/* ── Save (Optimistic) ── */
+function pat_save() {
+  var last    = document.getElementById('patFldLast').value.trim();
+  var first   = document.getElementById('patFldFirst').value.trim();
+  var middle  = document.getElementById('patFldMiddle').value.trim();
+  var sex     = document.getElementById('patFldSex').value;
+  var dob     = document.getElementById('patFldDob').value;
+  var contact = _phoneRaw(document.getElementById('patFldContact'));
+  var email   = document.getElementById('patFldEmail').value.trim();
+  var address = document.getElementById('patFldAddress').value.trim();
+  var philPin  = document.getElementById('patFldPhilPin').value.trim();
+  var is4ps    = document.getElementById('patFld4ps').checked ? 1 : 0;
+  var discIdNo = '';
+  var idFld = document.getElementById('patFldDiscId');
+  if (idFld && document.getElementById('patDiscIdWrap').style.display !== 'none') {
+    discIdNo = idFld.value.trim();
+    if (!discIdNo && document.querySelectorAll('#patDiscountList input[type=checkbox]:checked').length > 0) {
+      pat_showModalErr('Discount ID Number is required for selected discounts.');
+      idFld.focus();
+      return;
+    }
+  }
+  var discIds      = pat_getSelectedDiscounts().join(',');
+  var isEdit       = !!PAT.editingId;
+
+  if (!last)    { pat_showModalErr('Last name is required.'); return; }
+  if (!first)   { pat_showModalErr('First name is required.'); return; }
+  if (!sex)     { pat_showModalErr('Sex is required.'); return; }
+  if (!dob)     { pat_showModalErr('Date of birth is required.'); return; }
+  if (!contact) { pat_showModalErr('Contact is required.'); return; }
+  if (!_phoneValid(contact)) { pat_showModalErr('Invalid contact number. Use 09XXXXXXXXX format.'); return; }
+  if (!address) { pat_showModalErr('Address is required.'); return; }
+
+  var discDisp = discIds ? discIds.split(',').map(function(did) {
+    var d = PAT.discounts.find(function(x){ return x.discount_id === did.trim(); });
+    return d ? d.discount_name : did;
+  }).join(', ') : '';
+
+  var payload = {
+    patient_id: PAT.editingId || '', last_name: last, first_name: first,
+    middle_name: middle, sex: sex, dob: dob, contact: contact,
+    email: email, address: address,
+    philhealth_pin: philPin,
+    discount_ids: discIds,
+    discount_id_no: discIdNo,
+    is_4ps: is4ps
+  };
+
+  var snapshot = JSON.parse(JSON.stringify(PAT.all));
+
+  if (isEdit) {
+    var idx = PAT.all.findIndex(function(p){ return p.patient_id === PAT.editingId; });
+    if (idx !== -1) PAT.all[idx] = Object.assign({}, PAT.all[idx], {
+      last_name: last, first_name: first, middle_name: middle, sex: sex,
+      dob: dob, contact: contact, email: email, address: address,
+      philhealth_pin: philPin, is_4ps: is4ps,
+      discount_ids: discIds, discount_id_no: discIdNo, discounts_display: discDisp
+    });
+  } else {
+    PAT.all.unshift({
+      patient_id: 'PAT-PENDING', last_name: last, first_name: first, middle_name: middle,
+      sex: sex, dob: dob, contact: contact, email: email, address: address,
+      philhealth_pin: philPin, is_4ps: is4ps,
+      discount_ids: discIds, discount_id_no: discIdNo, discounts_display: discDisp
+    });
+  }
+
+  pat_applyFilter();
+  pat_closeModal();
+  toast('info', isEdit ? 'Saving changes…' : 'Adding patient…');
+
+  var fn = isEdit ? 'updatePatient' : 'createPatient';
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) {
+        PAT.all = snapshot; pat_applyFilter();
+        toast('error', r.message || 'Failed.');
+        setTimeout(function(){
+          if (isEdit) pat_openEdit(payload.patient_id); else pat_openModal();
+          document.getElementById('patFldLast').value    = last;
+          document.getElementById('patFldFirst').value   = first;
+          document.getElementById('patFldMiddle').value  = middle;
+          document.getElementById('patFldSex').value     = sex;
+          document.getElementById('patFldDob').value     = dob;
+          document.getElementById('patFldContact').value = contact;
+          document.getElementById('patFldEmail').value   = email;
+          document.getElementById('patFldAddress').value = address;
+          document.getElementById('patFldPhilPin').value = philPin;
+          pat_renderDiscounts(discIds ? discIds.split(',') : []);
+          pat_showModalErr(r.message || 'Failed.');
+        }, 200);
+        return;
+      }
+      if (!isEdit && r.patient_id) {
+        var ti = PAT.all.findIndex(function(p){ return p.patient_id === 'PAT-PENDING'; });
+        if (ti !== -1) PAT.all[ti].patient_id = r.patient_id;
+        pat_applyFilter();
+      }
+      toast('success', isEdit ? 'Patient updated!' : 'Patient added!');
+    })
+    .withFailureHandler(function(e) { PAT.all = snapshot; pat_applyFilter(); toast('error', e.message || 'Error.'); })
+    [fn](PAT.branchId, payload);
+}
+
+/* ── Delete ── */
+function pat_openDelete(id) {
+  var p = PAT.all.find(function(x){ return x.patient_id === id; });
+  if (!p) return;
+  _patDeleteId = id;
+  document.getElementById('patDeleteMsg').textContent = 'Delete "' + p.last_name + ', ' + p.first_name + '"? Cannot be undone.';
+  document.getElementById('patDeleteModal').style.display = 'flex';
+}
+function pat_closeDeleteModal() { document.getElementById('patDeleteModal').style.display = 'none'; _patDeleteId = null; }
+
+function pat_confirmDelete() {
+  if (!_patDeleteId) return;
+  var id       = _patDeleteId;
+  var snapshot = JSON.parse(JSON.stringify(PAT.all));
+  pat_closeDeleteModal();
+  var row = document.getElementById('pat-row-' + id);
+  if (row) { row.style.transition = 'opacity .25s,transform .25s'; row.style.opacity = '0'; row.style.transform = 'translateX(8px)'; }
+  setTimeout(function(){ PAT.all = PAT.all.filter(function(p){ return p.patient_id !== id; }); pat_applyFilter(); }, 260);
+  toast('info', 'Deleting patient…');
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) { PAT.all = snapshot; pat_applyFilter(); toast('error', r.message || 'Failed.'); return; }
+      toast('success', 'Patient deleted.');
+    })
+    .withFailureHandler(function(e) { PAT.all = snapshot; pat_applyFilter(); toast('error', e.message); })
+    .deletePatient(PAT.branchId, id);
+}
+
+/* ── View Modal ── */
+function pat_openView(id) {
+  var p = PAT.all.find(function(x){ return x.patient_id === id; });
+  if (!p) return;
+
+  var fullName = p.last_name + ', ' + p.first_name + (p.middle_name ? ' ' + p.middle_name : '');
+  var initials = (p.last_name[0] + p.first_name[0]).toUpperCase();
+  var avEl = document.getElementById('patViewAvatar');
+  avEl.textContent = initials;
+
+  document.getElementById('patViewName').textContent = fullName;
+  document.getElementById('patViewId').textContent   = p.patient_id;
+
+  var age    = p.dob ? pat_calcAge(p.dob) : '—';
+  var dobFmt = p.dob ? new Date(p.dob).toLocaleDateString('en-PH', {year:'numeric',month:'long',day:'numeric'}) : '—';
+
+  var fields = [
+    { label: 'Last Name',    value: p.last_name },
+    { label: 'First Name',   value: p.first_name },
+    { label: 'Middle Name',  value: p.middle_name || '—' },
+    { label: 'Sex',          value: p.sex },
+    { label: 'Date of Birth',value: dobFmt + ' (' + age + ' yrs old)' },
+    { label: 'Contact',      value: _phoneDisplay(p.contact), mono: true },
+    { label: 'Email',        value: p.email || '—' },
+    { label: 'Address',      value: p.address },
+    { label: 'PhilHealth',   value: p.philhealth_pin ? '✓ Member — ' + p.philhealth_pin : '✗ Not a member' },
+    { label: 'Discounts',    value: p.discounts_display || '—' }
+  ];
+
+  document.getElementById('patViewBody').innerHTML = fields.map(function(f) {
+    return '<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">'
+      + '<div style="font-size:12px;color:var(--text-3);font-weight:600;min-width:110px;flex-shrink:0;padding-top:1px;">' + _e(f.label) + '</div>'
+      + '<div style="font-size:13px;color:var(--text-1);font-weight:600;font-family:' + (f.mono ? 'var(--mono)' : 'var(--font)') + ';word-break:break-word;">' + _e(String(f.value||'—')) + '</div>'
+      + '</div>';
+  }).join('');
+
+  // Actions — edit/delete only for tech
+  var actDiv = document.getElementById('patViewActions');
+  actDiv.innerHTML = '';
+  if (PAT.isTech) {
+    var delBtn = document.createElement('button');
+    delBtn.className = 'btn btn-danger btn-sm';
+    delBtn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> Delete';
+    delBtn.onclick = function(){ pat_closeViewModal(); pat_openDelete(id); };
+    actDiv.appendChild(delBtn);
+
+    var editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-primary btn-sm';
+    editBtn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg> Edit';
+    editBtn.onclick = function(){ pat_closeViewModal(); pat_openEdit(id); };
+    actDiv.appendChild(editBtn);
+  } else {
+    actDiv.innerHTML = '<span style="font-size:12px;color:var(--text-4);">View only</span>';
+  }
+
+  _patViewPatientId = id;
+  _patViewActiveTab = 'profile';
+  pat_switchTab('profile');
+  document.getElementById('patTabContentResults').style.display = 'none';
+  document.getElementById('patResultsBody').innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-4);font-size:13px;">Loading results…</div>';
+  document.getElementById('patViewModal').style.display = 'flex';
+}
+
+function pat_closeViewModal() {
+  document.getElementById('patViewModal').style.display = 'none';
+}
+
+/* ── Patient View Tabs ── */
+var _patViewActiveTab = 'profile';
+var _patViewPatientId = null;
+
+function pat_switchTab(tab) {
+  _patViewActiveTab = tab;
+  var isProfile = tab === 'profile';
+  document.getElementById('patTabContentProfile').style.display = isProfile ? '' : 'none';
+  document.getElementById('patTabContentResults').style.display = !isProfile ? '' : 'none';
+  document.getElementById('patTabProfile').style.background  = isProfile ? 'rgba(255,255,255,.15)' : 'transparent';
+  document.getElementById('patTabProfile').style.color       = isProfile ? '#fff' : 'rgba(255,255,255,.6)';
+  document.getElementById('patTabResults').style.background  = !isProfile ? 'rgba(255,255,255,.15)' : 'transparent';
+  document.getElementById('patTabResults').style.color       = !isProfile ? '#fff' : 'rgba(255,255,255,.6)';
+
+  if (tab === 'results' && _patViewPatientId && PAT.branchId) {
+    pat_loadResults(_patViewPatientId, PAT.branchId);
+  }
+}
+
+function pat_loadResults(patientId, branchId) {
+  document.getElementById('patResultsBody').innerHTML =
+    '<div style="text-align:center;padding:32px;color:var(--text-4);font-family:var(--mono);font-size:13px;">'
+    + '<span class="spinner spinner-teal" style="display:inline-block;margin-bottom:8px;"></span><br>Loading results…</div>';
+
+  google.script.run
+    .withSuccessHandler(function (r) {
+      if (!r.success) {
+        document.getElementById('patResultsBody').innerHTML =
+          '<div style="padding:20px;color:var(--danger);font-size:13px;">' + _e(r.message) + '</div>';
+        return;
+      }
+      pat_renderResults(r.data || []);
+    })
+    .withFailureHandler(function (e) {
+      document.getElementById('patResultsBody').innerHTML =
+        '<div style="padding:20px;color:var(--danger);font-size:13px;">' + _e(e.message) + '</div>';
+    })
+    .getPatientResults(branchId, patientId);
+}
+
+function pat_renderResults(orders) {
+  if (!orders.length) {
+    document.getElementById('patResultsBody').innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--text-4);font-size:13px;">'
+      + '<svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:block;margin:0 auto 10px;opacity:.3;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>'
+      + 'No encoded results yet.</div>';
+    return;
+  }
+
+  var h = '';
+  orders.forEach(function (ord) {
+    h += '<div style="margin-bottom:20px;">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'
+      + '<span style="font-size:11px;font-weight:800;color:var(--text-3);font-family:var(--mono);">' + _e(ord.order_date) + '</span>'
+      + '<span style="font-size:10px;font-family:var(--mono);color:var(--text-4);">' + _e(ord.order_no) + '</span>'
+      + '</div>';
+
+    ord.items.forEach(function (item) {
+      if (!item.results.length) return;
+      var isXray = item.service_type === 'xray' || (item.results[0] && item.results[0].result_type === 'xray');
+
+      h += '<div style="border:1.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:10px;">'
+        + '<div style="padding:10px 14px;background:var(--gray-50);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">'
+        + (isXray
+          ? '<span style="font-size:10px;font-weight:800;background:rgba(14,165,233,.1);color:#0ea5e9;padding:1px 6px;border-radius:4px;">🩻 X-RAY</span>'
+          : '<span style="font-size:10px;font-weight:800;background:rgba(16,168,168,.1);color:var(--teal-600);padding:1px 6px;border-radius:4px;">🔬 LAB</span>')
+        + '<span style="font-size:13px;font-weight:700;color:var(--text-1);">' + _e(item.serv_name) + '</span>'
+        + '</div>';
+
+      if (isXray) {
+        var r0 = item.results[0];
+        h += '<div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px;">';
+        if (r0.clinical_data) {
+          h += '<div><div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Clinical Data</div>'
+            + '<div style="font-size:13px;color:var(--text-1);white-space:pre-wrap;">' + _e(r0.clinical_data) + '</div></div>';
+        }
+        if (r0.findings) {
+          h += '<div><div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Findings</div>'
+            + '<div style="font-size:13px;color:var(--text-1);white-space:pre-wrap;">' + _e(r0.findings) + '</div></div>';
+        }
+        if (r0.impression) {
+          h += '<div><div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Impression</div>'
+            + '<div style="font-size:13px;color:var(--text-1);white-space:pre-wrap;font-weight:700;">' + _e(r0.impression) + '</div></div>';
+        }
+        if (r0.encoded_by) {
+          h += '<div style="font-size:11px;color:var(--text-4);font-family:var(--mono);">Encoded by ' + _e(r0.encoded_by) + (r0.encoded_at ? ' · ' + new Date(r0.encoded_at).toLocaleDateString('en-PH') : '') + '</div>';
+        }
+        h += '</div>';
+      } else {
+        // Lab params table
+        h += '<table style="width:100%;border-collapse:collapse;font-size:12px;">'
+          + '<thead><tr style="background:var(--gray-50);">'
+          + '<th style="padding:6px 10px;text-align:left;font-weight:700;color:var(--text-3);font-size:11px;">Test</th>'
+          + '<th style="padding:6px 10px;text-align:center;font-weight:700;color:var(--text-3);font-size:11px;">Result</th>'
+          + '<th style="padding:6px 10px;text-align:center;font-weight:700;color:var(--text-3);font-size:11px;">Unit</th>'
+          + '<th style="padding:6px 10px;text-align:center;font-weight:700;color:var(--text-3);font-size:11px;">Ref. Range</th>'
+          + '<th style="padding:6px 10px;text-align:center;font-weight:700;color:var(--text-3);font-size:11px;">Remarks</th>'
+          + '</tr></thead><tbody>';
+        item.results.forEach(function (r) {
+          h += '<tr style="border-top:1px solid var(--border);">'
+            + '<td style="padding:7px 10px;font-weight:600;color:var(--text-1);">' + _e(r.lab_name) + '</td>'
+            + '<td style="padding:7px 10px;text-align:center;font-weight:800;color:var(--teal-700);font-family:var(--mono);">' + _e(r.result_value || '—') + '</td>'
+            + '<td style="padding:7px 10px;text-align:center;color:var(--text-3);font-family:var(--mono);">' + _e(r.unit || '—') + '</td>'
+            + '<td style="padding:7px 10px;text-align:center;color:var(--text-3);font-family:var(--mono);font-size:11px;">' + _e(r.reference_range || '—') + '</td>'
+            + '<td style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text-2);">' + _e(r.remarks || '—') + '</td>'
+            + '</tr>';
+        });
+        h += '</tbody></table>';
+        if (item.results[0] && item.results[0].encoded_by) {
+          h += '<div style="padding:6px 10px;font-size:10px;color:var(--text-4);font-family:var(--mono);border-top:1px solid var(--border);">Encoded by ' + _e(item.results[0].encoded_by) + (item.results[0].encoded_at ? ' · ' + new Date(item.results[0].encoded_at).toLocaleDateString('en-PH') : '') + '</div>';
+        }
+      }
+      h += '</div>';
+    });
+    h += '</div>';
+  });
+
+  document.getElementById('patResultsBody').innerHTML = h;
+}
+
+/* ══════════════════════════════════════
+   CROSS-BRANCH ACCESS GRANTS (BA only)
+   BA of home branch can grant/revoke access for other branches
+══════════════════════════════════════ */
+var PAT_GRANTS = { data: [], loaded: false };
+
+function pat_loadGrants() {
+  var role = APP.user ? APP.user.role : '';
+  if (role !== 'Branch Admin') return;
+  var branchId = APP.user.branch_ids ? APP.user.branch_ids.split(',')[0].trim() : '';
+  if (!branchId) return;
+
+  var wrap = document.getElementById('patGrantsWrap');
+  if (!wrap) return;
+  wrap.style.display = '';
+  document.getElementById('patGrantsBody').innerHTML =
+    '<tr><td colspan="3" style="text-align:center;padding:16px;"><span class="spinner spinner-teal" style="display:inline-block;width:16px;height:16px;border-width:2px;"></span></td></tr>';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      PAT_GRANTS.data   = r.data || [];
+      PAT_GRANTS.loaded = true;
+      pat_renderGrants();
+    })
+    .withFailureHandler(function(){})
+    .getPatientAccessGrants(branchId);
+}
+
+function pat_renderGrants() {
+  var tb = document.getElementById('patGrantsBody');
+  if (!PAT_GRANTS.data.length) {
+    tb.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-4);font-size:13px;">No active access grants for your branch.</td></tr>';
+    return;
+  }
+  var h = '';
+  PAT_GRANTS.data.forEach(function(g) {
+    var grantedDate = g.granted_at ? new Date(g.granted_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}) : '—';
+    h += '<tr>'
+      + '<td><span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--teal-600);">' + _e(g.patient_id) + '</span></td>'
+      + '<td><span style="font-size:12px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,96,176,.1);color:var(--teal-700);">' + _e(g.requesting_name) + '</span></td>'
+      + '<td style="font-size:11px;font-family:var(--mono);color:var(--text-3);">' + grantedDate + '</td>'
+      + '<td style="text-align:center;">'
+        + '<button class="btn btn-sm btn-danger" style="padding:4px 10px;font-size:11px;" onclick="pat_revokeGrant(\'' + _e(g.patient_id) + '\',\'' + _e(g.requesting_branch) + '\')">Revoke</button>'
+      + '</td>'
+      + '</tr>';
+  });
+  tb.innerHTML = h;
+}
+
+function pat_revokeGrant(patientId, requestingBranchId) {
+  if (!confirm('Revoke access for ' + patientId + ' from this branch?')) return;
+  toast('info', 'Revoking access…');
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) { toast('error', r.message||'Failed.'); return; }
+      PAT_GRANTS.data = PAT_GRANTS.data.filter(function(g) {
+        return !(g.patient_id === patientId && g.requesting_branch === requestingBranchId);
+      });
+      pat_renderGrants();
+      toast('success', 'Access revoked.');
+    })
+    .withFailureHandler(function(e){ toast('error', e.message||'Error.'); })
+    .revokePatientAccess(patientId, requestingBranchId);
+}
+
+/* Backdrop close */
+// document.getElementById('patViewModal').addEventListener('click', function(e){ if(e.target===this) pat_closeViewModal(); });
+// document.getElementById('patModal').addEventListener('click', function(e){ if(e.target===this) pat_closeModal(); });
+// document.getElementById('patDeleteModal').addEventListener('click', function(e){ if(e.target===this) pat_closeDeleteModal(); });
+
+// Load grants on init if BA
+(function() {
+  var orig = pat_init;
+  pat_init = function() {
+    orig();
+    setTimeout(pat_loadGrants, 800); // load after main patients list
+  };
+})();
+</script>

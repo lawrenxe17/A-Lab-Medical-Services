@@ -1,0 +1,697 @@
+<!-- BRANCH SETTINGS PAGE -->
+<div class="page-view" id="page-branch-settings">
+
+  <div class="section-header">
+    <div>
+      <div class="section-title" style="font-size:20px;">Branch Settings</div>
+      <div class="section-sub" id="bsSubtitle">Configure signatures and drive folders for your branch</div>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="branchSettings_load()" id="bsRefreshBtn">
+      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  <!-- SA-only: branch picker -->
+  <div id="bsBranchPickerCard" style="display:none;margin-bottom:16px;">
+    <div class="card" style="padding:14px 20px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <svg width="14" height="14" fill="none" stroke="var(--teal-600)" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span style="font-size:13px;font-weight:800;color:var(--text-1);">Editing settings for:</span>
+        </div>
+        <select id="bsBranchSelect" class="f-inp" style="width:auto;min-width:220px;font-size:13px;cursor:pointer;" onchange="branchSettings_onBranchChange()">
+          <option value="">— Select a branch —</option>
+        </select>
+        <span id="bsBranchPickerLoading" style="display:none;font-size:12px;color:var(--text-4);font-family:var(--mono);">Loading branches…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading skeleton -->
+  <div id="bsSkeleton" style="display:flex;flex-direction:column;gap:12px;">
+    <div class="card" style="padding:20px 24px;">
+      <div style="height:14px;width:200px;border-radius:6px;background:linear-gradient(90deg,#f0f2f7 25%,#e4e8f0 50%,#f0f2f7 75%);background-size:400px 100%;animation:shimmer 1.3s infinite;margin-bottom:16px;"></div>
+      <div style="height:40px;border-radius:8px;background:linear-gradient(90deg,#f0f2f7 25%,#e4e8f0 50%,#f0f2f7 75%);background-size:400px 100%;animation:shimmer 1.3s infinite;margin-bottom:10px;"></div>
+      <div style="height:40px;border-radius:8px;background:linear-gradient(90deg,#f0f2f7 25%,#e4e8f0 50%,#f0f2f7 75%);background-size:400px 100%;animation:shimmer 1.3s infinite;"></div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div id="bsContent" style="display:none;flex-direction:column;gap:16px;">
+
+    <!-- ═══════════════════════════════════════════
+         X-RAY SIGNATURES SECTION
+         Visible to: SA/BA (radiologist card only) | RadTech (own card + radiologist card)
+    ════════════════════════════════════════════ -->
+    <div class="card" id="bsSectionXray" style="padding:0;overflow:hidden;">
+      <div style="padding:16px 24px;border-bottom:1px solid var(--border);background:var(--gray-50);display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:9px;background:rgba(14,165,233,.1);border:1px solid rgba(14,165,233,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="17" height="17" fill="none" stroke="#0ea5e9" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:var(--text-1);">X-Ray Report Signatures</div>
+            <div style="font-size:12px;color:var(--text-3);margin-top:1px;">Names, credentials, and signatures printed on x-ray reports</div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="bsXraySaveBtn" onclick="bs_saveXray()" style="background:#0ea5e9;border-color:#0ea5e9;">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+          Save
+        </button>
+      </div>
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px;">
+
+        <!-- Radiologic Technologist — own card (tech only) -->
+        <div id="bsXsOwnCard" style="display:none;padding:16px;border:1.5px solid rgba(14,165,233,.2);border-radius:var(--radius-lg);background:rgba(14,165,233,.03);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+            <div style="width:28px;height:28px;border-radius:7px;background:rgba(14,165,233,.12);display:flex;align-items:center;justify-content:center;">
+              <svg width="14" height="14" fill="none" stroke="#0ea5e9" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+            </div>
+            <div style="font-size:13px;font-weight:800;color:#0369a1;">Radiologic Technologist <span style="font-size:11px;font-weight:500;color:var(--text-4);">(Your Account)</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div>
+              <label class="f-label">Full Name</label>
+              <div id="bsXsOwnName" style="font-size:13px;font-weight:600;color:var(--text-1);padding:9px 12px;background:var(--gray-50);border:1px solid var(--border);border-radius:var(--radius);"></div>
+            </div>
+            <div>
+              <label class="f-label">Credentials / License No.</label>
+              <input type="text" id="bsXsOwnCred" class="f-inp" placeholder="e.g. RRT Lic. No. 0012345" style="font-family:var(--mono);font-size:12px;">
+            </div>
+          </div>
+          <div>
+            <label class="f-label">Signature Image</label>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <div id="bsXsOwnSigPreview" style="width:160px;height:70px;border:1.5px dashed var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--gray-50);">
+                <span style="font-size:11px;color:var(--text-4);">No signature</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <input type="file" id="bsXsOwnSigFile" accept="image/*" style="display:none;" onchange="bs_uploadTechSig(this,'xray')">
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('bsXsOwnSigFile').click()" id="bsXsOwnSigBtn">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                  Upload Signature
+                </button>
+                <div id="bsXsOwnSigStatus" style="font-size:11px;color:var(--text-4);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Radiologist card (visible to all: SA/BA + RadTech) -->
+        <div style="padding:16px;border:1.5px solid rgba(99,102,241,.2);border-radius:var(--radius-lg);background:rgba(99,102,241,.03);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+            <div style="width:28px;height:28px;border-radius:7px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center;">
+              <svg width="14" height="14" fill="none" stroke="#6366f1" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+            </div>
+            <div style="font-size:13px;font-weight:800;color:#4f46e5;">Radiologist</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div>
+              <label class="f-label">Full Name</label>
+              <input type="text" id="bsXsRadiologName" class="f-inp" placeholder="e.g. Dr. Maria Santos, M.D.">
+            </div>
+            <div>
+              <label class="f-label">Credentials / Specialization</label>
+              <input type="text" id="bsXsRadiologCred" class="f-inp" placeholder="e.g. Diplomate, Philippine Board of Radiology" style="font-size:12px;">
+            </div>
+          </div>
+          <div>
+            <label class="f-label">Signature Image</label>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <div id="bsXsRadiologSigPreview" style="width:160px;height:70px;border:1.5px dashed var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--gray-50);">
+                <span style="font-size:11px;color:var(--text-4);">No signature</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <input type="file" id="bsXsRadiologSigFile" accept="image/*" style="display:none;" onchange="bs_uploadBranchSig(this,'radiologist')">
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('bsXsRadiologSigFile').click()" id="bsXsRadiologSigBtn">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                  Upload Signature
+                </button>
+                <div id="bsXsRadiologSigStatus" style="font-size:11px;color:var(--text-4);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         LAB SIGNATURES SECTION
+         Visible to: SA/BA (pathologist card only) | MedTech (own card + pathologist card)
+    ════════════════════════════════════════════ -->
+    <div class="card" id="bsSectionLab" style="padding:0;overflow:hidden;">
+      <div style="padding:16px 24px;border-bottom:1px solid var(--border);background:var(--gray-50);display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:9px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="17" height="17" fill="none" stroke="#14b8a6" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.675.27a6 6 0 01-3.86.517l-2.388-.477a2 2 0 00-1.022.547l-1.162 1.162a2 2 0 00-.547 1.022l-.477 2.388a2 2 0 002.547 2.547l2.388-.477a2 2 0 001.022-.547l1.162-1.162a2 2 0 00.547-1.022l.477-2.388a2 2 0 00-2.547-2.547l-2.388.477a2 2 0 00-1.022.547l-1.162 1.162z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 12l.01 0"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:var(--text-1);">Laboratory Report Signatures</div>
+            <div style="font-size:12px;color:var(--text-3);margin-top:1px;">Names, credentials, and signatures printed on lab reports</div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="bsLabSaveBtn" onclick="bs_saveLab()" style="background:#14b8a6;border-color:#14b8a6;">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+          Save
+        </button>
+      </div>
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px;">
+
+        <!-- Medical Technologist — own card (tech only) -->
+        <div id="bsLsOwnCard" style="display:none;padding:16px;border:1.5px solid rgba(20,184,166,.2);border-radius:var(--radius-lg);background:rgba(20,184,166,.03);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+            <div style="width:28px;height:28px;border-radius:7px;background:rgba(20,184,166,.12);display:flex;align-items:center;justify-content:center;">
+              <svg width="14" height="14" fill="none" stroke="#14b8a6" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+            </div>
+            <div style="font-size:13px;font-weight:800;color:#0d9488;">Medical Technologist <span style="font-size:11px;font-weight:500;color:var(--text-4);">(Your Account)</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div>
+              <label class="f-label">Full Name</label>
+              <div id="bsLsOwnName" style="font-size:13px;font-weight:600;color:var(--text-1);padding:9px 12px;background:var(--gray-50);border:1px solid var(--border);border-radius:var(--radius);"></div>
+            </div>
+            <div>
+              <label class="f-label">Credentials / Title</label>
+              <input type="text" id="bsLsOwnCred" class="f-inp" placeholder="e.g. MEDICAL TECHNOLOGIST" style="font-size:12px;">
+            </div>
+            <div>
+              <label class="f-label">License No.</label>
+              <input type="text" id="bsLsOwnLicenseNo" class="f-inp" placeholder="e.g. 0012345" style="font-family:var(--mono);font-size:12px;">
+            </div>
+          </div>
+          <div>
+            <label class="f-label">Signature Image</label>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <div id="bsLsOwnSigPreview" style="width:160px;height:70px;border:1.5px dashed var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--gray-50);">
+                <span style="font-size:11px;color:var(--text-4);">No signature</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <input type="file" id="bsLsOwnSigFile" accept="image/*" style="display:none;" onchange="bs_uploadTechSig(this,'lab')">
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('bsLsOwnSigFile').click()" id="bsLsOwnSigBtn">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                  Upload Signature
+                </button>
+                <div id="bsLsOwnSigStatus" style="font-size:11px;color:var(--text-4);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pathologist card (visible to all: SA/BA + MedTech) -->
+        <div style="padding:16px;border:1.5px solid rgba(245,158,11,.2);border-radius:var(--radius-lg);background:rgba(245,158,11,.03);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+            <div style="width:28px;height:28px;border-radius:7px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;">
+              <svg width="14" height="14" fill="none" stroke="#f59e0b" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+            </div>
+            <div style="font-size:13px;font-weight:800;color:#b45309;">Pathologist</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div>
+              <label class="f-label">Full Name</label>
+              <input type="text" id="bsLsPathologName" class="f-inp" placeholder="e.g. Dr. Jose Rizal, M.D.">
+            </div>
+            <div>
+              <label class="f-label">Credentials / Specialization</label>
+              <input type="text" id="bsLsPathologCred" class="f-inp" placeholder="e.g. FPSP, Anatomic & Clinical Pathology" style="font-size:12px;">
+            </div>
+            <div>
+              <label class="f-label">License No.</label>
+              <input type="text" id="bsLsPathologLicenseNo" class="f-inp" placeholder="e.g. 0012345" style="font-family:var(--mono);font-size:12px;">
+            </div>
+          </div>
+          <div>
+            <label class="f-label">Signature Image</label>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <div id="bsLsPathologSigPreview" style="width:160px;height:70px;border:1.5px dashed var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--gray-50);">
+                <span style="font-size:11px;color:var(--text-4);">No signature</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <input type="file" id="bsLsPathologSigFile" accept="image/*" style="display:none;" onchange="bs_uploadBranchSig(this,'pathologist')">
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('bsLsPathologSigFile').click()" id="bsLsPathologSigBtn">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                  Upload Signature
+                </button>
+                <div id="bsLsPathologSigStatus" style="font-size:11px;color:var(--text-4);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Drive & Folders — SA/BA only -->
+    <div class="card" id="bsSectionDrive" style="padding:0;overflow:hidden;">
+      <div style="padding:16px 24px;border-bottom:1px solid var(--border);background:var(--gray-50);display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:9px;background:rgba(16,168,168,.1);border:1px solid rgba(16,168,168,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="17" height="17" fill="none" stroke="var(--teal-600)" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 15v4c0 .6.4 1 1 1h16c.6 0 1-.4 1-1v-4M3 15V9c0-.6.4-1 1-1h6.5l2 2H20c.6 0 1 .4 1 1v4M3 15h18"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:var(--text-1);">Drive &amp; Folders</div>
+            <div style="font-size:12px;color:var(--text-3);margin-top:1px;">Configure patient automated Google Drive folders</div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="bsDriveSaveBtn" onclick="bs_saveDrive()">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+          Save Settings
+        </button>
+      </div>
+      <div style="padding:20px 24px;">
+        <div style="padding:16px;border:1.5px solid rgba(16,168,168,.2);border-radius:var(--radius-lg);background:rgba(16,168,168,.03);">
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <label class="f-label">Root Patient Folder ID / Link</label>
+              <input type="text" id="bsDsRootFolderId" class="f-inp" placeholder="e.g. 1A2B3C4D5E6F7G8H9I0J" style="font-family:var(--mono);font-size:13px;">
+              <div style="font-size:11px;color:var(--text-4);margin-top:6px;line-height:1.5;">Paste the Google Drive folder link or ID where all new patients should automatically get their own folders. Ensure this folder is shared with the system email.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Error banner -->
+  <div id="bsErr" style="display:none;margin-top:12px;font-size:12px;color:var(--danger);background:var(--danger-bg);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:10px 14px;"></div>
+
+</div>
+
+<script>
+  /* ════════════════════════════════════════════════════════
+     BRANCH SETTINGS PAGE
+  ════════════════════════════════════════════════════════ */
+
+  var _bsLoaded           = false;
+  var _bsSelectedBranchId = '';
+
+  function _bsIsSA()     { return APP.user && APP.user.role === 'Super Admin'; }
+  function _bsIsBA()     { return APP.user && APP.user.role === 'Branch Admin'; }
+  function _bsIsAdmin()  { return _bsIsSA() || _bsIsBA(); }
+  function _bsIsTech()   { return APP.user && APP.user.role === 'Technologist'; }
+  function _bsIsRadTech(){ return _bsIsTech() && (APP.user.tech_role || '').toLowerCase().indexOf('radiolog') !== -1; }
+  function _bsIsMedTech(){ return _bsIsTech() && !_bsIsRadTech(); }
+
+  function _bsGetBranchId() {
+    if (_bsIsSA()) return _bsSelectedBranchId;
+    return APP.user && APP.user.branch_ids ? APP.user.branch_ids.split(',')[0].trim() : '';
+  }
+
+  // Show/hide sections based on role
+  function _bsApplyRoleView() {
+    var secXray  = document.getElementById('bsSectionXray');
+    var secLab   = document.getElementById('bsSectionLab');
+    var secDrive = document.getElementById('bsSectionDrive');
+    var ownCardX = document.getElementById('bsXsOwnCard');
+    var ownCardL = document.getElementById('bsLsOwnCard');
+
+    if (_bsIsAdmin()) {
+      secXray.style.display  = '';
+      secLab.style.display   = '';
+      secDrive.style.display = '';
+      ownCardX.style.display = 'none';
+      ownCardL.style.display = 'none';
+    } else if (_bsIsRadTech()) {
+      secXray.style.display  = '';
+      secLab.style.display   = 'none';
+      secDrive.style.display = 'none';
+      ownCardX.style.display = '';
+      ownCardL.style.display = 'none';
+      // Populate own name
+      var nameEl = document.getElementById('bsXsOwnName');
+      if (nameEl) nameEl.textContent = APP.user.name || '';
+    } else if (_bsIsMedTech()) {
+      secXray.style.display  = 'none';
+      secLab.style.display   = '';
+      secDrive.style.display = 'none';
+      ownCardX.style.display = 'none';
+      ownCardL.style.display = '';
+      // Populate own name
+      var nameEl2 = document.getElementById('bsLsOwnName');
+      if (nameEl2) nameEl2.textContent = APP.user.name || '';
+    }
+  }
+
+  function branchSettings_onBranchChange() {
+    _bsSelectedBranchId = document.getElementById('bsBranchSelect').value;
+    if (_bsSelectedBranchId) branchSettings_load();
+    else {
+      document.getElementById('bsContent').style.display = 'none';
+      document.getElementById('bsSkeleton').style.display = 'none';
+    }
+  }
+
+  function branchSettings_initPicker() {
+    var card = document.getElementById('bsBranchPickerCard');
+    if (!_bsIsSA()) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    var sel = document.getElementById('bsBranchSelect');
+    if (sel.options.length > 1) return;
+    document.getElementById('bsBranchPickerLoading').style.display = 'inline';
+    google.script.run
+      .withSuccessHandler(function(branches) {
+        document.getElementById('bsBranchPickerLoading').style.display = 'none';
+        (branches || []).forEach(function(b) {
+          var opt = document.createElement('option');
+          opt.value = b.branch_id;
+          opt.textContent = b.branch_name;
+          sel.appendChild(opt);
+        });
+        if (!_bsSelectedBranchId && branches && branches.length) {
+          _bsSelectedBranchId = branches[0].branch_id;
+          sel.value = _bsSelectedBranchId;
+          branchSettings_load();
+        }
+      })
+      .withFailureHandler(function() {
+        document.getElementById('bsBranchPickerLoading').style.display = 'none';
+      })
+      .getBranchesForPatientView('');
+  }
+
+  function branchSettings_load() {
+    var branchId = _bsGetBranchId();
+    if (!branchId && !_bsIsSA()) {
+      document.getElementById('bsSkeleton').style.display = 'none';
+      document.getElementById('bsErr').style.display = 'block';
+      document.getElementById('bsErr').textContent = 'No branch assigned to your account.';
+      return;
+    }
+    if (!branchId) return;
+
+    document.getElementById('bsSkeleton').style.display = 'flex';
+    document.getElementById('bsContent').style.display  = 'none';
+    document.getElementById('bsErr').style.display      = 'none';
+
+    var xrayDone  = false, labDone = false, driveDone = false, techDone = false;
+    var xrayData  = null, labData = null, driveData = null, techData = null;
+    var needDrive = _bsIsAdmin();
+    var needTech  = _bsIsTech();
+
+    // For admin, tech data not needed; for tech, drive not needed
+    if (!needDrive) driveDone = true;
+    if (!needTech)  techDone  = true;
+
+    function tryRender() {
+      if (!xrayDone || !labDone || !driveDone || !techDone) return;
+      document.getElementById('bsSkeleton').style.display = 'none';
+
+      // Radiologist
+      if (xrayData && xrayData.success) {
+        document.getElementById('bsXsRadiologName').value = xrayData.radiologist ? xrayData.radiologist.name        : '';
+        document.getElementById('bsXsRadiologCred').value = xrayData.radiologist ? xrayData.radiologist.credentials : '';
+        _bsSetSigPreview('bsXsRadiologSigPreview', xrayData.radiologist ? xrayData.radiologist.signature_url : '');
+      }
+      // Pathologist
+      if (labData && labData.success) {
+        document.getElementById('bsLsPathologName').value      = labData.pathologist ? labData.pathologist.name        : '';
+        document.getElementById('bsLsPathologCred').value      = labData.pathologist ? labData.pathologist.credentials : '';
+        document.getElementById('bsLsPathologLicenseNo').value = labData.pathologist ? (labData.pathologist.license_no || '') : '';
+        _bsSetSigPreview('bsLsPathologSigPreview', labData.pathologist ? labData.pathologist.signature_url : '');
+      }
+      // Drive
+      if (driveData && driveData.success) {
+        document.getElementById('bsDsRootFolderId').value = driveData.root_folder_id || '';
+      }
+      // Tech own info
+      if (techData && techData.success) {
+        if (_bsIsRadTech()) {
+          document.getElementById('bsXsOwnCred').value = techData.credentials || '';
+          _bsSetSigPreview('bsXsOwnSigPreview', techData.signature_url || '');
+        } else {
+          document.getElementById('bsLsOwnCred').value      = techData.credentials || '';
+          document.getElementById('bsLsOwnLicenseNo').value = techData.license_no  || '';
+          _bsSetSigPreview('bsLsOwnSigPreview', techData.signature_url || '');
+        }
+      }
+
+      _bsApplyRoleView();
+      document.getElementById('bsContent').style.display = 'flex';
+      _bsLoaded = true;
+    }
+
+    // Always load xray + lab signatures
+    google.script.run
+      .withSuccessHandler(function(r) { xrayData = r; xrayDone = true; tryRender(); })
+      .withFailureHandler(function(e) {
+        xrayData = { success: false };
+        xrayDone = true;
+        document.getElementById('bsErr').style.display = 'block';
+        document.getElementById('bsErr').textContent = 'Failed to load x-ray signatures: ' + (e.message || 'Connection error');
+        tryRender();
+      })
+      .getXraySignatures(branchId);
+
+    google.script.run
+      .withSuccessHandler(function(r) { labData = r; labDone = true; tryRender(); })
+      .withFailureHandler(function(e) { labData = { success: false }; labDone = true; tryRender(); })
+      .getLabSignatures(branchId);
+
+    if (needDrive) {
+      google.script.run
+        .withSuccessHandler(function(r) { driveData = r; driveDone = true; tryRender(); })
+        .withFailureHandler(function(e) { driveData = { success: false }; driveDone = true; tryRender(); })
+        .getDriveFolderConfig(branchId);
+    }
+
+    if (needTech) {
+      google.script.run
+        .withSuccessHandler(function(r) { techData = r; techDone = true; tryRender(); })
+        .withFailureHandler(function(e) { techData = { success: false }; techDone = true; tryRender(); })
+        .getTechInfo(APP.user.admin_id);
+    }
+  }
+
+  // ── Signature preview helper ──────────────────────────────
+  function _bsSetSigPreview(elId, url) {
+    var el = document.getElementById(elId);
+    if (!el) return;
+    if (url) {
+      el.innerHTML = '<img src="' + url + '" style="max-width:100%;max-height:100%;object-fit:contain;">';
+    } else {
+      el.innerHTML = '<span style="font-size:11px;color:var(--text-4);">No signature</span>';
+    }
+  }
+
+  // ── Upload tech's own signature image ────────────────────
+  function bs_uploadTechSig(input, section) {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    var statusId  = section === 'xray' ? 'bsXsOwnSigStatus'   : 'bsLsOwnSigStatus';
+    var previewId = section === 'xray' ? 'bsXsOwnSigPreview'  : 'bsLsOwnSigPreview';
+    var btnId     = section === 'xray' ? 'bsXsOwnSigBtn'      : 'bsLsOwnSigBtn';
+    var statusEl  = document.getElementById(statusId);
+    var btn       = document.getElementById(btnId);
+
+    statusEl.textContent = 'Uploading…';
+    statusEl.style.color = 'var(--text-4)';
+    btn.disabled = true;
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var dataUrl  = e.target.result;
+      var base64   = dataUrl.split(',')[1];
+      var mimeType = file.type || 'image/png';
+      var branchId = _bsGetBranchId();
+
+      google.script.run
+        .withSuccessHandler(function(r) {
+          btn.disabled = false;
+          if (!r.success) { statusEl.textContent = r.message || 'Upload failed.'; statusEl.style.color = 'var(--danger)'; return; }
+          statusEl.textContent = 'Uploaded!';
+          statusEl.style.color = 'var(--success)';
+          _bsSetSigPreview(previewId, r.url);
+          // Update in-memory user object so PDF generation benefits immediately
+          if (APP.user) APP.user.signature_url = r.url;
+        })
+        .withFailureHandler(function(e) {
+          btn.disabled = false;
+          statusEl.textContent = e.message || 'Upload error.';
+          statusEl.style.color = 'var(--danger)';
+        })
+        .uploadTechSignatureImage(branchId, APP.user.admin_id, base64, mimeType);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ── Upload pathologist / radiologist signature image ─────
+  function bs_uploadBranchSig(input, role) {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    var statusId  = role === 'radiologist' ? 'bsXsRadiologSigStatus' : 'bsLsPathologSigStatus';
+    var previewId = role === 'radiologist' ? 'bsXsRadiologSigPreview' : 'bsLsPathologSigPreview';
+    var btnId     = role === 'radiologist' ? 'bsXsRadiologSigBtn'     : 'bsLsPathologSigBtn';
+    var statusEl  = document.getElementById(statusId);
+    var btn       = document.getElementById(btnId);
+
+    statusEl.textContent = 'Uploading…';
+    statusEl.style.color = 'var(--text-4)';
+    btn.disabled = true;
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var dataUrl  = e.target.result;
+      var base64   = dataUrl.split(',')[1];
+      var mimeType = file.type || 'image/png';
+      var branchId = _bsGetBranchId();
+
+      google.script.run
+        .withSuccessHandler(function(r) {
+          btn.disabled = false;
+          if (!r.success) { statusEl.textContent = r.message || 'Upload failed.'; statusEl.style.color = 'var(--danger)'; return; }
+          statusEl.textContent = 'Uploaded!';
+          statusEl.style.color = 'var(--success)';
+          _bsSetSigPreview(previewId, r.url);
+        })
+        .withFailureHandler(function(e) {
+          btn.disabled = false;
+          statusEl.textContent = e.message || 'Upload error.';
+          statusEl.style.color = 'var(--danger)';
+        })
+        .uploadBranchSignatureImage(branchId, role, base64, mimeType);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ── Save X-Ray section ───────────────────────────────────
+  function bs_saveXray() {
+    var branchId = _bsGetBranchId();
+    if (!branchId) return;
+    var btn = document.getElementById('bsXraySaveBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+
+    var radiologist = {
+      name:        document.getElementById('bsXsRadiologName').value.trim(),
+      credentials: document.getElementById('bsXsRadiologCred').value.trim()
+    };
+
+    var afterRadiologist = function() {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save';
+      toast('success', 'X-Ray signatures saved.');
+    };
+
+    // If tech, also save own credentials
+    if (_bsIsTech()) {
+      var cred = document.getElementById('bsXsOwnCred').value.trim();
+      google.script.run
+        .withSuccessHandler(function() {
+          google.script.run
+            .withSuccessHandler(afterRadiologist)
+            .withFailureHandler(function(e) { btn.disabled = false; btn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save'; toast('error', e.message || 'Error.'); })
+            .saveXraySignatures(branchId, radiologist);
+        })
+        .withFailureHandler(function(e) { btn.disabled = false; toast('error', e.message || 'Error saving credentials.'); })
+        .saveTechCredentials(APP.user.admin_id, cred);
+    } else {
+      google.script.run
+        .withSuccessHandler(function(r) {
+          btn.disabled = false;
+          btn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save';
+          if (!r.success) { toast('error', r.message || 'Failed to save.'); return; }
+          toast('success', 'X-Ray signatures saved.');
+        })
+        .withFailureHandler(function(e) { btn.disabled = false; btn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save'; toast('error', e.message || 'Connection error.'); })
+        .saveXraySignatures(branchId, radiologist);
+    }
+  }
+
+  // ── Save Lab section ─────────────────────────────────────
+  function bs_saveLab() {
+    var branchId = _bsGetBranchId();
+    if (!branchId) return;
+    var btn = document.getElementById('bsLabSaveBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+
+    var pathologist = {
+      name:        document.getElementById('bsLsPathologName').value.trim(),
+      credentials: document.getElementById('bsLsPathologCred').value.trim(),
+      license_no:  document.getElementById('bsLsPathologLicenseNo').value.trim()
+    };
+
+    var afterPathologist = function() {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save';
+      toast('success', 'Laboratory signatures saved.');
+    };
+
+    if (_bsIsTech()) {
+      var cred      = document.getElementById('bsLsOwnCred').value.trim();
+      var licenseNo = document.getElementById('bsLsOwnLicenseNo').value.trim();
+      google.script.run
+        .withSuccessHandler(function() {
+          google.script.run
+            .withSuccessHandler(function() {
+              google.script.run
+                .withSuccessHandler(afterPathologist)
+                .withFailureHandler(function(e) { btn.disabled = false; btn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save'; toast('error', e.message || 'Error.'); })
+                .saveLabSignatures(branchId, pathologist);
+            })
+            .withFailureHandler(function(e) { btn.disabled = false; toast('error', e.message || 'Error saving license number.'); })
+            .saveTechLicenseNo(APP.user.admin_id, licenseNo);
+        })
+        .withFailureHandler(function(e) { btn.disabled = false; toast('error', e.message || 'Error saving credentials.'); })
+        .saveTechCredentials(APP.user.admin_id, cred);
+    } else {
+      google.script.run
+        .withSuccessHandler(function(r) {
+          btn.disabled = false;
+          btn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save';
+          if (!r.success) { toast('error', r.message || 'Failed to save.'); return; }
+          toast('success', 'Laboratory signatures saved.');
+        })
+        .withFailureHandler(function(e) { btn.disabled = false; btn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save'; toast('error', e.message || 'Connection error.'); })
+        .saveLabSignatures(branchId, pathologist);
+    }
+  }
+
+  // ── Save Drive section ───────────────────────────────────
+  function bs_saveDrive() {
+    var branchId = _bsGetBranchId();
+    if (!branchId) return;
+    var rootFolderId = document.getElementById('bsDsRootFolderId').value.trim();
+    var btn = document.getElementById('bsDriveSaveBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    google.script.run
+      .withSuccessHandler(function(r) {
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save Settings';
+        if (!r.success) { toast('error', r.message || 'Failed to save.'); return; }
+        toast('success', 'Drive settings saved.');
+      })
+      .withFailureHandler(function(e) {
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save Settings';
+        toast('error', e.message || 'Connection error.');
+      })
+      .saveDriveFolderConfig(branchId, rootFolderId);
+  }
+</script>

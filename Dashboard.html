@@ -1,0 +1,342 @@
+<div class="page-view active" id="page-dashboard">
+
+  <!-- Hero -->
+  <div class="dash-hero">
+    <div class="dash-hero-grid"></div>
+    <div class="dash-hero-text">
+      <div class="dash-hero-greeting" id="heroGreeting">Good morning ☀️</div>
+      <div class="dash-hero-name" id="heroName">Welcome back, Admin</div>
+      <div class="dash-hero-sub">Here's what's happening at A-Lab today. <span id="heroDate" style="color:rgba(255,255,255,.4);"></span></div>
+    </div>
+    <div class="dash-hero-right">
+      <button class="dash-hero-btn dash-hero-btn-primary" onclick="navigateTo('orders')">View Orders</button>
+    </div>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-card-accent" style="background:var(--teal-500);"></div>
+      <div class="stat-icon" style="background:rgba(16,168,168,.1);">
+        <svg width="20" height="20" fill="none" stroke="var(--teal-600)" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+      </div>
+      <div class="stat-val" id="dashOrdersToday">0</div>
+      <div class="stat-label">Total Orders Today</div>
+      <div class="stat-delta delta-neutral" id="dashOrdersDelta" style="display:none;"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-accent" style="background:var(--success);"></div>
+      <div class="stat-icon" style="background:var(--success-bg);">
+        <svg width="20" height="20" fill="none" stroke="var(--success)" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div class="stat-val" id="dashCompletedOrders">0</div>
+      <div class="stat-label">Completed</div>
+      <div class="stat-delta delta-neutral" style="display:none;"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-accent" style="background:var(--warning);"></div>
+      <div class="stat-icon" style="background:var(--warning-bg);">
+        <svg width="20" height="20" fill="none" stroke="var(--warning)" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div class="stat-val" id="dashPendingOrders">0</div>
+      <div class="stat-label">Pending / Processing</div>
+      <div class="stat-delta delta-neutral" style="display:none;"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-accent" style="background:var(--info);"></div>
+      <div class="stat-icon" style="background:var(--info-bg);">
+        <svg width="20" height="20" fill="none" stroke="var(--info)" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div class="stat-val" id="dashRevenueToday">0</div>
+      <div class="stat-label">Revenue Today</div>
+      <div class="stat-delta delta-neutral" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Middle row: Chart + Quick stats -->
+  <div class="grid-2" style="margin-bottom:20px;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="section-title">Orders This Week</div>
+          <div class="section-sub">Daily order volume</div>
+        </div>
+        <span class="badge badge-teal">This Week</span>
+      </div>
+      <div class="card-body" id="dashWeeklyChart" style="display:flex;align-items:flex-end;justify-content:center;height:160px;">
+        <span class="spinner spinner-teal"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="section-title">Quick Overview</div>
+          <div class="section-sub">Current system status</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="qs-row">
+          <div class="qs-item">
+            <div class="qs-icon" style="background:rgba(16,168,168,.1);">
+              <svg width="16" height="16" fill="none" stroke="var(--teal-600)" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+              </svg>
+            </div>
+            <div><div class="qs-val" id="dashLabServices">0</div><div class="qs-label">Lab Services</div></div>
+          </div>
+          <div class="qs-item">
+            <div class="qs-icon" style="background:var(--success-bg);">
+              <svg width="16" height="16" fill="none" stroke="var(--success)" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+              </svg>
+            </div>
+            <div><div class="qs-val" id="dashPackages">0</div><div class="qs-label">Packages</div></div>
+          </div>
+          <div class="qs-item">
+            <div class="qs-icon" style="background:var(--info-bg);">
+              <svg width="16" height="16" fill="none" stroke="var(--info)" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              </svg>
+            </div>
+            <div><div class="qs-val" id="dashBranches">0</div><div class="qs-label">Branches</div></div>
+          </div>
+          <div class="qs-item">
+            <div class="qs-icon" style="background:var(--warning-bg);">
+              <svg width="16" height="16" fill="none" stroke="var(--warning)" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M17 17h.01M7 17L17 7M9 7a2 2 0 11-4 0 2 2 0 014 0zm10 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+            </div>
+            <div><div class="qs-val" id="dashDiscounts">0</div><div class="qs-label">Active Discounts</div></div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div style="font-size:12px;color:var(--text-3);font-family:var(--mono);text-align:center;">
+          Last synced: <span style="color:var(--teal-600);font-weight:700;">just now</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom row: Recent Orders + Activity -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="section-title">Recent Orders</div>
+          <div class="section-sub">Latest lab exam orders</div>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="navigateTo('orders')">View All</button>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Patient</th>
+              <th>Service</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="dashRecentOrdersBody">
+            <tr><td colspan="4" style="text-align:center;color:var(--text-4);font-family:var(--mono);padding:20px;">Loading orders...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="section-title">Recent Activity</div>
+          <div class="section-sub">System audit trail</div>
+        </div>
+        <span class="badge badge-green" style="font-family:var(--mono);">Live</span>
+      </div>
+      <div class="card-body" id="dashRecentActivityBody">
+        <div style="text-align:center;padding:20px;color:var(--text-4);font-family:var(--mono);">Loading activity...</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- /page-dashboard -->
+
+<script>
+function dash_init() {
+  if (!APP.user) return;
+  var isSA = APP.user.role === 'Super Admin';
+  var branchId = isSA ? '' : APP.user.branch_ids;
+
+  // Set loading states
+  document.getElementById('dashOrdersToday').textContent = '...';
+  document.getElementById('dashCompletedOrders').textContent = '...';
+  document.getElementById('dashPendingOrders').textContent = '...';
+  document.getElementById('dashRevenueToday').textContent = '...';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) {
+        toast('error', r.message || 'Failed to load dashboard data.');
+        return;
+      }
+      dash_render(r);
+    })
+    .withFailureHandler(function(e) {
+      toast('error', e.message || 'Connection error.');
+    })
+    .getDashboardStats(branchId);
+}
+
+function dash_render(data) {
+  var s = data.stats || {};
+  
+  // Quick fix for NumberFormat
+  var fmtMoney = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format;
+
+  // Stat tags
+  document.getElementById('dashOrdersToday').textContent = s.today_orders || 0;
+  document.getElementById('dashCompletedOrders').textContent = s.released || 0;
+  var pending = (s.in_progress || 0) + (s.for_release || 0); // or OPEN depending on what you want
+  document.getElementById('dashPendingOrders').textContent = pending || 0;
+  document.getElementById('dashRevenueToday').textContent = fmtMoney(s.today_revenue || 0);
+
+  // Quick Overview
+  document.getElementById('dashLabServices').textContent = s.service_count || 0;
+  document.getElementById('dashPackages').textContent = s.package_count || 0;
+  document.getElementById('dashBranches').textContent = s.branch_count || 0;
+  document.getElementById('dashDiscounts').textContent = s.discount_count || 0;
+
+  // Recent Orders table
+  var ordersHtml = '';
+  var recentOrders = data.recent_orders || [];
+  if (!recentOrders.length) {
+    ordersHtml = '<tr><td colspan="4" style="text-align:center;color:var(--text-4);font-family:var(--mono);font-size:12px;padding:20px;">No recent orders</td></tr>';
+  } else {
+    recentOrders.forEach(function(o) {
+      var sClass = o.status === 'RELEASED' ? 's-completed' : o.status === 'CANCELLED' ? 's-cancelled' : o.status === 'IN_PROGRESS' || o.status === 'FOR_RELEASE' ? 's-processing' : 's-pending';
+      var oType = o.order_types ? o.order_types : (o.net_amount > 0 ? fmtMoney(o.net_amount) : 'Lab Service');
+      ordersHtml += '<tr>'
+        + '<td><span style="font-family:var(--mono);font-weight:700;color:var(--teal-700);">' + _e(o.order_no) + '</span></td>'
+        + '<td>' + _e(o.patient_name) + '</td>'
+        + '<td>' + _e(oType) + '</td>'
+        + '<td><span class="status-pill ' + sClass + '">' + _e(o.status) + '</span></td>'
+        + '</tr>';
+    });
+  }
+  document.getElementById('dashRecentOrdersBody').innerHTML = ordersHtml;
+
+  // Recent Activity list
+  var actHtml = '';
+  var recentAct = data.recent_activity || [];
+  if (!recentAct.length) {
+    actHtml = '<div style="text-align:center;padding:20px;color:var(--text-4);font-family:var(--mono);font-size:12px;">No recent activity</div>';
+  } else {
+    recentAct.forEach(function(a) {
+      var dotColor = 'var(--info)';
+      if (a.action.indexOf('CREATE') !== -1) dotColor = 'var(--success)';
+      if (a.action.indexOf('DELETE') !== -1) dotColor = 'var(--danger)';
+      if (a.action.indexOf('UPDATE') !== -1) dotColor = 'var(--warning)';
+
+      var desc = '<strong>' + _e(a.action) + '</strong> by ' + _e(a.user.split('@')[0]);
+      if (a.payload && a.payload.branch_id) {
+        desc += ' in branch ' + _e(a.payload.branch_id);
+      }
+
+      var timeAgo = dash_timeSince(new Date(a.date));
+
+      actHtml += '<div class="activity-item">'
+        + '<div class="act-dot" style="background:' + dotColor + ';margin-top:5px;"></div>'
+        + '<div>'
+        + '<div class="act-text">' + desc + '</div>'
+        + '<div class="act-time">' + timeAgo + '</div>'
+        + '</div>'
+        + '</div>';
+    });
+  }
+  document.getElementById('dashRecentActivityBody').innerHTML = actHtml;
+
+  // Chart
+  var chartHtml = dash_renderChart(data.chart || { labels: [], data: [] });
+  document.getElementById('dashWeeklyChart').innerHTML = chartHtml;
+}
+
+function dash_timeSince(date) {
+  var seconds = Math.floor((new Date() - date) / 1000);
+  if (isNaN(seconds)) return '';
+  var interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + " years ago";
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + " months ago";
+  interval = seconds / 86400;
+  if (interval > 1) return Math.floor(interval) + " days ago";
+  interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + " hours ago";
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + " minutes ago";
+  return Math.floor(seconds) + " seconds ago";
+}
+
+function dash_renderChart(chartData) {
+  var labels = chartData.labels || [];
+  var data   = chartData.data   || [];
+  var max = Math.max.apply(null, data) || 10;
+  // Pad max slightly
+  max = max < 10 ? 10 : max * 1.2;
+
+  var svgHeight = 160;
+  var svgWidth  = 340;
+  var yBase     = 140; 
+  var xStart    = 20;
+  var barWidth  = 34;
+  var gap       = 16;
+  
+  var activeIdx = data.length - 1; // today is last item
+
+  var svg = '<svg viewBox="0 0 ' + svgWidth + ' ' + svgHeight + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">'
+    + '<defs>'
+    + '<linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10a8a8" stop-opacity="1"/><stop offset="100%" stop-color="#10a8a8" stop-opacity="0.3"/></linearGradient>'
+    + '</defs>'
+    + '<line x1="0" y1="140" x2="340" y2="140" stroke="#eef2f7" stroke-width="1"/>'
+    + '<line x1="0" y1="110" x2="340" y2="110" stroke="#eef2f7" stroke-width="1"/>'
+    + '<line x1="0" y1="80"  x2="340" y2="80"  stroke="#eef2f7" stroke-width="1"/>'
+    + '<line x1="0" y1="50"  x2="340" y2="50"  stroke="#eef2f7" stroke-width="1"/>';
+
+  for (var i = 0; i < data.length; i++) {
+    var val = data[i] || 0;
+    var h   = (val / max) * 90; // max chart height zone
+    if (h < 4 && val > 0) h = 4; // minimum visible bar
+    
+    var x = xStart + (i * (barWidth + gap));
+    var y = yBase - h;
+    
+    var fill = (i === activeIdx) ? '#10a8a8' : 'url(#barGrad)';
+    var textFill = (i === activeIdx) ? '#10a8a8' : '#8090a8';
+    var textWeight = (i === activeIdx) ? 'font-weight="700"' : '';
+
+    if (h > 0) {
+      svg += '<rect x="' + x + '" y="' + y + '" width="' + barWidth + '" height="' + h + '" rx="5" fill="' + fill + '"/>';
+    }
+    
+    // Label
+    var dx = x + (barWidth/2);
+    svg += '<text x="' + dx + '" y="155" text-anchor="middle" font-size="9" fill="' + textFill + '" font-family="JetBrains Mono,monospace" ' + textWeight + '>' + (labels[i]||'') + '</text>';
+
+    // Value tip for active or any non-zero
+    if (val > 0 && i === activeIdx) {
+      svg += '<text x="' + dx + '" y="' + (y - 4) + '" text-anchor="middle" font-size="9" fill="#10a8a8" font-family="JetBrains Mono,monospace" font-weight="700">' + val + '</text>';
+    }
+  }
+
+  svg += '</svg>';
+  return svg;
+}
+</script>

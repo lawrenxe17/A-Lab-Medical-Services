@@ -1,0 +1,138 @@
+<div class="page-view" id="page-rec-dashboard">
+<style>
+.rec-hero{background:linear-gradient(135deg,var(--teal-900) 0%,var(--teal-700) 100%);border-radius:var(--radius-xl);padding:28px 32px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:20px;position:relative;overflow:hidden;}
+.rec-hero::before{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.04);}
+.rec-hero::after{content:'';position:absolute;right:60px;bottom:-60px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.03);}
+.rec-hero-text{position:relative;z-index:1;}
+.rec-hero-greeting{font-size:13px;color:rgba(255,255,255,.65);font-family:var(--mono);margin-bottom:4px;}
+.rec-hero-name{font-family:var(--serif);font-size:26px;color:#fff;font-weight:700;line-height:1.15;margin-bottom:6px;}
+.rec-hero-date{font-size:12px;color:rgba(255,255,255,.5);font-family:var(--mono);}
+.rec-hero-actions{position:relative;z-index:1;display:flex;gap:10px;flex-shrink:0;}
+.rec-hero-btn{padding:10px 18px;border-radius:var(--radius);font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:var(--font);transition:all .15s;}
+.rec-hero-btn-primary{background:#fff;color:var(--teal-800);}
+.rec-hero-btn-primary:hover{background:rgba(255,255,255,.9);}
+.rec-hero-btn-secondary{background:var(--teal-400);color:var(--teal-950);}
+.rec-hero-btn-secondary:hover{background:var(--teal-300);}
+</style>
+
+<div style="padding:28px 32px;">
+
+  <!-- Hero Banner -->
+  <div class="rec-hero">
+    <div class="rec-hero-text">
+      <div class="rec-hero-greeting" id="recHeroGreeting">Good morning ☀️</div>
+      <div class="rec-hero-name" id="recHeroName">Welcome back</div>
+      <div class="rec-hero-date" id="recHeroDate"></div>
+    </div>
+    <div class="rec-hero-actions">
+      <button class="rec-hero-btn rec-hero-btn-secondary" onclick="navigateTo('patients')">+ New Patient</button>
+      <button class="rec-hero-btn rec-hero-btn-primary" onclick="navigateTo('orders')">View Orders</button>
+    </div>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="stat-grid" style="margin-bottom:20px;" id="recStatGrid">
+    <!-- Skeleton -->
+    <div class="stat-card"><div class="skeleton" style="height:18px;width:60%;margin-bottom:10px;"></div><div class="skeleton" style="height:36px;width:40%;"></div></div>
+    <div class="stat-card"><div class="skeleton" style="height:18px;width:60%;margin-bottom:10px;"></div><div class="skeleton" style="height:36px;width:40%;"></div></div>
+    <div class="stat-card"><div class="skeleton" style="height:18px;width:60%;margin-bottom:10px;"></div><div class="skeleton" style="height:36px;width:40%;"></div></div>
+    <div class="stat-card"><div class="skeleton" style="height:18px;width:60%;margin-bottom:10px;"></div><div class="skeleton" style="height:36px;width:40%;"></div></div>
+  </div>
+
+  <!-- Recent Orders -->
+  <div class="card">
+    <div style="padding:18px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-size:14px;font-weight:800;color:var(--text-1);">Today's Orders</div>
+        <div style="font-size:11px;color:var(--text-4);">Most recent orders for your branch</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="navigateTo('orders')" style="font-size:11px;">View All</button>
+    </div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Order No.</th>
+            <th>Patient</th>
+            <th>Status</th>
+            <th style="text-align:right;">Amount</th>
+          </tr>
+        </thead>
+        <tbody id="recDashOrderBody">
+          <tr><td colspan="4" style="text-align:center;padding:28px;color:var(--text-4);font-size:13px;">
+            <span class="spinner spinner-teal" style="display:inline-block;margin-bottom:8px;"></span><br>Loading…
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var REC_DASH = { loaded: false };
+
+function recdash_load() {
+  if (!APP.user) return;
+  var branchId = APP.user.branch_ids ? APP.user.branch_ids.split(',')[0].trim() : '';
+  if (!branchId) return;
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) { return; }
+      var s = r.stats || {};
+
+      // Status color map
+      var STATUS_COLORS = {
+        DRAFT:'#64748b', OPEN:'#ca8a04', PAID:'#16a34a',
+        IN_PROGRESS:'#2563eb', FOR_RELEASE:'#7c3aed',
+        RELEASED:'#0060b0', CANCELLED:'#dc2626', VOID:'#dc2626'
+      };
+
+      // Stat cards
+      var cards = [
+        { label:'Total Orders',     value: s.total||0,        icon:'📋', color:'var(--teal-600)' },
+        { label:'Awaiting Payment', value: s.open||0,         icon:'💳', color:'#ca8a04' },
+        { label:'Paid — In Queue',  value: s.paid||0,         icon:'✅', color:'#16a34a' },
+        { label:'Patients',         value: s.patients||0,     icon:'👥', color:'#7c3aed' }
+      ];
+      var gridH = '';
+      cards.forEach(function(c) {
+        gridH += '<div class="stat-card" style="cursor:default;">'
+          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
+            + '<div style="font-size:12px;font-weight:600;color:var(--text-3);">' + c.label + '</div>'
+            + '<span style="font-size:20px;">' + c.icon + '</span>'
+          + '</div>'
+          + '<div style="font-size:32px;font-weight:900;color:var(--text-1);line-height:1;">' + c.value + '</div>'
+        + '</div>';
+      });
+      document.getElementById('recStatGrid').innerHTML = gridH;
+
+      // Recent orders table
+      var orders = r.recent_orders || [];
+      var tbody = document.getElementById('recDashOrderBody');
+      if (!orders.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:28px;color:var(--text-4);font-size:13px;">No orders yet today.</td></tr>';
+        return;
+      }
+      var h = '';
+      orders.forEach(function(o) {
+        var color = STATUS_COLORS[o.status] || '#64748b';
+        var label = o.status.replace(/_/g,' ');
+        h += '<tr>'
+          + '<td><span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal-600);">' + _e(o.order_no) + '</span></td>'
+          + '<td style="font-size:13px;font-weight:600;color:var(--text-1);">' + _e(o.patient_name || '—') + '</td>'
+          + '<td><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:' + color + '22;color:' + color + ';font-family:var(--mono);">● ' + label + '</span></td>'
+          + '<td style="text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;">₱' + Number(o.net_amount||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}) + '</td>'
+          + '</tr>';
+      });
+      tbody.innerHTML = h;
+    })
+    .withFailureHandler(function(e) {
+      document.getElementById('recDashOrderBody').innerHTML =
+        '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--danger);font-size:12px;">Error: ' + _e(e.message||'') + '</td></tr>';
+    })
+    .getReceptionistDashboardStats(branchId);
+}
+</script>
+</div>

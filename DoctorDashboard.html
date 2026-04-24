@@ -1,0 +1,137 @@
+<!-- DOCTOR DASHBOARD -->
+<div class="page-view" id="page-doctor-dashboard">
+
+  <!-- Hero -->
+  <div class="dash-hero">
+    <div class="dash-hero-grid"></div>
+    <div class="dash-hero-text">
+      <div class="dash-hero-greeting" id="drHeroGreeting">Good morning ☀️</div>
+      <div class="dash-hero-name" id="drHeroName">Welcome back, Doctor</div>
+      <div class="dash-hero-sub">Here's a summary of your referrals. <span id="drHeroDate" style="color:rgba(255,255,255,.4);"></span></div>
+    </div>
+    <div class="dash-hero-right">
+      <button class="dash-hero-btn dash-hero-btn-secondary" onclick="navigateTo('my-referrals')">+ New Referral</button>
+    </div>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="stat-grid" style="margin-bottom:24px;">
+
+    <div class="stat-card">
+      <div class="stat-card-accent" style="background:var(--teal-500);"></div>
+      <div class="stat-icon" style="background:rgba(16,168,168,.1);">
+        <svg width="20" height="20" fill="none" stroke="var(--teal-600)" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+      </div>
+      <div class="stat-val">—</div>
+      <div class="stat-label">Total Referrals</div>
+      <div class="stat-delta delta-neutral">→ All time</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card-accent" style="background:var(--warning);"></div>
+      <div class="stat-icon" style="background:var(--warning-bg);">
+        <svg width="20" height="20" fill="none" stroke="var(--warning)" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div class="stat-val">—</div>
+      <div class="stat-label">Pending</div>
+      <div class="stat-delta delta-neutral">→ Awaiting processing</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card-accent" style="background:var(--info);"></div>
+      <div class="stat-icon" style="background:var(--info-bg);">
+        <svg width="20" height="20" fill="none" stroke="var(--info)" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      <div class="stat-val">—</div>
+      <div class="stat-label">For Release</div>
+      <div class="stat-delta delta-neutral">→ Ready for pickup</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card-accent" style="background:var(--success);"></div>
+      <div class="stat-icon" style="background:var(--success-bg);">
+        <svg width="20" height="20" fill="none" stroke="var(--success)" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div class="stat-val">—</div>
+      <div class="stat-label">Released</div>
+      <div class="stat-delta delta-neutral">→ Completed</div>
+    </div>
+
+  </div>
+
+  <!-- Bottom row -->
+  <div class="grid-2">
+
+    <!-- Recent Referrals -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="section-title">Recent Referrals</div>
+          <div class="section-sub">Your latest patient referrals</div>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="navigateTo('my-referrals')">View All</button>
+      </div>
+      <div style="padding:40px;text-align:center;">
+        <div style="width:48px;height:48px;border-radius:12px;background:var(--teal-50);border:1.5px solid rgba(16,168,168,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+          <svg width="22" height="22" fill="none" stroke="var(--teal-500)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:4px;">No referrals yet</div>
+        <div style="font-size:12px;color:var(--text-4);">Referral data will appear here once the module is live.</div>
+      </div>
+    </div>
+
+    <!-- Right column: Status Breakdown + Your Branch -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <!-- Status Breakdown -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="section-title">Status Breakdown</div>
+            <div class="section-sub">Referral status distribution</div>
+          </div>
+        </div>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="flex:1;font-size:13px;color:var(--text-2);font-weight:600;">Pending</div>
+            <div style="flex:2;height:8px;background:var(--gray-100);border-radius:8px;overflow:hidden;"><div style="width:0%;height:100%;background:var(--warning);border-radius:8px;"></div></div>
+            <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text-3);width:32px;text-align:right;">—</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="flex:1;font-size:13px;color:var(--text-2);font-weight:600;">For Release</div>
+            <div style="flex:2;height:8px;background:var(--gray-100);border-radius:8px;overflow:hidden;"><div style="width:0%;height:100%;background:var(--info);border-radius:8px;"></div></div>
+            <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text-3);width:32px;text-align:right;">—</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="flex:1;font-size:13px;color:var(--text-2);font-weight:600;">Released</div>
+            <div style="flex:2;height:8px;background:var(--gray-100);border-radius:8px;overflow:hidden;"><div style="width:0%;height:100%;background:var(--success);border-radius:8px;"></div></div>
+            <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text-3);width:32px;text-align:right;">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Your Branch -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="section-title">Your Branch</div>
+            <div class="section-sub">Assigned location</div>
+          </div>
+        </div>
+        <div style="padding:16px 20px;" id="drBranchInfo">
+          <div style="font-size:13px;color:var(--text-4);font-family:var(--mono);">Loading branch info…</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

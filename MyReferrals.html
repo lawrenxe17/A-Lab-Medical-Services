@@ -1,0 +1,199 @@
+<div class="page-view" id="page-my-referrals">
+
+        <div class="section-header">
+          <div>
+            <div class="section-title" style="font-size:20px;">My Referrals</div>
+            <div class="section-sub" id="refSubtitle">Your referred laboratory orders</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="ref_load()">
+            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="refRefreshIcon">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+
+        <!-- Stat cards -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+          <div class="card" style="padding:16px 20px;cursor:pointer;" onclick="document.getElementById('refStatusFilter').value='';ref_applyFilter()">
+            <div style="font-size:26px;font-weight:800;color:var(--text-1);" id="refStatTotal">—</div>
+            <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Total</div>
+          </div>
+          <div class="card" style="padding:16px 20px;cursor:pointer;" onclick="document.getElementById('refStatusFilter').value='pending';ref_applyFilter()">
+            <div style="font-size:26px;font-weight:800;color:#ca8a04;" id="refStatPending">—</div>
+            <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Pending</div>
+          </div>
+          <div class="card" style="padding:16px 20px;cursor:pointer;" onclick="document.getElementById('refStatusFilter').value='processing';ref_applyFilter()">
+            <div style="font-size:26px;font-weight:800;color:#2563eb;" id="refStatProcessing">—</div>
+            <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Processing</div>
+          </div>
+          <div class="card" style="padding:16px 20px;cursor:pointer;" onclick="document.getElementById('refStatusFilter').value='RELEASED';ref_applyFilter()">
+            <div style="font-size:26px;font-weight:800;color:#16a34a;" id="refStatReleased">—</div>
+            <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Released</div>
+          </div>
+        </div>
+
+        <!-- Filter bar -->
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+          <div style="position:relative;flex:1;min-width:200px;">
+            <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-4);" width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+            </svg>
+            <input type="text" id="refSearch" class="f-inp" style="padding-left:34px;font-size:13px;" placeholder="Search order no, patient…" oninput="ref_applyFilter()">
+          </div>
+          <select id="refStatusFilter" class="f-inp" style="width:auto;min-width:160px;font-size:13px;cursor:pointer;" onchange="ref_applyFilter()">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending (Open/Draft)</option>
+            <option value="processing">Processing</option>
+            <option value="RELEASED">Released</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </div>
+
+        <!-- Empty state -->
+        <div id="refEmptyState" style="display:none;text-align:center;padding:60px 20px;">
+          <div style="width:56px;height:56px;border-radius:14px;background:var(--teal-50);border:1.5px solid rgba(0,96,176,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+            <svg width="24" height="24" fill="none" stroke="var(--teal-500)" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+          </div>
+          <div style="font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:6px;" id="refEmptyTitle">No referrals found</div>
+          <div style="font-size:12px;color:var(--text-4);">Orders where you are the referring or 2nd opinion doctor will appear here.</div>
+        </div>
+
+        <!-- Table -->
+        <div class="card" id="refTableCard" style="display:none;">
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Order No</th>
+                  <th>Patient</th>
+                  <th>Branch</th>
+                  <th>Amount</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Role</th>
+                </tr>
+              </thead>
+              <tbody id="refTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+<script>
+var REF = { all:[], filtered:[], loaded:false };
+
+var REF_STATUS_COLORS = {
+  DRAFT:'#64748b', OPEN:'#ca8a04', PAID:'#16a34a',
+  IN_PROGRESS:'#2563eb', FOR_RELEASE:'#7c3aed',
+  RELEASED:'#0060b0', CANCELLED:'#dc2626', VOID:'#dc2626'
+};
+
+function ref_skeleton() {
+  var row = '<tr>';
+  for (var i=0;i<7;i++) row += '<td><div style="height:13px;border-radius:6px;background:linear-gradient(90deg,#f0f2f7 25%,#e4e8f0 50%,#f0f2f7 75%);background-size:400px 100%;animation:shimmer 1.3s infinite;' + (i===0?'width:140px;':i===3?'width:70px;':i===6?'width:50px;':'') + '"></div></td>';
+  return (row+'</tr>').repeat(5);
+}
+
+function ref_init() {
+  REF.all=[]; REF.filtered=[]; REF.loaded=false;
+  document.getElementById('refEmptyState').style.display  = 'none';
+  document.getElementById('refTableCard').style.display   = '';
+  document.getElementById('refTableBody').innerHTML       = ref_skeleton();
+  ref_load();
+}
+
+function ref_load() {
+  var doctorId = APP.user ? APP.user.admin_id : '';
+  if (!doctorId) return;
+  var icon = document.getElementById('refRefreshIcon');
+  if (icon) icon.style.animation = 'spin .8s linear infinite';
+  document.getElementById('refTableCard').style.display  = '';
+  document.getElementById('refTableBody').innerHTML      = ref_skeleton();
+  document.getElementById('refEmptyState').style.display = 'none';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (icon) icon.style.animation = '';
+      if (!r.success) {
+        document.getElementById('refTableCard').style.display  = 'none';
+        document.getElementById('refEmptyState').style.display = '';
+        document.getElementById('refEmptyTitle').textContent   = r.message || 'Error loading referrals.';
+        return;
+      }
+      REF.all    = r.data || [];
+      REF.loaded = true;
+      ref_applyFilter();
+    })
+    .withFailureHandler(function(e) {
+      if (icon) icon.style.animation = '';
+      document.getElementById('refTableCard').style.display  = 'none';
+      document.getElementById('refEmptyState').style.display = '';
+      document.getElementById('refEmptyTitle').textContent   = e.message || 'Connection error.';
+    })
+    .getDoctorReferrals(doctorId);
+}
+
+function ref_applyFilter() {
+  var q      = (document.getElementById('refSearch').value || '').toLowerCase().trim();
+  var status = document.getElementById('refStatusFilter').value;
+
+  REF.filtered = REF.all.filter(function(o) {
+    if (status) {
+      if (status === 'pending'    && o.status !== 'DRAFT' && o.status !== 'OPEN') return false;
+      if (status === 'processing' && o.status !== 'PAID' && o.status !== 'IN_PROGRESS' && o.status !== 'FOR_RELEASE') return false;
+      if (status !== 'pending' && status !== 'processing' && o.status !== status) return false;
+    }
+    if (q) {
+      var hay = [o.order_no, o.patient_name, o.branch_name, o.status].join(' ').toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+
+  ref_render();
+}
+
+function ref_render() {
+  // Stat cards from full list
+  var counts = { pending:0, processing:0, released:0 };
+  REF.all.forEach(function(o) {
+    if (o.status === 'DRAFT' || o.status === 'OPEN') counts.pending++;
+    if (o.status === 'PAID' || o.status === 'IN_PROGRESS' || o.status === 'FOR_RELEASE') counts.processing++;
+    if (o.status === 'RELEASED') counts.released++;
+  });
+  document.getElementById('refStatTotal').textContent      = REF.all.length;
+  document.getElementById('refStatPending').textContent    = counts.pending;
+  document.getElementById('refStatProcessing').textContent = counts.processing;
+  document.getElementById('refStatReleased').textContent   = counts.released;
+
+  if (!REF.filtered.length) {
+    document.getElementById('refTableCard').style.display  = 'none';
+    document.getElementById('refEmptyState').style.display = '';
+    document.getElementById('refEmptyTitle').textContent   = REF.all.length ? 'No referrals match filter.' : 'No referrals yet.';
+    return;
+  }
+
+  document.getElementById('refEmptyState').style.display = 'none';
+  document.getElementById('refTableCard').style.display  = '';
+
+  document.getElementById('refTableBody').innerHTML = REF.filtered.map(function(o) {
+    var sc    = REF_STATUS_COLORS[o.status] || '#64748b';
+    var badge = '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:' + sc + '22;color:' + sc + ';">' + _e(o.status.replace('_',' ')) + '</span>';
+    var role  = o.is_2nd_opinion
+      ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(124,58,237,.1);color:#7c3aed;">2nd Opinion</span>'
+      : '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(16,168,168,.1);color:var(--teal-600);">Primary</span>';
+    return '<tr>'
+      + '<td><span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal-600);">' + _e(o.order_no) + '</span></td>'
+      + '<td style="font-weight:600;">' + _e(o.patient_name) + '</td>'
+      + '<td style="font-size:12px;color:var(--text-3);">' + _e(o.branch_name) + '</td>'
+      + '<td style="font-family:var(--mono);font-size:12px;font-weight:700;">₱' + (o.net_amount||0).toLocaleString('en-PH',{minimumFractionDigits:2}) + '</td>'
+      + '<td style="font-size:12px;color:var(--text-3);font-family:var(--mono);">' + _e(o.order_date) + '</td>'
+      + '<td>' + badge + '</td>'
+      + '<td>' + role + '</td>'
+      + '</tr>';
+  }).join('');
+}
+</script>

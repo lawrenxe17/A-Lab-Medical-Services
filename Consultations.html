@@ -1,0 +1,278 @@
+<div class="page-view" id="page-consultations">
+<style>
+.con-order-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:10px;cursor:pointer;transition:box-shadow .15s,border-color .15s;}
+.con-order-card:hover{box-shadow:var(--shadow);border-color:var(--teal-400);}
+.con-order-card.selected{border-color:var(--teal-600);box-shadow:0 0 0 2.5px rgba(0,96,176,.15);}
+.con-findings-area{width:100%;min-height:180px;resize:vertical;border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:13px;font-family:var(--font);color:var(--text-1);line-height:1.6;transition:border-color .15s;}
+.con-findings-area:focus{outline:none;border-color:var(--teal-500);}
+.con-status-saved{background:rgba(22,163,74,.08);border:1px solid rgba(22,163,74,.2);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;color:#16a34a;display:none;}
+</style>
+
+<div style="padding:28px 32px;">
+
+  <!-- Header -->
+  <div style="margin-bottom:24px;">
+    <div style="font-size:22px;font-weight:900;color:var(--text-1);">Consultations</div>
+    <div style="font-size:12px;color:var(--text-4);margin-top:2px;">Document your findings for each patient order</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start;" id="conGrid">
+
+    <!-- LEFT: Orders assigned to this doctor -->
+    <div>
+      <div style="font-size:12px;font-weight:800;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Patient Orders</div>
+      <div style="margin-bottom:10px;">
+        <input type="text" id="conSearch" class="f-inp" placeholder="Search patient or order…"
+          style="font-size:12px;padding:7px 11px;" oninput="con_filterOrders()">
+      </div>
+      <div id="conOrderList">
+        <div style="text-align:center;padding:32px;color:var(--text-4);font-size:13px;">
+          <span class="spinner spinner-teal" style="display:inline-block;margin-bottom:8px;"></span><br>Loading…
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Findings editor -->
+    <div>
+      <div id="conEditorEmpty" style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:48px;text-align:center;color:var(--text-4);">
+        <div style="font-size:32px;margin-bottom:10px;">📋</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:4px;">Select an order</div>
+        <div style="font-size:12px;">Click a patient order on the left to view or document findings</div>
+      </div>
+      <div id="conEditor" style="display:none;">
+        <!-- Order info -->
+        <div style="background:var(--gray-50);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal-600);" id="conOrderNo">—</span>
+            <span id="conOrderStatus" style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;font-family:var(--mono);"></span>
+          </div>
+          <div style="font-size:15px;font-weight:800;color:var(--text-1);" id="conPatientName">—</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:3px;" id="conOrderDate">—</div>
+        </div>
+
+        <!-- Services ordered -->
+        <div style="margin-bottom:16px;" id="conServicesWrap">
+          <div style="font-size:11px;font-weight:800;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Ordered Services</div>
+          <div id="conServicesList" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+        </div>
+
+        <!-- Findings textarea -->
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <label style="font-size:11px;font-weight:800;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em;">Clinical Findings / Notes</label>
+            <span id="conLastSaved" style="font-size:10px;color:var(--text-4);font-family:var(--mono);"></span>
+          </div>
+          <textarea id="conFindings" class="con-findings-area" placeholder="Document your clinical findings, interpretation of results, recommendations…"></textarea>
+        </div>
+
+        <!-- Status + save -->
+        <div id="conSavedStatus" class="con-status-saved">✅ Findings saved successfully</div>
+        <div id="conSaveErr" style="display:none;font-size:12px;color:var(--danger);margin-bottom:8px;"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
+          <button class="btn btn-secondary btn-sm" onclick="con_clearFindings()">Clear</button>
+          <button class="btn btn-primary" id="conSaveBtn" onclick="con_save()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            Save Findings
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+var CON = {
+  doctorId:  null,
+  orders:    [],
+  filtered:  [],
+  selected:  null  // { order_id, order_no, patient_name, patient_id, status, order_date, items }
+};
+
+var CON_STATUS_COLORS = {
+  PAID:'#16a34a', IN_PROGRESS:'#2563eb', FOR_RELEASE:'#7c3aed',
+  RELEASED:'#0060b0', OPEN:'#ca8a04'
+};
+
+/* ── Init ── */
+function con_init() {
+  if (!APP.user) return;
+  CON.doctorId = APP.user.admin_id;
+  CON.selected = null;
+  document.getElementById('conEditor').style.display      = 'none';
+  document.getElementById('conEditorEmpty').style.display = '';
+  document.getElementById('conSearch').value = '';
+  con_load();
+}
+
+function con_load() {
+  document.getElementById('conOrderList').innerHTML =
+    '<div style="text-align:center;padding:32px;color:var(--text-4);font-size:13px;">' +
+    '<span class="spinner spinner-teal" style="display:inline-block;margin-bottom:8px;"></span><br>Loading…</div>';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) {
+        document.getElementById('conOrderList').innerHTML =
+          '<div style="padding:16px;color:var(--danger);font-size:12px;">' + _e(r.message||'Failed.') + '</div>';
+        return;
+      }
+      // getDoctorPatients returns orders assigned to this doctor
+      CON.orders   = r.data || [];
+      CON.filtered = CON.orders;
+      con_renderList();
+    })
+    .withFailureHandler(function(e) {
+      document.getElementById('conOrderList').innerHTML =
+        '<div style="padding:16px;color:var(--danger);font-size:12px;">Error: ' + _e(e.message||'') + '</div>';
+    })
+    .getDoctorPatients(CON.doctorId);
+}
+
+function con_filterOrders() {
+  var q = document.getElementById('conSearch').value.toLowerCase().trim();
+  CON.filtered = q
+    ? CON.orders.filter(function(o) {
+        return (o.patient_name||'').toLowerCase().includes(q) ||
+               (o.order_no||'').toLowerCase().includes(q);
+      })
+    : CON.orders;
+  con_renderList();
+}
+
+function con_renderList() {
+  if (!CON.filtered.length) {
+    document.getElementById('conOrderList').innerHTML =
+      '<div style="text-align:center;padding:28px;color:var(--text-4);font-size:13px;">' +
+      (CON.orders.length ? 'No orders match your search.' : 'No orders assigned yet.') +
+      '</div>';
+    return;
+  }
+  var h = '';
+  CON.filtered.forEach(function(o) {
+    var color    = CON_STATUS_COLORS[o.status] || '#64748b';
+    var label    = (o.status||'').replace(/_/g,' ');
+    var selected = CON.selected && CON.selected.order_id === o.order_id;
+    var dateDisp = o.order_date ? new Date(o.order_date).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}) : '—';
+    h += '<div class="con-order-card' + (selected ? ' selected' : '') + '" onclick="con_select(' + JSON.stringify(o) + ')">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">'
+        + '<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--teal-600);">' + _e(o.order_no||'') + '</span>'
+        + '<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:' + color + '22;color:' + color + ';font-family:var(--mono);">● ' + label + '</span>'
+      + '</div>'
+      + '<div style="font-size:13px;font-weight:700;color:var(--text-1);">' + _e(o.patient_name||'—') + '</div>'
+      + '<div style="font-size:11px;color:var(--text-4);margin-top:2px;">' + dateDisp + '</div>'
+      + (o.has_findings ? '<div style="font-size:10px;color:#16a34a;font-weight:700;margin-top:4px;">✅ Findings saved</div>' : '')
+      + '</div>';
+  });
+  document.getElementById('conOrderList').innerHTML = h;
+}
+
+function con_select(order) {
+  CON.selected = order;
+  con_renderList(); // re-render to show selection
+
+  // Populate order info
+  var color = CON_STATUS_COLORS[order.status] || '#64748b';
+  document.getElementById('conOrderNo').textContent      = order.order_no || '—';
+  document.getElementById('conPatientName').textContent  = order.patient_name || '—';
+  document.getElementById('conOrderDate').textContent    = order.order_date
+    ? new Date(order.order_date).toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+    : '—';
+  document.getElementById('conOrderStatus').textContent  = (order.status||'').replace(/_/g,' ');
+  document.getElementById('conOrderStatus').style.background = color + '22';
+  document.getElementById('conOrderStatus').style.color      = color;
+
+  // Services
+  var svcH = '';
+  (order.items || []).forEach(function(it) {
+    svcH += '<span style="font-size:11px;background:rgba(0,96,176,.08);color:var(--teal-700);padding:2px 9px;border-radius:20px;font-weight:700;">' + _e(it.lab_name||it) + '</span>';
+  });
+  document.getElementById('conServicesList').innerHTML = svcH || '<span style="font-size:12px;color:var(--text-4);">No services listed</span>';
+
+  // Clear editor state
+  document.getElementById('conFindings').value    = '';
+  document.getElementById('conLastSaved').textContent = '';
+  document.getElementById('conSavedStatus').style.display = 'none';
+  document.getElementById('conSaveErr').style.display     = 'none';
+
+  // Show editor
+  document.getElementById('conEditorEmpty').style.display = 'none';
+  document.getElementById('conEditor').style.display      = '';
+
+  // Load existing findings
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (r.success && r.data) {
+        document.getElementById('conFindings').value = r.data.findings || '';
+        if (r.data.updated_at) {
+          document.getElementById('conLastSaved').textContent =
+            'Last saved: ' + new Date(r.data.updated_at).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+        }
+        // Mark this order as having findings in local list
+        var idx = CON.orders.findIndex(function(o){ return o.order_id === order.order_id; });
+        if (idx !== -1 && r.data.findings) CON.orders[idx].has_findings = true;
+      }
+    })
+    .withFailureHandler(function(){})
+    .getConsultationByOrder(CON.doctorId, order.order_id);
+}
+
+/* ── Save findings ── */
+function con_save() {
+  if (!CON.selected) return;
+  var findings = document.getElementById('conFindings').value.trim();
+  if (!findings) {
+    document.getElementById('conSaveErr').textContent    = 'Findings cannot be empty.';
+    document.getElementById('conSaveErr').style.display = 'block';
+    return;
+  }
+  document.getElementById('conSaveErr').style.display     = 'none';
+  document.getElementById('conSavedStatus').style.display = 'none';
+  var btn = document.getElementById('conSaveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save Findings';
+      if (!r.success) {
+        document.getElementById('conSaveErr').textContent    = r.message || 'Failed to save.';
+        document.getElementById('conSaveErr').style.display = 'block';
+        return;
+      }
+      document.getElementById('conSavedStatus').style.display = 'block';
+      document.getElementById('conLastSaved').textContent =
+        'Last saved: ' + new Date().toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      // Mark in order list
+      var idx = CON.orders.findIndex(function(o){ return o.order_id === CON.selected.order_id; });
+      if (idx !== -1) CON.orders[idx].has_findings = true;
+      CON.filtered = CON.orders;
+      con_renderList();
+      // Hide status after 3s
+      setTimeout(function(){ document.getElementById('conSavedStatus').style.display = 'none'; }, 3000);
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save Findings';
+      document.getElementById('conSaveErr').textContent    = e.message || 'Connection error.';
+      document.getElementById('conSaveErr').style.display = 'block';
+    })
+    .saveConsultation(
+      CON.doctorId,
+      CON.selected.order_id,
+      CON.selected.patient_id || '',
+      CON.selected.patient_name || '',
+      findings
+    );
+}
+
+function con_clearFindings() {
+  document.getElementById('conFindings').value            = '';
+  document.getElementById('conSavedStatus').style.display = 'none';
+  document.getElementById('conSaveErr').style.display     = 'none';
+  document.getElementById('conFindings').focus();
+}
+</script>
+</div>

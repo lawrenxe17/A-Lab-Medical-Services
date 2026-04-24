@@ -1,0 +1,1464 @@
+<!-- LAB SERVICES -->
+<div class="page-view" id="page-lab-services">
+
+  <div class="section-header">
+    <div>
+      <div class="section-title" style="font-size:20px;">Lab Services</div>
+      <div class="section-sub" id="lsSubtitle">Manage laboratory services</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-secondary btn-sm" onclick="ls_load()" id="lsRefreshBtn">
+        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="lsRefreshIcon">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Refresh
+      </button>
+      <button class="btn btn-primary btn-sm" id="lsAddBtn" onclick="ls_openModal()">
+        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+        </svg>
+        Add Service
+      </button>
+    </div>
+  </div>
+
+  <!-- SA: search + filter | Branch Admin: banner -->
+  <div id="lsSAToolbar" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+    <!-- Type tabs: All / Lab / X-Ray -->
+    <div style="display:flex;gap:4px;background:var(--gray-100);border-radius:9px;padding:3px;flex-shrink:0;">
+      <button id="lsTypeTab-all" onclick="ls_setTypeFilter('all')"
+        style="padding:5px 14px;border-radius:7px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:var(--white);color:var(--text-1);box-shadow:0 1px 3px rgba(0,0,0,.1);font-family:var(--font);">
+        All
+      </button>
+      <button id="lsTypeTab-lab" onclick="ls_setTypeFilter('lab')"
+        style="padding:5px 14px;border-radius:7px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:var(--text-3);font-family:var(--font);">
+        🔬 Lab
+      </button>
+      <button id="lsTypeTab-xray" onclick="ls_setTypeFilter('xray')"
+        style="padding:5px 14px;border-radius:7px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:var(--text-3);font-family:var(--font);">
+        🩻 X-Ray
+      </button>
+    </div>
+    <!-- Search -->
+    <div style="position:relative;flex:1;min-width:200px;">
+      <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-4);"
+        width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+      </svg>
+      <input type="text" id="lsSearch" class="f-inp" style="padding-left:34px;font-size:13px;"
+        placeholder="Search service name, category…" oninput="ls_applyFilter()">
+    </div>
+    <!-- Category dropdown -->
+    <select id="lsFilterCat" class="f-inp" style="width:auto;font-size:13px;cursor:pointer;"
+      onchange="ls_applyFilter()">
+      <option value="">All Categories</option>
+    </select>
+  </div>
+  <!-- BA toolbar -->
+  <div id="lsBAToolbar" style="display:none;flex-direction:column;gap:10px;margin-bottom:16px;">
+    <!-- Branch info banner -->
+    <div id="lsBABanner"
+      style="padding:8px 14px;background:rgba(16,168,168,.06);border:1px solid rgba(0,96,176,.15);border-radius:var(--radius);display:flex;align-items:center;gap:8px;">
+      <svg width="13" height="13" fill="none" stroke="var(--teal-600)" viewBox="0 0 24 24" style="flex-shrink:0;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+      <span style="font-size:12px;color:var(--teal-700);font-weight:600;" id="lsBABranchName">Your branch</span>
+      <span style="font-size:12px;color:var(--text-3);">— toggle services active or inactive for your branch only.</span>
+    </div>
+    <!-- Tabs + Search -->
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <div style="display:flex;gap:4px;background:var(--gray-100);border-radius:9px;padding:3px;flex-shrink:0;">
+        <button id="lsBaTypeTab-all" onclick="ls_setBaTypeFilter('all')"
+          style="padding:5px 14px;border-radius:7px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:var(--white);color:var(--text-1);box-shadow:0 1px 3px rgba(0,0,0,.1);font-family:var(--font);">
+          All
+        </button>
+        <button id="lsBaTypeTab-lab" onclick="ls_setBaTypeFilter('lab')"
+          style="padding:5px 14px;border-radius:7px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:var(--text-3);font-family:var(--font);">
+          🔬 Lab
+        </button>
+        <button id="lsBaTypeTab-xray" onclick="ls_setBaTypeFilter('xray')"
+          style="padding:5px 14px;border-radius:7px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:var(--text-3);font-family:var(--font);">
+          🩻 X-Ray
+        </button>
+      </div>
+      <div style="position:relative;flex:1;min-width:200px;">
+        <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-4);"
+          width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+        </svg>
+        <input type="text" id="lsBASearch" class="f-inp" style="padding-left:34px;font-size:13px;"
+          placeholder="Search service name…" oninput="ls_renderBranchView()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Table (SA view) -->
+  <div class="card" id="lsSATable">
+    <div class="table-wrap">
+      <table class="table">
+        <thead id="lsThead">
+          <tr>
+            <th>Service Name</th>
+            <th>Default Fee</th>
+            <th>Type</th>
+            <th>Specimen</th>
+            <th>PhilHealth</th>
+            <th style="text-align:center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="lsTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ SERVICE MODAL ══ -->
+<div id="lsModal"
+  style="display:none;position:fixed;inset:0;z-index:500;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
+  <div
+    style="background:var(--white);border-radius:var(--radius-xl);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-xl);animation:modalIn .22s cubic-bezier(.34,1.2,.64,1);">
+    <div
+      style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-size:16px;font-weight:800;color:var(--text-1);" id="lsModalTitle">Add Lab Service</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;font-family:var(--mono);" id="lsModalSub">Fill in
+          service details</div>
+      </div>
+      <button onclick="ls_closeModal()"
+        style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div style="padding:24px;">
+      <input type="hidden" id="lsModalId">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+        <div style="grid-column:1/-1;">
+          <label class="f-label">Service Name <span style="color:var(--danger);">*</span></label>
+          <input type="text" id="lsFldName" class="f-inp" placeholder="e.g. Complete Blood Count">
+        </div>
+
+        <div style="grid-column:1/-1;">
+          <label class="f-label">Category <span style="color:var(--danger);">*</span></label>
+          <input type="hidden" id="lsFldCat">
+          <div style="position:relative;" id="lsCatDropWrap">
+            <div style="position:relative;">
+              <svg
+                style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-4);"
+                width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+              </svg>
+              <input type="text" id="lsCatSearch" class="f-inp" style="padding-left:34px;padding-right:34px;"
+                placeholder="Search category…" oninput="ls_catDropFilter()" onfocus="ls_catDropOpen()"
+                autocomplete="off">
+              <svg id="lsCatDropArrow"
+                style="position:absolute;right:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-4);transition:transform .15s;"
+                width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+            <div id="lsCatDropList"
+              style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--white);border:1.5px solid var(--teal-400);border-radius:var(--radius);box-shadow:var(--shadow-lg);z-index:600;max-height:200px;overflow-y:auto;">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="f-label">Default Fee (₱) <span style="color:var(--danger);">*</span></label>
+          <input type="number" id="lsFldFee" class="f-inp" placeholder="e.g. 350" min="0" step="0.01"
+            style="font-family:var(--mono);">
+        </div>
+
+        <div>
+          <label class="f-label">Specimen Type <span
+              style="font-size:10px;color:var(--text-4);font-weight:400;">(optional)</span></label>
+          <input type="text" id="lsFldSpecimen" class="f-inp" placeholder="e.g. Whole Blood">
+        </div>
+
+        <div style="grid-column:1/-1;">
+          <label class="f-label">PhilHealth Coverage</label>
+          <div style="display:flex;gap:8px;">
+            <label
+              style="flex:1;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius);border:1.5px solid var(--border);cursor:pointer;"
+              id="lsPhilYesPill">
+              <input type="radio" name="lsPhilHealth" value="1" onchange="ls_onPhilChange()"
+                style="accent-color:var(--teal-600);">
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text-1);">Covered</div>
+                <div style="font-size:11px;color:var(--text-3);">PhilHealth benefit applies</div>
+              </div>
+            </label>
+            <label
+              style="flex:1;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius);border:1.5px solid var(--border);cursor:pointer;"
+              id="lsPhilNoPill">
+              <input type="radio" name="lsPhilHealth" value="0" checked onchange="ls_onPhilChange()"
+                style="accent-color:var(--teal-600);">
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text-1);">Not Covered</div>
+                <div style="font-size:11px;color:var(--text-3);">Regular fee applies</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+
+        <div style="grid-column:1/-1;" id="lsNewServNote">
+          <div
+            style="padding:9px 12px;background:rgba(16,168,168,.06);border:1px solid rgba(0,96,176,.15);border-radius:8px;font-size:12px;color:var(--teal-700);display:flex;align-items:center;gap:7px;">
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink:0;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            New services are Active by default and propagated to all branches.
+          </div>
+        </div>
+
+      </div>
+      <div id="lsModalErr"
+        style="display:none;margin-top:14px;font-size:12px;color:var(--danger);background:var(--danger-bg);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:9px 12px;">
+      </div>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;">
+      <button class="btn btn-secondary" onclick="ls_closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="lsSaveBtn" onclick="ls_save()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+        </svg>
+        Save Service
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DELETE CONFIRM ══ -->
+<div id="lsDeleteModal"
+  style="display:none;position:fixed;inset:0;z-index:501;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;padding:20px;">
+  <div
+    style="background:var(--white);border-radius:24px 24px 0 0;width:100%;max-width:440px;box-shadow:var(--shadow-xl);padding:28px 24px;animation:slideup .22s ease;">
+    <div style="display:flex;gap:14px;margin-bottom:20px;align-items:flex-start;">
+      <div
+        style="width:42px;height:42px;border-radius:50%;background:var(--danger-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" fill="none" stroke="var(--danger)" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </div>
+      <div>
+        <div style="font-size:16px;font-weight:800;color:var(--text-1);margin-bottom:4px;">Delete Service?</div>
+        <div style="font-size:13px;color:var(--text-2);line-height:1.6;" id="lsDeleteMsg">This cannot be undone.</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="btn btn-danger" style="width:100%;justify-content:center;padding:13px;"
+        onclick="ls_confirmDelete()">Yes, Delete Service</button>
+      <button class="btn btn-secondary" style="width:100%;justify-content:center;padding:13px;"
+        onclick="ls_closeDeleteModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BRANCH OVERRIDE MODAL ══ -->
+<div id="lsBranchModal"
+  style="display:none;position:fixed;inset:0;z-index:502;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
+  <div
+    style="background:var(--white);border-radius:var(--radius-xl);width:100%;max-width:560px;max-height:88vh;box-shadow:var(--shadow-xl);display:flex;flex-direction:column;animation:modalIn .22s cubic-bezier(.34,1.2,.64,1);">
+
+    <!-- Header -->
+    <div
+      style="display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div
+        style="width:40px;height:40px;border-radius:10px;background:rgba(16,168,168,.1);border:1px solid rgba(0,96,176,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" fill="none" stroke="var(--teal-600)" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:15px;font-weight:800;color:var(--text-1);" id="lsBranchModalTitle">Branch Status</div>
+        <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin-top:2px;" id="lsBranchModalSub">
+          Loading…</div>
+      </div>
+      <button onclick="lsBranch_close()"
+        style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);flex-shrink:0;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div style="flex:1;overflow-y:auto;padding:20px 24px;" id="lsBranchModalBody">
+      <div style="text-align:center;padding:32px;color:var(--text-4);font-family:var(--mono);font-size:13px;">
+        <span class="spinner spinner-teal" style="display:inline-block;margin-bottom:8px;"></span><br>Loading branches…
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONSULTATION SETUP MODAL (SA only) ══ -->
+<div id="lsConModal"
+  style="display:none;position:fixed;inset:0;z-index:503;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
+  <div
+    style="background:var(--white);border-radius:var(--radius-xl);width:100%;max-width:560px;max-height:88vh;box-shadow:var(--shadow-xl);display:flex;flex-direction:column;animation:modalIn .22s cubic-bezier(.34,1.2,.64,1);">
+
+    <!-- Header -->
+    <div
+      style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div>
+        <div style="font-size:16px;font-weight:800;color:var(--text-1);">Consultation Service Setup</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Select which services appear in the
+          Consultations tab during order</div>
+      </div>
+      <button onclick="ls_closeConSetup()"
+        style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);flex-shrink:0;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div style="flex:1;overflow-y:auto;padding:0;" id="lsConModalBody">
+      <div style="text-align:center;padding:32px;color:var(--text-4);font-size:13px;">Loading</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ════════════════════════════════════
+     LAB SERVICES MODULE
+  ════════════════════════════════════ */
+  var _lsTypeFilter = 'all';
+
+  function ls_setTypeFilter(type) {
+    _lsTypeFilter = type;
+    var tabs = ['all', 'lab', 'xray'];
+    tabs.forEach(function(t) {
+      var btn = document.getElementById('lsTypeTab-' + t);
+      if (!btn) return;
+      var active = t === type;
+      btn.style.background = active ? 'var(--white)' : 'transparent';
+      btn.style.color = active ? 'var(--text-1)' : 'var(--text-3)';
+      btn.style.boxShadow = active ? '0 1px 3px rgba(0,0,0,.1)' : 'none';
+    });
+    ls_applyFilter();
+  }
+
+  var LS = {
+    all: [],
+    filtered: [],
+    cats: [],
+    isBranchView: false,
+    branchId: null,
+    editingId: null
+  };
+  var _lsDeleteId = null;
+
+  /* ── Skeleton ── */
+  function ls_skeleton(cols) {
+    var row = '<tr>';
+    for (var i = 0; i < cols; i++) {
+      row += '<td><div style="height:13px;border-radius:6px;background:linear-gradient(90deg,#f0f2f7 25%,#e4e8f0 50%,#f0f2f7 75%);background-size:400px 100%;animation:shimmer 1.3s infinite;"></div></td>';
+    }
+    return row + '</tr>' + row + row + row + row;
+  }
+
+  /* ── Load ── */
+  function ls_load() {
+    var isSA = APP.user && APP.user.role === 'Super Admin';
+    var branchId = !isSA ? (APP.user && APP.user.branch_ids ? APP.user.branch_ids.split(',')[0].trim() : '') : '';
+
+    var addBtn = document.getElementById('lsAddBtn');
+    var toolbar = document.getElementById('lsSAToolbar');
+    var baToolbar = document.getElementById('lsBAToolbar');
+    var conBtn = document.getElementById('lsConSetupBtn');
+    if (addBtn) addBtn.style.display = isSA ? '' : 'none';
+    if (conBtn) conBtn.style.display = isSA ? '' : 'none';
+    if (toolbar) toolbar.style.display = isSA ? 'flex' : 'none';
+    if (baToolbar) baToolbar.style.display = !isSA ? 'flex' : 'none';
+
+    if (!isSA && branchId) {
+      var bname = document.getElementById('lsBABranchName');
+      var cachedName = APP.user && APP.user.branch_name;
+      var branchObj = !cachedName && typeof BR !== 'undefined' && BR.all && BR.all.find(function (b) { return b.branch_id === branchId; });
+      if (cachedName) {
+        if (bname) bname.textContent = cachedName;
+      } else if (branchObj) {
+        if (bname) bname.textContent = branchObj.branch_name;
+      } else {
+        google.script.run
+          .withSuccessHandler(function (r) {
+            if (r.success && r.data && r.data.length && bname)
+              bname.textContent = r.data[0].branch_name || branchId;
+          })
+          .withFailureHandler(function () { })
+          .getBranchesForPatientView(branchId);
+      }
+    }
+
+    var icon = document.getElementById('lsRefreshIcon');
+    if (icon) icon.style.animation = 'spin .8s linear infinite';
+    document.getElementById('lsSubtitle').textContent = 'Loading…';
+    document.getElementById('lsTableBody').innerHTML = ls_skeleton(isSA ? 8 : 3);
+
+    if (isSA) {
+      google.script.run
+        .withSuccessHandler(function (r) {
+          if (icon) icon.style.animation = '';
+          if (!r.success) { toast('error', r.message || 'Failed to load.'); return; }
+          LS.all = r.data || [];
+          LS.cats = r.cats || [];
+          LS.isBranchView = false;
+          _lsCatExpanded = {};
+          _lsTypeFilter = 'all';
+          ls_populateCatFilter();
+          ls_setTypeFilter('all');
+          ls_applyFilter();
+        })
+        .withFailureHandler(function (e) {
+          if (icon) icon.style.animation = '';
+          toast('error', e.message || 'Connection error.');
+          document.getElementById('lsTableBody').innerHTML =
+            '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--danger);font-size:13px;">Error. <a href="javascript:void(0)" onclick="ls_load()" style="color:var(--teal-600);">Retry</a></td></tr>';
+        })
+        .getLabServices();
+    } else {
+      if (!branchId) {
+        if (icon) icon.style.animation = '';
+        document.getElementById('lsTableBody').innerHTML =
+          '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text-4);font-size:13px;">No branch assigned to your account.</td></tr>';
+        return;
+      }
+      google.script.run
+        .withSuccessHandler(function (r) {
+          if (icon) icon.style.animation = '';
+          if (!r.success) { toast('error', r.message || 'Failed to load.'); return; }
+          LS.all = r.data || [];
+          LS.isBranchView = true;
+          LS.branchId = branchId;
+          _lsBACatExpanded = {};
+          ls_renderBranchView();
+        })
+        .withFailureHandler(function (e) {
+          if (icon) icon.style.animation = '';
+          toast('error', e.message || 'Connection error.');
+        })
+        .getBranchServStatus(branchId);
+    }
+  }
+
+  /* ── Populate category filter dropdown (SA toolbar) ── */
+  function ls_populateCatFilter() {
+    var sel = document.getElementById('lsFilterCat');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">All Categories</option>';
+    LS.cats.forEach(function (c) {
+      sel.innerHTML += '<option value="' + _e(c.cat_id) + '">' + _e(c.category_name) + '</option>';
+    });
+    // Reset searchable cat dropdown
+    ls_catDropReset();
+  }
+
+  /* ══════════════════════════════════════
+     SEARCHABLE CATEGORY DROPDOWN
+  ══════════════════════════════════════ */
+  var _lsCatSelectedId = '';
+  var _lsCatDropOpen = false;
+
+  function ls_catDropReset() {
+    _lsCatSelectedId = '';
+    var inp = document.getElementById('lsCatSearch');
+    var hid = document.getElementById('lsFldCat');
+    if (inp) inp.value = '';
+    if (hid) hid.value = '';
+    ls_catDropClose();
+  }
+
+  function ls_catDropOpen() {
+    var list = document.getElementById('lsCatDropList');
+    var arrow = document.getElementById('lsCatDropArrow');
+    if (!list) return;
+    ls_catDropRender('');
+    list.style.display = 'block';
+    if (arrow) arrow.style.transform = 'translateY(-50%) rotate(180deg)';
+    _lsCatDropOpen = true;
+  }
+
+  function ls_catDropClose() {
+    var list = document.getElementById('lsCatDropList');
+    var arrow = document.getElementById('lsCatDropArrow');
+    if (list) list.style.display = 'none';
+    if (arrow) arrow.style.transform = 'translateY(-50%)';
+    _lsCatDropOpen = false;
+  }
+
+  function ls_catDropFilter() {
+    var q = (document.getElementById('lsCatSearch').value || '').trim();
+    // Clear selection if user edits the text
+    _lsCatSelectedId = '';
+    document.getElementById('lsFldCat').value = '';
+    ls_catDropRender(q);
+    if (!_lsCatDropOpen) ls_catDropOpen();
+  }
+
+  function ls_catDropRender(q) {
+    var list = document.getElementById('lsCatDropList');
+    if (!list) return;
+    var query = q.toLowerCase();
+    var matches = LS.cats.filter(function (c) {
+      return !query || c.category_name.toLowerCase().indexOf(query) !== -1;
+    });
+    if (!matches.length) {
+      list.innerHTML = '<div style="padding:12px 14px;font-size:13px;color:var(--text-4);text-align:center;">No categories found</div>';
+      return;
+    }
+    list.innerHTML = matches.map(function (c) {
+      var isSelected = c.cat_id === _lsCatSelectedId;
+      return '<div onclick="ls_catDropSelect(\'' + _e(c.cat_id) + '\',\'' + _e(c.category_name) + '\')"'
+        + ' style="padding:10px 14px;font-size:13px;cursor:pointer;font-weight:' + (isSelected ? '700' : '500') + ';'
+        + 'color:' + (isSelected ? 'var(--teal-700)' : 'var(--text-1)') + ';'
+        + 'background:' + (isSelected ? 'rgba(16,168,168,.08)' : 'transparent') + ';'
+        + 'border-left:3px solid ' + (isSelected ? 'var(--teal-500)' : 'transparent') + ';"'
+        + ' onmouseenter="this.style.background=\'' + (isSelected ? 'rgba(16,168,168,.12)' : 'var(--gray-50)') + '\'"'
+        + ' onmouseleave="this.style.background=\'' + (isSelected ? 'rgba(16,168,168,.08)' : 'transparent') + '\'">'
+        + _e(c.category_name)
+        + '</div>';
+    }).join('');
+  }
+
+  function ls_catDropSelect(catId, catName) {
+    _lsCatSelectedId = catId;
+    document.getElementById('lsFldCat').value = catId;
+    document.getElementById('lsCatSearch').value = catName;
+    ls_catDropClose();
+    // Style the input to show selection
+    var inp = document.getElementById('lsCatSearch');
+    if (inp) { inp.style.borderColor = 'var(--teal-500)'; inp.style.color = 'var(--text-1)'; inp.style.fontWeight = '600'; }
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function (e) {
+    var wrap = document.getElementById('lsCatDropWrap');
+    if (wrap && !wrap.contains(e.target)) ls_catDropClose();
+  });
+
+  /* ── SA category expand/collapse state ── */
+  var _lsCatExpanded = {};
+
+  function ls_toggleCat(catId) {
+    _lsCatExpanded[catId] = !_lsCatExpanded[catId];
+    ls_render();
+  }
+
+  /* ── SA Filter + Render ── */
+  function ls_applyFilter() {
+    var thead = document.getElementById('lsThead');
+    if (thead && !LS.isBranchView) {
+      thead.innerHTML = '<tr><th>Service Name</th><th>Default Fee</th><th>Type</th><th>Specimen</th><th>PhilHealth</th><th style="text-align:center;">Actions</th></tr>';
+    }
+    var q = (document.getElementById('lsSearch') && document.getElementById('lsSearch').value || '').trim().toLowerCase();
+    var cf = (document.getElementById('lsFilterCat') && document.getElementById('lsFilterCat').value || '');
+    LS.filtered = LS.all.filter(function (s) {
+      if (_lsTypeFilter !== 'all' && s.service_type !== _lsTypeFilter) return false;
+      if (cf && s.cat_id !== cf) return false;
+      if (q) {
+        var hay = [s.serv_name, s.cat_name, s.specimen_type].join(' ').toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+    ls_render();
+  }
+
+  function ls_render() {
+    var count = LS.filtered.length;
+    document.getElementById('lsSubtitle').textContent =
+      count + ' service' + (count !== 1 ? 's' : '') +
+      (count !== LS.all.length ? ' (filtered from ' + LS.all.length + ')' : ' total');
+
+    if (!count) {
+      document.getElementById('lsTableBody').innerHTML =
+        '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-4);font-family:var(--mono);font-size:13px;">No services found.</td></tr>';
+      return;
+    }
+
+    // Group filtered services by category, preserving order
+    var catOrder = [];
+    var grouped = {};
+    LS.filtered.forEach(function (s) {
+      var key = s.cat_id || '__none__';
+      if (!grouped[key]) {
+        grouped[key] = { cat_id: key, cat_name: s.cat_name || 'Uncategorized', services: [] };
+        catOrder.push(key);
+        // Default to expanded on first render; preserve state on re-render
+        if (_lsCatExpanded[key] === undefined) _lsCatExpanded[key] = true;
+      }
+      grouped[key].services.push(s);
+    });
+
+    var h = '';
+    catOrder.forEach(function (key) {
+      var group = grouped[key];
+      var isOpen = _lsCatExpanded[key];
+      var chevron = isOpen
+        ? '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>'
+        : '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>';
+
+      // Category header row
+      h += '<tr style="background:var(--gray-50);cursor:pointer;" onclick="ls_toggleCat(\'' + _e(key) + '\')">'
+        + '<td colspan="6" style="padding:10px 14px;">'
+        + '<div style="display:flex;align-items:center;gap:8px;">'
+        + '<span style="color:var(--teal-600);display:flex;align-items:center;">' + chevron + '</span>'
+        + '<svg width="13" height="13" fill="none" stroke="var(--teal-600)" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>'
+        + '<span style="font-size:12px;font-weight:800;color:var(--teal-700);text-transform:uppercase;letter-spacing:.04em;">' + _e(group.cat_name) + '</span>'
+        + '<span style="font-size:11px;color:var(--text-4);font-family:var(--mono);">' + group.services.length + ' service' + (group.services.length !== 1 ? 's' : '') + '</span>'
+        + '</div>'
+        + '</td>'
+        + '</tr>';
+
+      if (!isOpen) return;
+
+      // Service rows
+      group.services.forEach(function (s) {
+        var isPhil = s.is_philhealth_covered == 1;
+        h += '<tr id="ls-row-' + _e(s.serv_id) + '" style="border-top:1px solid var(--gray-100);">'
+          + '<td style="padding-left:36px;"><span style="font-weight:700;color:var(--text-1);">' + _e(s.serv_name) + '</span></td>'
+          + '<td style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text-1);">₱' + Number(s.default_fee || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</td>'
+          + '<td>' + (s.service_type === 'xray'
+            ? '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(14,165,233,.1);color:#0ea5e9;font-family:var(--mono);">🩻 X-Ray</span>'
+            : '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(16,168,168,.1);color:var(--teal-600);font-family:var(--mono);">🔬 Lab</span>')
+          + '</td>'
+          + '<td style="font-size:12px;color:var(--text-3);">' + _e(s.specimen_type || '—') + '</td>'
+          + '<td>'
+          + (isPhil
+            ? '<span class="badge badge-teal" style="font-family:var(--mono);">✓ Covered</span>'
+            : '<span class="badge badge-gray" style="font-family:var(--mono);">✗ No</span>')
+          + '</td>'
+          + '<td style="text-align:center;">'
+          + '<div style="display:flex;gap:5px;justify-content:center;">'
+          + '<button class="btn btn-sm" onclick="event.stopPropagation();lsBranch_open(\'' + _e(s.serv_id) + '\')" style="padding:5px 10px;background:rgba(16,168,168,.1);color:var(--teal-700);border:1px solid rgba(0,96,176,.2);" title="Branch Status">'
+          + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>'
+          + ' Branches</button>'
+          + (s.service_type !== 'xray'
+            ? '<button class="btn btn-sm" onclick="event.stopPropagation();lsParams_open(\'' + _e(s.serv_id) + '\')" style="padding:5px 10px;background:rgba(99,102,241,.1);color:#6366f1;border:1px solid rgba(99,102,241,.25);" title="Configure Parameters">'
+              + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>'
+              + ' Params</button>'
+            : '')
+          + '<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();ls_openEdit(\'' + _e(s.serv_id) + '\')" style="padding:5px 10px;" title="Edit">'
+          + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>'
+          + '</button>'
+          + '<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();ls_openDelete(\'' + _e(s.serv_id) + '\')" style="padding:5px 10px;" title="Delete">'
+          + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>'
+          + '</button>'
+          + '</div>'
+          + '</td>'
+          + '</tr>';
+      });
+
+      // Spacer between groups
+      h += '<tr><td colspan="6" style="padding:0;height:6px;background:var(--bg);border:none;"></td></tr>';
+    });
+
+    document.getElementById('lsTableBody').innerHTML = h;
+  }
+
+  /* ══════════════════════════════════════
+     BRANCH ADMIN VIEW
+  ══════════════════════════════════════ */
+  var _lsBACatExpanded = {};
+  var _lsBaTypeFilter = 'all';
+
+  function ls_setBaTypeFilter(type) {
+    _lsBaTypeFilter = type;
+    ['all','lab','xray'].forEach(function(t) {
+      var btn = document.getElementById('lsBaTypeTab-' + t);
+      if (!btn) return;
+      btn.style.background = t === type ? 'var(--white)' : 'transparent';
+      btn.style.color = t === type ? 'var(--text-1)' : 'var(--text-3)';
+      btn.style.boxShadow = t === type ? '0 1px 3px rgba(0,0,0,.1)' : 'none';
+    });
+    ls_renderBranchView();
+  }
+
+  function ls_baToggleCat(catId) {
+    _lsBACatExpanded[catId] = !_lsBACatExpanded[catId];
+    ls_renderBranchView();
+  }
+
+  function ls_renderBranchView() {
+    var q = (document.getElementById('lsBASearch') ? document.getElementById('lsBASearch').value : '').toLowerCase().trim();
+    // Filter each group's services by type + search, skip empty groups
+    var data = (LS.all || []).map(function(group) {
+      var svcs = (group.services || []).filter(function(s) {
+        if (_lsBaTypeFilter !== 'all' && s.service_type !== _lsBaTypeFilter) return false;
+        if (q && s.serv_name.toLowerCase().indexOf(q) === -1) return false;
+        return true;
+      });
+      return svcs.length ? { cat_id: group.cat_id, cat_name: group.cat_name, services: svcs } : null;
+    }).filter(Boolean);
+
+    var count = data.reduce(function (n, g) { return n + (g.services || []).length; }, 0);
+
+    document.getElementById('lsSubtitle').textContent =
+      count + ' service' + (count !== 1 ? 's' : '') + ' in your branch';
+
+    var thead = document.getElementById('lsThead');
+    if (thead) thead.innerHTML =
+      '<tr><th>Service Name</th><th>Default Fee</th><th>Type</th><th>Specimen</th><th>PhilHealth</th><th style="text-align:center;">Your Branch</th></tr>';
+
+    if (!data.length) {
+      document.getElementById('lsTableBody').innerHTML =
+        '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-4);font-family:var(--mono);">No services available.</td></tr>';
+      return;
+    }
+
+    var h = '';
+    data.forEach(function (group, gi) {
+      var key = group.cat_id || '__none__';
+      if (_lsBACatExpanded[key] === undefined) _lsBACatExpanded[key] = true;
+      var isOpen = _lsBACatExpanded[key];
+      var activeSvc = (group.services || []).filter(function (s) { return s.branch_active == 1; }).length;
+      var totalSvc = (group.services || []).length;
+      var chevron = isOpen
+        ? '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>'
+        : '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>';
+
+      // Category header
+      h += '<tr style="background:var(--gray-50);cursor:pointer;" onclick="ls_baToggleCat(\'' + _e(key) + '\')">'
+        + '<td colspan="6" style="padding:10px 14px;">'
+        + '<div style="display:flex;align-items:center;gap:8px;">'
+        + '<span style="color:var(--teal-600);display:flex;align-items:center;">' + chevron + '</span>'
+        + '<svg width="13" height="13" fill="none" stroke="var(--teal-600)" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>'
+        + '<span style="font-size:12px;font-weight:800;color:var(--teal-700);text-transform:uppercase;letter-spacing:.04em;">' + _e(group.cat_name) + '</span>'
+        + '<span style="font-size:11px;color:var(--text-4);font-family:var(--mono);">' + activeSvc + '/' + totalSvc + ' active</span>'
+        + '</div>'
+        + '</td>'
+        + '</tr>';
+
+      if (!isOpen) return;
+
+      (group.services || []).forEach(function (svc, si) {
+        var sActive = svc.branch_active == 1 && svc.master_active == 1;
+        var sDisabled = svc.master_active == 0;
+        var isPhil = svc.is_philhealth_covered == 1;
+        h += '<tr style="background:var(--white);border-top:1px solid var(--gray-100);">'
+          + '<td style="padding-left:36px;">'
+          + '<div style="display:flex;align-items:center;gap:8px;">'
+          + '<div style="width:5px;height:5px;border-radius:50%;background:' + (sActive ? 'var(--teal-400)' : 'var(--gray-300)') + ';flex-shrink:0;"></div>'
+          + '<div>'
+          + '<div style="font-size:13px;font-weight:700;color:' + (sDisabled ? 'var(--text-4)' : 'var(--text-1)') + ';">' + _e(svc.serv_name) + '</div>'
+          + (sDisabled ? '<div style="font-size:10px;color:var(--danger);margin-top:1px;">⚠ Globally inactive</div>' : '')
+          + '</div>'
+          + '</div>'
+          + '</td>'
+          + '<td style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text-1);">₱' + Number(svc.default_fee || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</td>'
+          + '<td>' + (svc.service_type === 'xray'
+            ? '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(14,165,233,.1);color:#0ea5e9;font-family:var(--mono);">🩻 X-Ray</span>'
+            : '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(16,168,168,.1);color:var(--teal-600);font-family:var(--mono);">🔬 Lab</span>')
+          + '</td>'
+          + '<td style="font-size:12px;color:var(--text-3);">' + _e(svc.specimen_type || '—') + '</td>'
+          + '<td>'
+          + (isPhil
+            ? '<span class="badge badge-teal" style="font-family:var(--mono);">✓ Covered</span>'
+            : '<span class="badge badge-gray" style="font-family:var(--mono);">✗ No</span>')
+          + '</td>'
+          + '<td style="text-align:center;" onclick="event.stopPropagation();">'
+          + ls_buildToggle(sActive, sDisabled, 'ls_baToggleServ(' + JSON.stringify(svc.serv_id) + ')', 44, 24)
+          + '</td>'
+          + '</tr>';
+      });
+
+      h += '<tr><td colspan="6" style="padding:0;height:6px;background:var(--bg);border:none;"></td></tr>';
+    });
+
+    document.getElementById('lsTableBody').innerHTML = h;
+  }
+
+  function ls_buildToggle(isOn, disabled, onclick, w, h) {
+    var knob = h - 4;
+    return '<div style="display:inline-flex;align-items:center;gap:8px;cursor:' + (disabled ? 'not-allowed' : 'pointer') + ';" onclick="' + (disabled ? '' : onclick) + '">'
+      + '<div style="position:relative;width:' + w + 'px;height:' + h + 'px;flex-shrink:0;">'
+      + '<div style="position:absolute;inset:0;border-radius:' + h + 'px;background:' + (isOn ? 'var(--teal-500)' : 'var(--gray-300)') + ';opacity:' + (disabled ? '.4' : '1') + ';transition:background .2s;"></div>'
+      + '<div style="position:absolute;top:2px;left:' + (isOn ? (w - knob - 2) + 'px' : '2px') + ';width:' + knob + 'px;height:' + knob + 'px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);opacity:' + (disabled ? '.4' : '1') + ';"></div>'
+      + '</div>'
+      + '<span style="font-size:' + (h >= 22 ? '13' : '11') + 'px;font-weight:700;min-width:' + (h >= 22 ? '52' : '44') + 'px;color:' + (isOn && !disabled ? 'var(--teal-600)' : 'var(--text-4)') + ';opacity:' + (disabled ? '.5' : '1') + ';">' + (isOn && !disabled ? 'Active' : 'Inactive') + '</span>'
+      + '</div>';
+  }
+
+  function ls_baToggleServ(servId) {
+    var svc = null;
+    for (var i = 0; i < LS.all.length; i++) {
+      var found = (LS.all[i].services || []).find(function(s) { return s.serv_id === servId; });
+      if (found) { svc = found; break; }
+    }
+    if (!svc || svc.master_active == 0) return;
+    var newVal = svc.branch_active == 1 ? 0 : 1;
+    var snapshot = JSON.parse(JSON.stringify(LS.all));
+
+    svc.branch_active = newVal;
+    ls_renderBranchView();
+
+    google.script.run
+      .withSuccessHandler(function (r) {
+        if (!r.success) { LS.all = snapshot; ls_renderBranchView(); toast('error', r.message || 'Failed.'); return; }
+        toast('success', svc.serv_name + ' ' + (newVal ? 'activated' : 'deactivated') + ' for your branch.');
+      })
+      .withFailureHandler(function (e) { LS.all = snapshot; ls_renderBranchView(); toast('error', e.message); })
+      .setBranchServStatus(LS.branchId, svc.serv_id, newVal);
+  }
+
+
+
+  /* ══════════════════════════════════════
+     MODAL
+  ══════════════════════════════════════ */
+  function ls_onPhilChange() {
+    var val = document.querySelector('input[name="lsPhilHealth"]:checked');
+    var isYes = val && val.value === '1';
+    var pillYes = document.getElementById('lsPhilYesPill');
+    var pillNo = document.getElementById('lsPhilNoPill');
+    if (pillYes) { pillYes.style.borderColor = isYes ? 'var(--teal-500)' : 'var(--border)'; pillYes.style.background = isYes ? 'rgba(16,168,168,.05)' : ''; }
+    if (pillNo) { pillNo.style.borderColor = !isYes ? 'var(--border2)' : 'var(--border)'; pillNo.style.background = !isYes ? 'var(--gray-50)' : ''; }
+  }
+
+  function ls_openModal() {
+    LS.editingId = null;
+    document.getElementById('lsModalTitle').textContent = 'Add Lab Service';
+    document.getElementById('lsModalSub').textContent = 'Fill in service details';
+    document.getElementById('lsSaveBtn').textContent = 'Save Service';
+    document.getElementById('lsModalId').value = '';
+    document.getElementById('lsFldName').value = '';
+    document.getElementById('lsFldFee').value = '';
+    document.getElementById('lsFldSpecimen').value = '';
+    ls_catDropReset();
+    var inp = document.getElementById('lsCatSearch');
+    if (inp) { inp.style.borderColor = ''; inp.style.color = ''; inp.style.fontWeight = ''; }
+    document.querySelector('input[name="lsPhilHealth"][value="0"]').checked = true;
+    ls_onPhilChange();
+    ls_hideModalErr();
+    var note = document.getElementById('lsNewServNote');
+    if (note) note.style.display = '';
+    document.getElementById('lsModal').style.display = 'flex';
+    setTimeout(function () { document.getElementById('lsFldName').focus(); }, 80);
+  }
+
+  function ls_openEdit(id) {
+    var s = LS.all.find(function (x) { return x.serv_id === id; });
+    if (!s) { toast('error', 'Service not found.'); return; }
+    LS.editingId = id;
+    document.getElementById('lsModalTitle').textContent = 'Edit Lab Service';
+    document.getElementById('lsModalSub').textContent = s.serv_name;
+    document.getElementById('lsSaveBtn').textContent = 'Update Service';
+    document.getElementById('lsModalId').value = s.serv_id;
+    document.getElementById('lsFldName').value = s.serv_name || '';
+    document.getElementById('lsFldFee').value = s.default_fee || '';
+    document.getElementById('lsFldSpecimen').value = s.specimen_type || '';
+    ls_catDropReset();
+    if (s.cat_id && s.cat_name) ls_catDropSelect(s.cat_id, s.cat_name);
+    var philVal = s.is_philhealth_covered == 1 ? '1' : '0';
+    document.querySelector('input[name="lsPhilHealth"][value="' + philVal + '"]').checked = true;
+    ls_onPhilChange();
+    ls_hideModalErr();
+    var note = document.getElementById('lsNewServNote');
+    if (note) note.style.display = 'none';
+    document.getElementById('lsModal').style.display = 'flex';
+    setTimeout(function () { document.getElementById('lsFldName').focus(); }, 80);
+  }
+
+  function ls_closeModal() {
+    document.getElementById('lsModal').style.display = 'none';
+    LS.editingId = null;
+  }
+  function ls_showModalErr(msg) { var el = document.getElementById('lsModalErr'); el.textContent = msg; el.style.display = 'block'; }
+  function ls_hideModalErr() { document.getElementById('lsModalErr').style.display = 'none'; }
+
+  /* ── Save (Optimistic — Create & Update) ── */
+  function ls_save() {
+    var name = document.getElementById('lsFldName').value.trim();
+    var catId = document.getElementById('lsFldCat').value;
+    var fee = document.getElementById('lsFldFee').value.trim();
+    var specimen = document.getElementById('lsFldSpecimen').value.trim();
+    var philEl = document.querySelector('input[name="lsPhilHealth"]:checked');
+    var isPhil = philEl ? parseInt(philEl.value) : 0;
+    var isEdit = !!LS.editingId;
+
+    if (!name) { ls_showModalErr('Service name is required.'); return; }
+    if (!catId) { ls_showModalErr('Please select a category from the dropdown.'); return; }
+    if (!fee || isNaN(parseFloat(fee)) || parseFloat(fee) < 0) { ls_showModalErr('Valid fee is required.'); return; }
+
+    var catObj = LS.cats.find(function (c) { return c.cat_id === catId; });
+    var payload = {
+      serv_id: LS.editingId || '',
+      serv_name: name,
+      cat_id: catId,
+      default_fee: parseFloat(fee),
+      specimen_type: specimen,
+      is_philhealth_covered: isPhil,
+    };
+
+    var snapshot = JSON.parse(JSON.stringify(LS.all));
+
+    if (isEdit) {
+      var idx = LS.all.findIndex(function (s) { return s.serv_id === LS.editingId; });
+      if (idx !== -1) {
+        LS.all[idx] = Object.assign({}, LS.all[idx], {
+          serv_name: name,
+          cat_id: catId,
+          cat_name: catObj ? catObj.category_name : LS.all[idx].cat_name,
+          default_fee: parseFloat(fee),
+          specimen_type: specimen,
+          is_philhealth_covered: isPhil,
+        });
+      }
+    } else {
+      LS.all.unshift({
+        serv_id: 'SERV-PENDING',
+        serv_name: name,
+        cat_id: catId,
+        cat_name: catObj ? catObj.category_name : '',
+        default_fee: parseFloat(fee),
+        specimen_type: specimen,
+        is_philhealth_covered: isPhil,
+        is_active: 1,
+        created_at: new Date().toISOString()
+      });
+    }
+
+    ls_applyFilter();
+    ls_closeModal();
+    toast('info', isEdit ? 'Saving changes…' : 'Adding service…');
+
+    var fn = isEdit ? 'updateLabService' : 'createLabService';
+    google.script.run
+      .withSuccessHandler(function (r) {
+        if (!r.success) {
+          LS.all = snapshot; ls_applyFilter();
+          toast('error', r.message || 'Failed to save.');
+          setTimeout(function () {
+            if (isEdit) ls_openEdit(payload.serv_id);
+            else ls_openModal();
+            document.getElementById('lsFldName').value = name;
+            document.getElementById('lsFldFee').value = fee;
+            document.getElementById('lsFldSpecimen').value = specimen;
+            var catObj2 = LS.cats.find(function (c) { return c.cat_id === catId; });
+            if (catObj2) ls_catDropSelect(catId, catObj2.category_name);
+            document.querySelector('input[name="lsPhilHealth"][value="' + isPhil + '"]').checked = true;
+            ls_onPhilChange();
+            ls_showModalErr(r.message || 'Failed to save.');
+          }, 200);
+          return;
+        }
+        if (!isEdit && r.serv_id) {
+          var ti = LS.all.findIndex(function (s) { return s.serv_id === 'SERV-PENDING'; });
+          if (ti !== -1) LS.all[ti].serv_id = r.serv_id;
+          ls_applyFilter();
+        }
+        toast('success', isEdit ? 'Service updated!' : 'Service created!');
+      })
+      .withFailureHandler(function (e) { LS.all = snapshot; ls_applyFilter(); toast('error', e.message || 'Error.'); })
+    [fn](payload);
+  }
+
+  /* ── Delete (Optimistic) ── */
+  function ls_openDelete(id) {
+    var s = LS.all.find(function (x) { return x.serv_id === id; });
+    if (!s) return;
+    _lsDeleteId = id;
+    document.getElementById('lsDeleteMsg').textContent = 'Delete "' + s.serv_name + '"? Cannot be undone.';
+    document.getElementById('lsDeleteModal').style.display = 'flex';
+  }
+  function ls_closeDeleteModal() { document.getElementById('lsDeleteModal').style.display = 'none'; _lsDeleteId = null; }
+
+  function ls_confirmDelete() {
+    if (!_lsDeleteId) return;
+    var id = _lsDeleteId;
+    var snapshot = JSON.parse(JSON.stringify(LS.all));
+    ls_closeDeleteModal();
+
+    var row = document.getElementById('ls-row-' + id);
+    if (row) { row.style.transition = 'opacity .25s,transform .25s'; row.style.opacity = '0'; row.style.transform = 'translateX(8px)'; }
+    setTimeout(function () { LS.all = LS.all.filter(function (s) { return s.serv_id !== id; }); ls_applyFilter(); }, 260);
+    toast('info', 'Deleting service…');
+
+    google.script.run
+      .withSuccessHandler(function (r) {
+        if (!r.success) { LS.all = snapshot; ls_applyFilter(); toast('error', r.message || 'Failed.'); return; }
+        toast('success', 'Service deleted.');
+      })
+      .withFailureHandler(function (e) { LS.all = snapshot; ls_applyFilter(); toast('error', e.message); })
+      .deleteLabService(id);
+  }
+
+  /* ══════════════════════════════════════
+     BRANCH OVERRIDE MODAL (SA only)
+     Shows all branches with active toggle
+     per branch for a specific service.
+     PhilHealth follows master — read only.
+  ══════════════════════════════════════ */
+  var LB = {
+    servId: null,
+    servName: '',
+    isPhil: 0,
+    branches: []  // [{branch_id, branch_name, branch_code, is_active}]
+  };
+
+  function lsBranch_open(servId) {
+    var svc = LS.all.find(function (s) { return s.serv_id === servId; });
+    if (!svc) return;
+    LB.servId = servId;
+    LB.servName = svc.serv_name;
+    LB.isPhil = svc.is_philhealth_covered;
+
+    document.getElementById('lsBranchModalTitle').textContent = svc.serv_name;
+    document.getElementById('lsBranchModalSub').textContent =
+      _e(svc.cat_name || '') + (svc.specimen_type ? ' · ' + svc.specimen_type : '');
+    document.getElementById('lsBranchModalBody').innerHTML =
+      '<div style="text-align:center;padding:32px;color:var(--text-4);font-family:var(--mono);font-size:13px;">'
+      + '<span class="spinner spinner-teal" style="display:inline-block;margin-bottom:8px;"></span><br>Loading branches…</div>';
+    document.getElementById('lsBranchModal').style.display = 'flex';
+
+    google.script.run
+      .withSuccessHandler(function (r) {
+        if (!r.success) {
+          document.getElementById('lsBranchModalBody').innerHTML =
+            '<div style="text-align:center;padding:24px;color:var(--danger);font-size:13px;">' + _e(r.message) + '</div>';
+          return;
+        }
+        LB.branches = r.data || [];
+        lsBranch_render();
+      })
+      .withFailureHandler(function (e) {
+        document.getElementById('lsBranchModalBody').innerHTML =
+          '<div style="text-align:center;padding:24px;color:var(--danger);font-size:13px;">' + _e(e.message) + '</div>';
+      })
+      .getServBranchStatus(servId);
+  }
+
+  function lsBranch_close() {
+    document.getElementById('lsBranchModal').style.display = 'none';
+    LB.servId = null; LB.branches = [];
+  }
+
+  function lsBranch_render() {
+    var isPhil = LB.isPhil == 1;
+    var h = '';
+
+    // PhilHealth info bar
+    h += '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius);'
+      + 'background:' + (isPhil ? 'rgba(16,168,168,.06)' : 'var(--gray-50)') + ';'
+      + 'border:1px solid ' + (isPhil ? 'rgba(0,96,176,.15)' : 'var(--border)') + ';margin-bottom:16px;">'
+      + '<svg width="14" height="14" fill="none" stroke="' + (isPhil ? 'var(--teal-600)' : 'var(--text-4)') + '" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>'
+      + '<div>'
+      + '<div style="font-size:12px;font-weight:700;color:' + (isPhil ? 'var(--teal-700)' : 'var(--text-3)') + ';">'
+      + (isPhil ? '✓ PhilHealth Covered' : '✗ Not PhilHealth Covered') + '</div>'
+      + '<div style="font-size:11px;color:var(--text-4);margin-top:1px;">Master setting — managed from the service record</div>'
+      + '</div>'
+      + '</div>';
+
+    if (!LB.branches.length) {
+      h += '<div style="text-align:center;padding:32px;color:var(--text-4);font-size:13px;">No branches found.</div>';
+      document.getElementById('lsBranchModalBody').innerHTML = h;
+      return;
+    }
+
+    // Branch list
+    h += '<div style="display:flex;flex-direction:column;gap:8px;">';
+    LB.branches.forEach(function (b, bi) {
+      var isActive = b.is_active == 1;
+      h += '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border:1.5px solid '
+        + (isActive ? 'rgba(0,96,176,.2)' : 'var(--border)') + ';border-radius:var(--radius-lg);'
+        + 'background:' + (isActive ? 'rgba(16,168,168,.03)' : 'var(--white)') + ';">'
+        + '<div style="flex:1;min-width:0;">'
+        + '<div style="font-size:13px;font-weight:700;color:var(--text-1);">' + _e(b.branch_name) + '</div>'
+        + '<div style="font-size:11px;color:var(--text-4);font-family:var(--mono);margin-top:1px;">' + _e(b.branch_code) + '</div>'
+        + '</div>'
+        + lsBranchToggle(isActive, false, 'lsBranch_toggle(' + bi + ')', 44, 24)
+        + '</div>';
+    });
+    h += '</div>';
+
+    document.getElementById('lsBranchModalBody').innerHTML = h;
+  }
+
+  function lsBranchToggle(isOn, disabled, onclick, w, h) {
+    var knob = h - 4;
+    return '<div style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;" onclick="' + onclick + '">'
+      + '<div style="position:relative;width:' + w + 'px;height:' + h + 'px;flex-shrink:0;">'
+      + '<div style="position:absolute;inset:0;border-radius:' + h + 'px;background:' + (isOn ? 'var(--teal-500)' : 'var(--gray-300)') + ';transition:background .2s;"></div>'
+      + '<div style="position:absolute;top:2px;left:' + (isOn ? (w - knob - 2) + 'px' : '2px') + ';width:' + knob + 'px;height:' + knob + 'px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);"></div>'
+      + '</div>'
+      + '<span style="font-size:13px;font-weight:700;min-width:52px;color:' + (isOn ? 'var(--teal-600)' : 'var(--text-4)') + ';">' + (isOn ? 'Active' : 'Inactive') + '</span>'
+      + '</div>';
+  }
+
+  function lsBranch_toggle(bi) {
+    var b = LB.branches[bi];
+    if (!b) return;
+    var newVal = b.is_active == 1 ? 0 : 1;
+    var snapshot = JSON.parse(JSON.stringify(LB.branches));
+
+    b.is_active = newVal;
+    lsBranch_render();
+
+    google.script.run
+      .withSuccessHandler(function (r) {
+        if (!r.success) {
+          LB.branches = snapshot; lsBranch_render();
+          toast('error', r.message || 'Failed.'); return;
+        }
+        // Sync back to LS.all local state (Branch_Serv_Status)
+        toast('success', b.branch_name + ': ' + LB.servName + ' ' + (newVal ? 'activated' : 'deactivated') + '.');
+      })
+      .withFailureHandler(function (e) {
+        LB.branches = snapshot; lsBranch_render();
+        toast('error', e.message || 'Error.');
+      })
+      .setBranchServStatus(b.branch_id, LB.servId, newVal);
+  }
+
+  /* Backdrop close */
+  // document.getElementById('lsBranchModal').addEventListener('click', function(e){
+  //   if (e.target === this) lsBranch_close();
+  // });
+
+  /* ══════════════════════════════════════
+     CONSULTATION SETUP (SA only)
+  ══════════════════════════════════════ */
+  function ls_openConSetup() {
+    document.getElementById('lsConModal').style.display = 'flex';
+    ls_renderConSetup();
+  }
+
+  function ls_closeConSetup() {
+    document.getElementById('lsConModal').style.display = 'none';
+  }
+
+  function ls_renderConSetup() {
+    var body = document.getElementById('lsConModalBody');
+    // Group all services by category
+    var groups = {};
+    LS.all.forEach(function (s) {
+      if (!groups[s.cat_id]) groups[s.cat_id] = { cat_name: s.cat_name, services: [] };
+      groups[s.cat_id].services.push(s);
+    });
+
+    var h = '';
+    Object.keys(groups).sort(function (a, b) { return groups[a].cat_name.localeCompare(groups[b].cat_name); }).forEach(function (cid) {
+      var grp = groups[cid];
+      h += '<div style="background:var(--gray-50);padding:8px 16px;border-bottom:1px solid var(--border);border-top:1px solid var(--border);font-size:11px;font-weight:800;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;">' + _e(grp.cat_name) + '</div>';
+
+      grp.services.sort(function (a, b) { return a.serv_name.localeCompare(b.serv_name); }).forEach(function (s) {
+        var isCon = s.is_consultation == 1;
+        var typeTag = s.service_type === 'xray'
+          ? '<span style="font-size:9px;font-weight:800;background:rgba(14,165,233,.1);color:#0ea5e9;padding:1px 5px;border-radius:4px;margin-left:8px;">X-RAY</span>'
+          : '<span style="font-size:9px;font-weight:800;background:rgba(16,168,168,.1);color:var(--teal-600);padding:1px 5px;border-radius:4px;margin-left:8px;">LAB</span>';
+
+        h += '<label style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;" onmouseenter="this.style.background=\'var(--gray-50)\'" onmouseleave="this.style.background=\'\'">'
+          + '<div style="flex:1;">'
+          + '<div style="font-size:13px;font-weight:700;color:var(--text-1);">' + _e(s.serv_name) + typeTag + '</div>'
+          + '<div style="font-size:11px;color:var(--text-4);">' + _e(s.serv_id) + '</div>'
+          + '</div>'
+          + '<div>'
+          + '<input type="checkbox" ' + (isCon ? 'checked' : '') + ' onchange="ls_toggleCon(\'' + _e(s.serv_id) + '\', this)" style="accent-color:var(--teal-600);width:16px;height:16px;">'
+          + '</div>'
+          + '</label>';
+      });
+    });
+
+    if (!h) h = '<div style="padding:24px;text-align:center;color:var(--text-4);font-size:12px;">No services found.</div>';
+    body.innerHTML = h;
+  }
+
+  function ls_toggleCon(servId, chk) {
+    var s = LS.all.find(function (x) { return x.serv_id === servId; });
+    if (!s) return;
+    var newVal = chk.checked ? 1 : 0;
+
+    // Optimistic update
+    s.is_consultation = newVal;
+
+    google.script.run
+      .withSuccessHandler(function (r) {
+        if (!r.success) {
+          chk.checked = !newVal; // Revert visually
+          s.is_consultation = !newVal; // Revert data
+          toast('error', r.message || 'Failed to update consultation status.');
+        } else {
+          toast('success', 'Consultation status updated.');
+        }
+      })
+      .withFailureHandler(function (e) {
+        chk.checked = !newVal;
+        s.is_consultation = !newVal;
+        toast('error', e.message || 'Error saving.');
+      })
+      .setServiceConsultation(servId, newVal);
+  }
+
+  /* ══════════════════════════════════════
+     LAB PARAMETERS CONFIG (SA only)
+     Opens a modal to configure test
+     parameters (CBC rows, UA rows, etc.)
+     per lab service.
+  ══════════════════════════════════════ */
+  var LP = { servId: null, servName: '', params: [], nextSort: 1 };
+
+  var LP_TYPES = [
+    { value: 'header',   label: '— Section Header',   desc: 'Bold section title row, no input (e.g. PHYSICAL, CHEMICAL)' },
+    { value: 'subheader',label: '— Sub-section',       desc: 'Italic group label under a section (e.g. DIFFERENTIAL COUNT)' },
+    { value: 'numeric',  label: 'Numeric',             desc: 'Number input with unit & reference range' },
+    { value: 'text',     label: 'Free Text',           desc: 'Open text input' },
+    { value: 'pos_neg',  label: 'Positive / Negative', desc: 'Dropdown: Positive or Negative' },
+    { value: 'reactive', label: 'Non-Reactive / Reactive', desc: 'Dropdown: Non-Reactive or Reactive' },
+    { value: 'selection',label: 'Custom Selection',    desc: 'Dropdown with options you define' }
+  ];
+
+  function lsParams_open(servId) {
+    var svc = LS.all.find(function (s) { return s.serv_id === servId; });
+    if (!svc) return;
+    LP.servId = servId;
+    LP.servName = svc.serv_name;
+    LP.params = [];
+
+    document.getElementById('lsParamsModalTitle').textContent = svc.serv_name;
+    document.getElementById('lsParamsModalSub').textContent = 'Configure result fields for this service';
+    document.getElementById('lsParamsBody').innerHTML =
+      '<div style="text-align:center;padding:32px;color:var(--text-4);font-family:var(--mono);font-size:13px;">'
+      + '<span class="spinner spinner-teal" style="display:inline-block;margin-bottom:8px;"></span><br>Loading parameters…</div>';
+    document.getElementById('lsParamsModal').style.display = 'flex';
+
+    google.script.run
+      .withSuccessHandler(function (r) {
+        if (!r.success) {
+          document.getElementById('lsParamsBody').innerHTML =
+            '<div style="padding:20px;color:var(--danger);font-size:13px;">' + _e(r.message) + '</div>';
+          return;
+        }
+        LP.params = (r.data || []).map(function (p) {
+          return {
+            param_id: p.param_id || '',
+            param_name: p.param_name || '',
+            unit: p.unit || '',
+            reference_range: p.reference_range || '',
+            sort_order: Number(p.sort_order) || 0,
+            field_type: p.field_type || 'numeric',
+            options: p.options || ''
+          };
+        });
+        LP.nextSort = LP.params.length ? Math.max.apply(null, LP.params.map(function (p) { return p.sort_order; })) + 1 : 1;
+        lsParams_render();
+      })
+      .withFailureHandler(function (e) {
+        document.getElementById('lsParamsBody').innerHTML =
+          '<div style="padding:20px;color:var(--danger);font-size:13px;">' + _e(e.message) + '</div>';
+      })
+      .getLabServiceParams(servId);
+  }
+
+  function lsParams_close() {
+    document.getElementById('lsParamsModal').style.display = 'none';
+    LP.servId = null; LP.params = [];
+  }
+
+  function lsParams_typeChanged(i, val) {
+    LP.params[i].field_type = val;
+    lsParams_render();
+    // Re-focus the name input for the same row
+    var nameInp = document.getElementById('lsp-name-' + i);
+    if (nameInp) setTimeout(function() { nameInp.focus(); }, 30);
+  }
+
+  function lsParams_render() {
+    var h = '<div style="padding:0 0 12px 0;">'
+      + '<div style="font-size:12px;color:var(--text-3);line-height:1.5;padding:10px 14px;background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.15);border-radius:8px;margin-bottom:14px;">'
+      + '<strong style="color:#6366f1;">Tip:</strong> Each row is a result field shown to the technologist during encoding. Choose the result type per field.'
+      + '</div>';
+
+    if (!LP.params.length) {
+      h += '<div style="text-align:center;padding:32px;color:var(--text-4);font-size:13px;">No fields yet. Click <strong>+ Add Field</strong> to begin.</div>';
+    } else {
+      LP.params.forEach(function (p, i) {
+        var ft = p.field_type || 'numeric';
+        var typeInfo = LP_TYPES.find(function(t){ return t.value === ft; }) || LP_TYPES[0];
+
+        // Type selector options
+        var typeOpts = LP_TYPES.map(function(t) {
+          return '<option value="' + t.value + '"' + (ft === t.value ? ' selected' : '') + '>' + t.label + '</option>';
+        }).join('');
+
+        var isSection = ft === 'header' || ft === 'subheader';
+
+        // Conditional extra fields (only for data rows)
+        var extraFields = '';
+        if (ft === 'numeric') {
+          extraFields =
+            '<div style="display:flex;gap:8px;margin-top:6px;">'
+            + '<div style="flex:1;">'
+            + '<div style="font-size:10px;color:var(--text-3);margin-bottom:3px;font-weight:600;">UNIT</div>'
+            + '<input type="text" id="lsp-unit-' + i + '" value="' + _e(p.unit) + '" oninput="LP.params[' + i + '].unit=this.value" class="f-inp" style="font-size:12px;padding:5px 8px;" placeholder="e.g. g/dL">'
+            + '</div>'
+            + '<div style="flex:2;">'
+            + '<div style="font-size:10px;color:var(--text-3);margin-bottom:3px;font-weight:600;">REFERENCE RANGE</div>'
+            + '<input type="text" id="lsp-ref-' + i + '" value="' + _e(p.reference_range) + '" oninput="LP.params[' + i + '].reference_range=this.value" class="f-inp" style="font-size:12px;padding:5px 8px;" placeholder="e.g. 12.0–16.0 g/dL">'
+            + '</div>'
+            + '</div>';
+        } else if (ft === 'selection') {
+          extraFields =
+            '<div style="margin-top:6px;">'
+            + '<div style="font-size:10px;color:var(--text-3);margin-bottom:3px;font-weight:600;">OPTIONS <span style="font-weight:400;color:var(--text-4);">(comma-separated)</span></div>'
+            + '<input type="text" value="' + _e(p.options) + '" oninput="LP.params[' + i + '].options=this.value" class="f-inp" style="font-size:12px;padding:5px 8px;" placeholder="e.g. A, B, O, AB, Positive (+)">'
+            + '</div>';
+        } else if (ft === 'pos_neg') {
+          extraFields = '<div style="margin-top:6px;font-size:11px;color:var(--text-3);padding:5px 8px;background:var(--gray-50);border-radius:6px;border:1px solid var(--border);">Choices: <strong>Positive</strong>, <strong>Negative</strong></div>';
+        } else if (ft === 'reactive') {
+          extraFields = '<div style="margin-top:6px;font-size:11px;color:var(--text-3);padding:5px 8px;background:var(--gray-50);border-radius:6px;border:1px solid var(--border);">Choices: <strong>Non-Reactive</strong>, <strong>Reactive</strong></div>';
+        } else if (ft === 'text') {
+          extraFields = '<div style="margin-top:6px;font-size:11px;color:var(--text-3);padding:5px 8px;background:var(--gray-50);border-radius:6px;border:1px solid var(--border);">Technologist can enter any text.</div>';
+        }
+
+        // Section headers get a distinct look — no input, just label + type pill + remove
+        if (isSection) {
+          var isHeader = ft === 'header';
+          h += '<div style="border:2px solid ' + (isHeader ? '#6366f1' : 'var(--border)') + ';border-radius:10px;padding:10px 14px;margin-bottom:8px;background:' + (isHeader ? 'rgba(99,102,241,.06)' : 'var(--gray-50)') + ';display:flex;align-items:center;gap:8px;">'
+            // Section icon
+            + '<div style="font-size:14px;flex-shrink:0;">' + (isHeader ? '▌' : '└') + '</div>'
+            // Label input (bold for header, italic for subheader)
+            + '<div style="flex:1;">'
+            + '<input type="text" id="lsp-name-' + i + '" value="' + _e(p.param_name) + '" oninput="LP.params[' + i + '].param_name=this.value" class="f-inp" style="font-size:13px;' + (isHeader ? 'font-weight:800;text-transform:uppercase;' : 'font-style:italic;font-weight:600;') + 'padding:5px 8px;background:transparent;border-color:transparent;" placeholder="' + (isHeader ? 'Section title, e.g. PHYSICAL' : 'Sub-section, e.g. DIFFERENTIAL COUNT') + '">'
+            + '</div>'
+            // Type selector
+            + '<select onchange="lsParams_typeChanged(' + i + ',this.value)" class="f-inp" style="font-size:11px;padding:5px 6px;width:auto;flex-shrink:0;">' + typeOpts + '</select>'
+            // Order
+            + '<input type="number" value="' + p.sort_order + '" oninput="LP.params[' + i + '].sort_order=Number(this.value)||0" class="f-inp" style="font-size:12px;padding:5px 6px;text-align:center;width:46px;flex-shrink:0;" min="1" title="Order">'
+            // Remove
+            + '<button onclick="lsParams_removeRow(' + i + ')" style="width:28px;height:28px;border-radius:6px;background:var(--danger-bg);border:1px solid rgba(239,68,68,.2);cursor:pointer;color:var(--danger);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">'
+            + '<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>'
+            + '</button>'
+            + '</div>';
+        } else {
+          h += '<div style="border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;background:var(--white);">'
+            + '<div style="display:flex;align-items:center;gap:8px;">'
+            + '<div style="width:22px;height:22px;border-radius:50%;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);font-size:10px;font-weight:700;color:#6366f1;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + (i + 1) + '</div>'
+            + '<div style="flex:1;">'
+            + '<input type="text" id="lsp-name-' + i + '" value="' + _e(p.param_name) + '" oninput="LP.params[' + i + '].param_name=this.value" class="f-inp" style="font-size:13px;font-weight:600;padding:5px 8px;" placeholder="Field name, e.g. Hemoglobin">'
+            + '</div>'
+            + '<select onchange="lsParams_typeChanged(' + i + ',this.value)" class="f-inp" style="font-size:11px;padding:5px 6px;width:auto;flex-shrink:0;color:var(--text-2);">' + typeOpts + '</select>'
+            + '<input type="number" value="' + p.sort_order + '" oninput="LP.params[' + i + '].sort_order=Number(this.value)||0" class="f-inp" style="font-size:12px;padding:5px 6px;text-align:center;width:46px;flex-shrink:0;" min="1" title="Order">'
+            + '<button onclick="lsParams_removeRow(' + i + ')" style="width:28px;height:28px;border-radius:6px;background:var(--danger-bg);border:1px solid rgba(239,68,68,.2);cursor:pointer;color:var(--danger);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">'
+            + '<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>'
+            + '</button>'
+            + '</div>'
+            + extraFields
+            + '</div>';
+        }
+      });
+    }
+
+    h += '</div>'
+      + '<button onclick="lsParams_addRow()" class="btn btn-secondary btn-sm" style="width:100%;justify-content:center;margin-top:4px;">'
+      + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>'
+      + ' Add Field'
+      + '</button>';
+
+    document.getElementById('lsParamsBody').innerHTML = h;
+  }
+
+  function lsParams_addRow() {
+    LP.params.push({ param_id: '', param_name: '', unit: '', reference_range: '', sort_order: LP.nextSort++, field_type: 'numeric', options: '' });
+    lsParams_render();
+    var nameInp = document.getElementById('lsp-name-' + (LP.params.length - 1));
+    if (nameInp) setTimeout(function () { nameInp.focus(); }, 50);
+  }
+
+  function lsParams_removeRow(i) {
+    LP.params.splice(i, 1);
+    lsParams_render();
+  }
+
+  function lsParams_save() {
+    // Check for any row with an empty name
+    var emptyName = LP.params.find(function(p) { return !p.param_name.trim(); });
+    if (emptyName) {
+      toast('error', 'All fields must have a name. Remove or fill in empty rows.');
+      return;
+    }
+    var params = LP.params;
+    // Validate selection type has options
+    var badSel = params.find(function(p) { return p.field_type === 'selection' && !p.options.trim(); });
+    if (badSel) {
+      toast('error', '"' + badSel.param_name + '" is a Custom Selection but has no options defined.');
+      return;
+    }
+
+    var btn = document.getElementById('lsParamsSaveBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+    google.script.run
+      .withSuccessHandler(function (r) {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save Parameters'; }
+        if (!r.success) { toast('error', r.message || 'Failed to save.'); return; }
+        toast('success', LP.servName + ': parameters saved (' + params.length + ' fields).');
+        lsParams_close();
+      })
+      .withFailureHandler(function (e) {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save Parameters'; }
+        toast('error', e.message || 'Connection error.');
+      })
+      .saveLabServiceParams(LP.servId, params);
+  }
+
+</script>
+
+<!-- ══ LAB PARAMETERS MODAL ══ -->
+<div id="lsParamsModal"
+  style="display:none;position:fixed;inset:0;z-index:504;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
+  <div
+    style="background:var(--white);border-radius:var(--radius-xl);width:100%;max-width:720px;max-height:88vh;box-shadow:var(--shadow-xl);display:flex;flex-direction:column;animation:modalIn .22s cubic-bezier(.34,1.2,.64,1);">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="width:40px;height:40px;border-radius:10px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" fill="none" stroke="#6366f1" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:15px;font-weight:800;color:var(--text-1);" id="lsParamsModalTitle">Test Parameters</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;" id="lsParamsModalSub">Configure parameters</div>
+      </div>
+      <button onclick="lsParams_close()"
+        style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);flex-shrink:0;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div style="flex:1;overflow-y:auto;padding:20px 24px;" id="lsParamsBody">
+      <div style="text-align:center;padding:32px;color:var(--text-4);font-size:13px;">Loading…</div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;">
+      <button class="btn btn-secondary" onclick="lsParams_close()">Cancel</button>
+      <button class="btn btn-primary" id="lsParamsSaveBtn" onclick="lsParams_save()"
+        style="background:#6366f1;border-color:#6366f1;">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+        </svg>
+        Save Parameters
+      </button>
+    </div>
+  </div>
+</div>

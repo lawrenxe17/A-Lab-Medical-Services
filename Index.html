@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A-Lab — Laboratory System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<?!= include('Stylesheet') ?>
+
+</head>
+<body>
+
+<!-- ═══ LOADING OVERLAY ═══ -->
+<div id="appLoader">
+  <div class="loader-mark">
+    <svg width="24" height="24" fill="none" stroke="white" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
+    </svg>
+  </div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+  <div class="loader-text" id="loaderText">initializing…</div>
+</div>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="viewLogin" class="view hidden">
+  <div class="login-brand">
+    <div class="brand-grid"></div>
+    <div class="brand-logo">
+      <div class="brand-mark">
+        <div class="brand-icon">
+          <svg width="22" height="22" fill="none" stroke="white" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
+          </svg>
+        </div>
+        <span class="brand-name">A-Lab</span>
+      </div>
+      <p class="brand-tagline">Comprehensive laboratory system for modern medical facilities.</p>
+    </div>
+    <div class="brand-features">
+      <div class="brand-feat-item">
+        <div class="brand-feat-dot">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-feat-label">Orders Management</div>
+          <div class="brand-feat-text">Track lab exam orders end-to-end</div>
+        </div>
+      </div>
+      <div class="brand-feat-item">
+        <div class="brand-feat-dot">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-feat-label">Lab Services Catalog</div>
+          <div class="brand-feat-text">Manage tests, panels &amp; packages</div>
+        </div>
+      </div>
+      <div class="brand-feat-item">
+        <div class="brand-feat-dot">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-feat-label">Analytics &amp; Reports</div>
+          <div class="brand-feat-text">Real-time insights across branches</div>
+        </div>
+      </div>
+    </div>
+    <div class="brand-footer">v1.0.0 · A-Lab LMS · 2025</div>
+  </div>
+  <div class="login-form-panel">
+    <div class="login-form-inner">
+      <div class="login-form-logo">
+        <div class="login-form-icon" style="background:transparent;padding:0;">
+          <img src="data:image/png;base64,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" alt="A-Lab" width="36" height="36" style="width:36px;height:36px;object-fit:contain;display:block;">
+        </div>
+        <span class="login-form-brand">A-Lab</span>
+      </div>
+      <div class="login-h">Welcome back</div>
+      <div class="login-sub">Sign in to your account to continue</div>
+      <div class="login-err" id="loginErr">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span id="loginErrText"></span>
+      </div>
+      <div class="f-wrap">
+        <label class="f-label">Username or Email</label>
+        <div style="position:relative;">
+          <svg class="f-icon" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          <input type="text" id="lUser" class="f-inp f-inp-icon" placeholder="admin@alab.com"
+            autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+      </div>
+      <div class="f-wrap">
+        <label class="f-label">Password</label>
+        <div style="position:relative;">
+          <svg class="f-icon" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          <input type="password" id="lPass" class="f-inp f-inp-icon" placeholder="••••••••"
+            autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+      </div>
+      <button class="btn-signin" id="loginBtn" onclick="doLogin()">Sign In</button>
+      <div class="login-footer">A-Lab Laboratory System · Powered by Google Sheets</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APP SHELL ═══ -->
+<div id="viewApp" class="view hidden">
+
+  <div class="sb-overlay" id="sbOverlay" onclick="closeMobileSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-header">
+      <a class="sb-logo" href="javascript:void(0)" onclick="navigateTo('dashboard')">
+        <div class="sb-logo-icon" style="background:transparent;padding:0;overflow:hidden;">
+          <img src="data:image/png;base64,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" alt="A-Lab" width="34" height="34" style="width:34px;height:34px;object-fit:contain;display:block;">
+        </div>
+        <div class="sb-logo-text">
+          <div class="sb-logo-name">A-Lab</div>
+          <div class="sb-logo-sub">LMS v1.0</div>
+        </div>
+      </a>
+    </div>
+
+    <nav class="sb-nav">
+      <div class="sb-section" id="sbSectionTech" style="display:none;">
+        <div class="sb-section-label">My Portal</div>
+        <a class="sb-nav-item" data-page="tech-dashboard" data-label="Dashboard" onclick="navigateTo('tech-dashboard')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          <span class="sb-nav-label">Dashboard</span>
+        </a>
+        <a class="sb-nav-item" data-page="tech-queue" data-label="Queue" onclick="navigateTo('tech-queue')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          </svg>
+          <span class="sb-nav-label sb-label" id="sbTechQueueLabel">Lab Queue</span>
+        </a>
+        <a class="sb-nav-item" data-page="orders" data-label="Orders" onclick="navigateTo('orders')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          <span class="sb-nav-label">Orders</span>
+        </a>
+        <a class="sb-nav-item" data-page="patients" data-label="Patients" onclick="navigateTo('patients')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span class="sb-nav-label">Patients</span>
+        </a>
+        <a class="sb-nav-item" data-label="Settings" onclick="settings_openModal('signatures')" style="cursor:pointer;">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span class="sb-nav-label">Settings</span>
+        </a>
+
+      </div>
+
+      <div class="sb-section" id="sbSectionDoctor" style="display:none;">
+        <div class="sb-section-label">My Portal</div>
+        <a class="sb-nav-item" data-page="doctor-dashboard" data-label="Dashboard" onclick="navigateTo('doctor-dashboard')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          <span class="sb-nav-label">Dashboard</span>
+        </a>
+        <a class="sb-nav-item" data-page="my-referrals" data-label="My Referrals" onclick="navigateTo('my-referrals')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+          </svg>
+          <span class="sb-nav-label">My Referrals</span>
+        </a>
+        <a class="sb-nav-item" data-page="my-patients" data-label="My Patients" onclick="navigateTo('my-patients')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span class="sb-nav-label">My Patients</span>
+        </a>
+        <a class="sb-nav-item" data-page="consultations" data-label="Consultations" onclick="navigateTo('consultations')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span class="sb-nav-label">Consultations</span>
+        </a>
+      </div>
+
+      <!-- Receptionist Portal -->
+      <div class="sb-section" id="sbSectionReceptionist" style="display:none;">
+        <div class="sb-section-label">Front Desk</div>
+        <a class="sb-nav-item" data-page="rec-dashboard" data-label="Dashboard" onclick="navigateTo('rec-dashboard')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          <span class="sb-nav-label">Dashboard</span>
+        </a>
+        <a class="sb-nav-item" data-page="orders" data-label="Orders" onclick="navigateTo('orders')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          <span class="sb-nav-label">Orders</span>
+        </a>
+        <a class="sb-nav-item" data-page="patients" data-label="Patients" onclick="navigateTo('patients')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span class="sb-nav-label">Patients</span>
+        </a>
+
+      </div>
+
+      <!-- Liaison Officer Portal -->
+      <div class="sb-section" id="sbSectionLiaison" style="display:none;">
+        <div class="sb-section-label">Liaison</div>
+        <a class="sb-nav-item" data-page="liaison-dashboard" data-label="Dashboard" onclick="navigateTo('liaison-dashboard')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          <span class="sb-nav-label">Dashboard</span>
+        </a>
+        <a class="sb-nav-item" data-page="orders" data-label="Order Queue" onclick="navigateTo('orders')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          <span class="sb-nav-label">Order Queue</span>
+        </a>
+      </div>
+
+      <div class="sb-section" id="sbSectionOverview">
+        <div class="sb-section-label">Overview</div>
+        <a class="sb-nav-item active" data-page="dashboard" data-label="Dashboard" onclick="navigateTo('dashboard')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          <span class="sb-nav-label">Dashboard</span>
+        </a>
+        <!-- Reports — SA + BA only (hidden for others via JS) -->
+        <a class="sb-nav-item" data-page="reports" data-label="Reports" id="sbReportsNavItem" onclick="navigateTo('reports')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+          <span class="sb-nav-label">Reports</span>
+        </a>
+      </div>
+
+      <div class="sb-section" id="sbSectionOperations">
+        <div class="sb-section-label">Operations</div>
+        <a class="sb-nav-item" data-page="orders" data-label="Orders" onclick="navigateTo('orders')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          <span class="sb-nav-label">Orders</span>
+        </a>
+        <a class="sb-nav-item" data-page="patients" data-label="Patients" onclick="navigateTo('patients')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span class="sb-nav-label">Patients</span>
+        </a>
+      </div>
+
+      <div class="sb-section" id="sbSectionCatalog">
+        <div class="sb-section-label">Catalog</div>
+        <a class="sb-nav-item" data-page="lab-services" data-label="Lab Services" onclick="navigateTo('lab-services')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+          </svg>
+          <span class="sb-nav-label">Lab Services / X-Ray</span>
+        </a>
+        <a class="sb-nav-item" data-page="consultations" data-label="Consultations Setup" onclick="navigateTo('consultations')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span class="sb-nav-label">Consultations</span>
+        </a>
+        <a class="sb-nav-item" data-page="packages" data-label="Packages" onclick="navigateTo('packages')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+          <span class="sb-nav-label">Packages</span>
+        </a>
+        <a class="sb-nav-item" data-page="discounts" data-label="Discounts" onclick="navigateTo('discounts')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 7h.01M17 17h.01M7 17L17 7M9 7a2 2 0 11-4 0 2 2 0 014 0zm10 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+          <span class="sb-nav-label">Discounts</span>
+        </a>
+      </div>
+
+      <div class="sb-section" id="sbSectionPeople">
+        <div class="sb-section-label">People</div>
+        <a class="sb-nav-item" data-page="doctors" data-label="Doctors" onclick="navigateTo('doctors')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span class="sb-nav-label">Doctors</span>
+        </a>
+        <a class="sb-nav-item" data-page="technologists" data-label="Technologists" onclick="navigateTo('technologists')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
+          </svg>
+          <span class="sb-nav-label">Technologists</span>
+        </a>
+        <a class="sb-nav-item" data-page="admins" data-label="Admins" onclick="navigateTo('admins')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+          <span class="sb-nav-label">Admins</span>
+        </a>
+      </div>
+
+      <div class="sb-section" id="sbSectionAdmin">
+        <div class="sb-section-label">Administration</div>
+        <a class="sb-nav-item" data-page="branches" data-label="Branches" onclick="navigateTo('branches')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span class="sb-nav-label">Branches</span>
+        </a>
+        <a class="sb-nav-item" data-page="departments" data-label="Departments" onclick="navigateTo('departments')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+          <span class="sb-nav-label">Departments</span>
+        </a>
+      </div>
+
+      <div class="sb-section" id="sbSectionImport">
+        <div class="sb-section-label">Import</div>
+        <a class="sb-nav-item" data-page="bulkimport" data-label="Import Catalog" onclick="navigateTo('bulkimport')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span class="sb-nav-label">Import Catalog</span>
+        </a>
+        <a class="sb-nav-item" data-page="bulkimport-packages" data-label="Import Packages" onclick="navigateTo('bulkimport-packages')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+          <span class="sb-nav-label">Import Packages</span>
+        </a>
+      </div>
+
+      <div class="sb-section" id="sbSectionSettings">
+        <div class="sb-section-label">Settings</div>
+        <a class="sb-nav-item" data-page="configurations" data-label="Global Settings" onclick="navigateTo('configurations')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span class="sb-nav-label">Global Settings</span>
+        </a>
+        <a class="sb-nav-item" data-page="branch-settings" data-label="Branch Settings" id="sbNavBranchSettings" style="display:none;" onclick="navigateTo('branch-settings')">
+          <svg class="sb-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+          </svg>
+          <span class="sb-nav-label">Branch Settings</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sb-footer">
+      <button class="sb-logout" onclick="doLogout()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+        <span class="sb-logout-label">Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- APP BODY -->
+  <div class="app-body" id="appBody">
+    <header class="topbar">
+      <!-- Mobile hamburger -->
+      <button class="sb-mobile-toggle" onclick="toggleMobileSidebar()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+      <!-- Desktop sidebar toggle -->
+      <button class="tb-sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+      <div class="topbar-breadcrumb">
+        <div class="tb-page" id="tbPage">Dashboard</div>
+        <div class="tb-path" id="tbPath">A-Lab / Dashboard</div>
+      </div>
+      <div class="tb-actions">
+        <div class="tb-user" title="Settings">
+          <div class="tb-user-av" id="tbAvatar" onclick="event.stopPropagation();openMyProfile();" title="View my profile" style="cursor:zoom-in;">SA</div>
+          <div onclick="event.stopPropagation();toggleSettingsDropdown();" style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 4px 4px 2px;border-radius:6px;">
+            <div class="tb-user-info">
+              <div class="tb-user-name" id="tbUserName">Super Admin</div>
+              <div class="tb-user-role" id="tbUserRole">super_admin</div>
+            </div>
+            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--text-4);flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- PAGES — each tab is its own included file -->
+    <main class="app-main">
+      <?!= include('Dashboard') ?>
+      <?!= include('DoctorDashboard') ?>
+      <?!= include('TechDashboard') ?>
+      <?!= include('ReceptionistDashboard') ?>
+      <?!= include('LiaisonDashboard') ?>
+      <?!= include('Reports') ?>
+      <?!= include('StaticPages') ?>
+      <?!= include('Branches') ?>
+      <?!= include('Admins') ?>
+      <?!= include('Departments') ?>
+      <?!= include('LabServices') ?>
+      <?!= include('Packages') ?>
+      <?!= include('Discounts') ?>
+      <?!= include('Doctors') ?>
+      <?!= include('Technologists') ?>
+      <?!= include('Patients') ?>
+      <?!= include('Orders') ?>
+      <?!= include('MyReferrals') ?>
+      <?!= include('MyPatients') ?>
+      <?!= include('Consultations') ?>
+      <?!= include('Configurations') ?>
+      <?!= include('BranchSettings') ?>
+      <?!= include('Settings') ?>
+      <?!= include('BulkImport') ?>
+      <?!= include('BulkImportPackages') ?>
+    </main>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast">
+  <svg id="toastIcon" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"></svg>
+  <span id="toastMsg"></span>
+</div>
+
+<!-- ═══ SCRIPTS ═══ -->
+<?!= include('Utils') ?>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "a-lab",
+  "version": "1.0.0",
+  "scripts": {
+    "push": "clasp push",
+    "deploy": "clasp push && clasp deploy --deploymentId AKfycbyT7rCxtgkcVK58ZqaEMCoPQRleQ6G6x4TUGcFHbACQgEFHS3XkCpKbuO-y0xiALmtm -d \"A-Lab\"",
+    "open": "clasp open"
+  }
+}

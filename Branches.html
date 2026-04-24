@@ -1,0 +1,703 @@
+<!-- BRANCHES -->
+      <div class="page-view" id="page-branches">
+
+        <div class="section-header">
+          <div>
+            <div class="section-title" style="font-size:20px;">Branches</div>
+            <div class="section-sub" id="brSubtitle">Manage laboratory branches</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-secondary btn-sm" onclick="br_load()" id="brRefreshBtn">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="brRefreshIcon">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Refresh
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="br_openModal()">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+              </svg>
+              Add Branch
+            </button>
+          </div>
+        </div>
+
+        <!-- Search + filter bar -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+          <div style="position:relative;flex:1;min-width:200px;">
+            <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-4);" width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+            </svg>
+            <input type="text" id="brSearch" class="f-inp" style="padding-left:34px;font-size:13px;"
+              placeholder="Search branch name, code, address…" oninput="br_applyFilter()">
+          </div>
+          <select id="brFilterStatus" class="f-inp" style="width:auto;font-size:13px;cursor:pointer;" onchange="br_applyFilter()">
+            <option value="">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+
+        <!-- Table card -->
+        <div class="card">
+          <div class="table-wrap">
+            <table class="table" id="brTable">
+              <thead>
+                <tr>
+                  <th>Branch ID</th>
+                  <th>Branch Name</th>
+                  <th>Code</th>
+                  <th>Address</th>
+                  <th>Contact</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Spreadsheet</th>
+                  <th style="text-align:center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="brTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══ BRANCH DETAIL MODAL ══ -->
+      <div id="brDetailPanel" style="display:none;position:fixed;inset:0;z-index:490;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
+        <div style="background:var(--white);border-radius:var(--radius-xl);width:100%;max-width:640px;max-height:88vh;box-shadow:var(--shadow-xl);display:flex;flex-direction:column;animation:modalIn .22s cubic-bezier(.34,1.2,.64,1);">
+
+          <!-- Modal header -->
+          <div style="display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--border);flex-shrink:0;">
+            <div style="width:40px;height:40px;border-radius:10px;background:rgba(16,168,168,.1);border:1px solid rgba(16,168,168,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" fill="none" stroke="var(--teal-600)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:16px;font-weight:800;color:var(--text-1);" id="brDetailName">Branch Name</div>
+              <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin-top:2px;" id="brDetailMeta">Branch Code · Address</div>
+            </div>
+            <div id="brDetailSANote" style="display:none;font-size:11px;color:var(--teal-600);background:rgba(16,168,168,.08);border:1px solid rgba(16,168,168,.15);padding:3px 10px;border-radius:20px;font-family:var(--mono);flex-shrink:0;">Super Admin override</div>
+            <button onclick="brDetail_close()" style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);flex-shrink:0;">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <!-- Modal body -->
+          <div style="flex:1;overflow-y:auto;padding:20px 24px;" id="brDetailBody">
+            <div style="text-align:center;padding:40px;color:var(--text-4);font-family:var(--mono);font-size:13px;">
+              <span class="spinner spinner-teal" style="display:inline-block;margin-bottom:8px;"></span><br>Loading departments…
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ BRANCH MODAL ══ -->
+      <div id="brModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
+        <div style="background:var(--white);border-radius:var(--radius-xl);width:100%;max-width:560px;box-shadow:var(--shadow-xl);animation:modalIn .22s cubic-bezier(.34,1.2,.64,1);max-height:90vh;overflow-y:auto;">
+          <!-- Modal header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);">
+            <div>
+              <div style="font-size:16px;font-weight:800;color:var(--text-1);" id="brModalTitle">Add Branch</div>
+              <div style="font-size:12px;color:var(--text-3);margin-top:2px;font-family:var(--mono);" id="brModalSub">Fill in branch details</div>
+            </div>
+            <button onclick="br_closeModal()" style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <!-- Modal body -->
+          <div style="padding:24px;">
+            <input type="hidden" id="brModalId">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+              <div style="grid-column:1/-1;">
+                <label class="f-label">Branch Name <span style="color:var(--danger);">*</span></label>
+                <input type="text" id="brFldName" class="f-inp" placeholder="e.g. A-Lab Manila">
+              </div>
+              <div>
+                <label class="f-label">Branch Code <span style="color:var(--danger);">*</span></label>
+                <input type="text" id="brFldCode" class="f-inp" placeholder="e.g. MNL" style="font-family:var(--mono);text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+              </div>
+              <div>
+                <label class="f-label">Status</label>
+                <select id="brFldStatus" class="f-inp" style="cursor:pointer;">
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+              <div style="grid-column:1/-1;">
+                <label class="f-label">Address <span style="color:var(--danger);">*</span></label>
+                <input type="text" id="brFldAddress" class="f-inp" placeholder="e.g. Manila City">
+              </div>
+              <div>
+                <label class="f-label">Contact Number</label>
+                <input type="tel" id="brFldContact" class="f-inp" placeholder="09XX XXX XXXX" maxlength="13" style="font-family:var(--mono);" oninput="_phoneInput(this)">
+                <div class="ph-hint" style="font-size:11px;margin-top:3px;font-family:var(--mono);"></div>
+              </div>
+              <div>
+                <label class="f-label">Email</label>
+                <input type="email" id="brFldEmail" class="f-inp" placeholder="e.g. branch@alab.com">
+              </div>
+              <div style="grid-column:1/-1;">
+                <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(16,168,168,.06);border:1px solid rgba(16,168,168,.15);border-radius:8px;">
+                  <svg width="14" height="14" fill="none" stroke="var(--teal-600)" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <span style="font-size:12px;color:var(--teal-700);">A dedicated Google Spreadsheet will be automatically created for this branch.</span>
+                </div>
+              </div>
+            </div>
+            <div id="brModalErr" style="display:none;margin-top:14px;font-size:12px;color:var(--danger);background:var(--danger-bg);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:9px 12px;"></div>
+          </div>
+          <!-- Modal footer -->
+          <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;">
+            <button class="btn btn-secondary" onclick="br_closeModal()">Cancel</button>
+            <button class="btn btn-primary" id="brSaveBtn" onclick="br_save()">
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              Save Branch
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ DELETE CONFIRM MODAL ══ -->
+      <div id="brDeleteModal" style="display:none;position:fixed;inset:0;z-index:501;background:rgba(9,15,18,.6);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;padding:20px;">
+        <div style="background:var(--white);border-radius:24px 24px 0 0;width:100%;max-width:440px;box-shadow:var(--shadow-xl);padding:28px 24px;animation:slideup .22s ease;">
+          <div style="display:flex;gap:14px;margin-bottom:20px;align-items:flex-start;">
+            <div style="width:42px;height:42px;border-radius:50%;background:var(--danger-bg);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" fill="none" stroke="var(--danger)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </div>
+            <div>
+              <div style="font-size:16px;font-weight:800;color:var(--text-1);margin-bottom:4px;">Delete Branch?</div>
+              <div style="font-size:13px;color:var(--text-2);line-height:1.6;" id="brDeleteMsg">This action cannot be undone.</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button class="btn btn-danger" style="width:100%;justify-content:center;padding:13px;" id="brDeleteConfirmBtn" onclick="br_confirmDelete()">Yes, Delete Branch</button>
+            <button class="btn btn-secondary" style="width:100%;justify-content:center;padding:13px;" onclick="br_closeDeleteModal()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+
+<script>
+/* ════════════════════════════════════
+   BRANCHES MODULE
+════════════════════════════════════ */
+var BR = {
+  all:       [],
+  filtered:  [],
+  editingId: null
+};
+
+/* ── br_load is called by the router in Utils.html
+   when navigating to 'branches' for the first time    */
+
+/* ── SKELETON ROWS ── */
+function br_skeleton() {
+  var row = '<tr>';
+  for (var i = 0; i < 9; i++) {
+    row += '<td><div style="height:14px;border-radius:6px;background:linear-gradient(90deg,#f0f2f7 25%,#e4e8f0 50%,#f0f2f7 75%);background-size:400px 100%;animation:shimmer 1.3s infinite;"></div></td>';
+  }
+  row += '</tr>';
+  return row + row + row + row;
+}
+
+/* ── LOAD ── */
+function br_load() {
+  var isSA      = APP.user && APP.user.role === 'Super Admin';
+  var branchIds = isSA ? '' : (APP.user && APP.user.branch_ids || '');
+
+  var icon = document.getElementById('brRefreshIcon');
+  if (icon) icon.style.animation = 'spin .8s linear infinite';
+  document.getElementById('brSubtitle').textContent = 'Loading…';
+  document.getElementById('brTableBody').innerHTML  = br_skeleton();
+
+  // Hide Add Branch button for Branch Admin
+  var addBtnWrap = document.getElementById('brAddBtnArea');
+  if (addBtnWrap) addBtnWrap.style.display = isSA ? 'inline-flex' : 'none';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (icon) icon.style.animation = '';
+      if (!r.success) {
+        document.getElementById('brTableBody').innerHTML =
+          '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--danger);font-size:13px;">'+
+          'Failed to load. <a href="javascript:void(0)" onclick="br_load()" style="color:var(--teal-600);font-weight:700;">Retry</a></td></tr>';
+        return;
+      }
+      BR.all = r.data || [];
+      br_applyFilter();
+      // Branch Admin with single branch → auto-open detail panel
+      if (!isSA && BR.all.length === 1) {
+        setTimeout(function(){ brDetail_open(BR.all[0].branch_id); }, 300);
+      }
+    })
+    .withFailureHandler(function(e) {
+      if (icon) icon.style.animation = '';
+      toast('error', e.message || 'Connection error.');
+      document.getElementById('brTableBody').innerHTML =
+        '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--danger);font-size:13px;">'+
+        'Error: ' + _e(e.message) + ' <a href="javascript:void(0)" onclick="br_load()" style="color:var(--teal-600);">Retry</a></td></tr>';
+    })
+    .getBranches(branchIds);
+}
+
+/* ── FILTER + RENDER ── */
+function br_applyFilter() {
+  var q  = (document.getElementById('brSearch').value || '').trim().toLowerCase();
+  var st = (document.getElementById('brFilterStatus').value || '');
+  BR.filtered = BR.all.filter(function(b) {
+    if (st && b.status !== st) return false;
+    if (q) {
+      var hay = [b.branch_name, b.branch_code, b.address, b.email, b.contact, b.branch_id].join(' ').toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+  br_render();
+}
+
+function br_render() {
+  var isSA  = APP.user && APP.user.role === 'Super Admin';
+  var count = BR.filtered.length;
+  document.getElementById('brSubtitle').textContent =
+    count + ' branch' + (count !== 1 ? 'es' : '') +
+    (count !== BR.all.length ? ' (filtered from ' + BR.all.length + ')' : ' total');
+
+  if (!count) {
+    document.getElementById('brTableBody').innerHTML =
+      '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-4);font-family:var(--mono);font-size:13px;">No branches found.</td></tr>';
+    return;
+  }
+
+  var h = '';
+  BR.filtered.forEach(function(b) {
+    var isActive = b.status === 'Active';
+    var ssLink   = b.spreadsheet_url
+      ? '<a href="' + _e(b.spreadsheet_url) + '" target="_blank" style="color:var(--teal-600);font-family:var(--mono);font-size:11px;display:inline-flex;align-items:center;gap:4px;">'
+        + '<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>'
+        + 'Sheet</a>'
+      : '<span style="color:var(--text-4);font-size:11px;">—</span>';
+
+    // Departments button — visible to all
+    var deptBtn = '<button class="btn btn-sm" onclick="brDetail_open(\'' + _e(b.branch_id) + '\')" style="padding:5px 10px;background:rgba(16,168,168,.1);color:var(--teal-700);border:1px solid rgba(16,168,168,.2);" title="View Departments">'
+      + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>'
+      + ' Depts</button>';
+
+    // Edit/Delete — Super Admin only
+    var editDelBtns = isSA
+      ? '<button class="btn btn-sm btn-secondary" onclick="br_openEdit(\'' + _e(b.branch_id) + '\')" style="padding:5px 10px;" title="Edit">'
+          + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>'
+          + '</button>'
+        + '<button class="btn btn-sm btn-danger" onclick="br_openDelete(\'' + _e(b.branch_id) + '\')" style="padding:5px 10px;" title="Delete">'
+          + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>'
+          + '</button>'
+      : '';
+
+    h += '<tr id="br-row-' + _e(b.branch_id) + '">'
+      + '<td><span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text-3);">' + _e(b.branch_id) + '</span></td>'
+      + '<td><span style="font-weight:700;color:var(--text-1);">' + _e(b.branch_name) + '</span></td>'
+      + '<td><span style="font-family:var(--mono);font-weight:700;font-size:12px;background:rgba(16,168,168,.08);color:var(--teal-700);padding:2px 8px;border-radius:5px;">' + _e(b.branch_code) + '</span></td>'
+      + '<td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + _e(b.address) + '">' + _e(b.address || '—') + '</td>'
+      + '<td style="font-family:var(--mono);font-size:12px;">' + _e(_phoneDisplay(b.contact) || '—') + '</td>'
+      + '<td style="font-size:12px;">' + _e(b.email || '—') + '</td>'
+      + '<td><span class="badge ' + (isActive ? 'badge-green' : 'badge-gray') + '" style="font-family:var(--mono);">' + (isActive ? '● Active' : '○ Inactive') + '</span></td>'
+      + '<td>' + ssLink + '</td>'
+      + '<td style="text-align:center;"><div style="display:flex;gap:5px;justify-content:center;">' + deptBtn + editDelBtns + '</div></td>'
+      + '</tr>';
+  });
+  document.getElementById('brTableBody').innerHTML = h;
+}
+
+/* ══════════════════════════════════════
+   MODAL HELPERS
+══════════════════════════════════════ */
+function br_openModal() {
+  BR.editingId = null;
+  document.getElementById('brModalTitle').textContent = 'Add Branch';
+  document.getElementById('brModalSub').textContent   = 'Fill in branch details';
+  document.getElementById('brSaveBtn').textContent    = 'Save Branch';
+  ['brModalId','brFldName','brFldCode','brFldAddress','brFldContact','brFldEmail']
+    .forEach(function(id){ document.getElementById(id).value = ''; });
+  document.getElementById('brFldStatus').value = 'Active';
+  br_hideModalErr();
+  document.getElementById('brModal').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('brFldName').focus(); }, 80);
+}
+
+function br_openEdit(id) {
+  var b = BR.all.find(function(x){ return x.branch_id === id; });
+  if (!b) { toast('error', 'Branch not found.'); return; }
+  BR.editingId = id;
+  document.getElementById('brModalTitle').textContent  = 'Edit Branch';
+  document.getElementById('brModalSub').textContent    = b.branch_name;
+  document.getElementById('brSaveBtn').textContent     = 'Update Branch';
+  document.getElementById('brModalId').value           = b.branch_id;
+  document.getElementById('brFldName').value           = b.branch_name || '';
+  document.getElementById('brFldCode').value           = b.branch_code || '';
+  document.getElementById('brFldAddress').value        = b.address     || '';
+  document.getElementById('brFldContact').value = _phoneDisplay(b.contact);
+  document.getElementById('brFldEmail').value          = b.email       || '';
+  document.getElementById('brFldStatus').value         = b.status      || 'Active';
+  br_hideModalErr();
+  document.getElementById('brModal').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('brFldName').focus(); }, 80);
+}
+
+function br_closeModal() {
+  document.getElementById('brModal').style.display = 'none';
+  BR.editingId = null;
+}
+function br_showModalErr(msg) {
+  var el = document.getElementById('brModalErr');
+  el.textContent = msg; el.style.display = 'block';
+}
+function br_hideModalErr() {
+  document.getElementById('brModalErr').style.display = 'none';
+}
+
+/* ══════════════════════════════════════
+   OPTIMISTIC SAVE (Create / Update)
+   1. Validate
+   2. Close modal instantly
+   3. Update local state + re-render
+   4. Sync to GAS in background
+   5. On error: rollback + reopen modal with error
+══════════════════════════════════════ */
+function br_save() {
+  var name    = document.getElementById('brFldName').value.trim();
+  var code    = document.getElementById('brFldCode').value.trim().toUpperCase();
+  var address = document.getElementById('brFldAddress').value.trim();
+  var contact = _phoneRaw(document.getElementById('brFldContact'));
+  var email   = document.getElementById('brFldEmail').value.trim();
+  var status  = document.getElementById('brFldStatus').value;
+
+  if (!name)    { br_showModalErr('Branch name is required.'); return; }
+  if (!code)    { br_showModalErr('Branch code is required.'); return; }
+  if (!address) { br_showModalErr('Address is required.'); return; }
+  if (contact && !_phoneValid(contact)) { br_showModalErr('Invalid contact number. Use 09XXXXXXXXX format.'); return; }
+
+  var isEdit  = !!BR.editingId;
+  var payload = {
+    branch_id:   BR.editingId || '',
+    branch_name: name, branch_code: code, address: address,
+    contact:     contact, email: email, status: status
+  };
+
+  // ── Snapshot for rollback ──
+  var snapshot = BR.all.slice();
+
+  if (isEdit) {
+    var idx = BR.all.findIndex(function(b){ return b.branch_id === BR.editingId; });
+    if (idx !== -1) {
+      BR.all[idx] = Object.assign({}, BR.all[idx], {
+        branch_name: name, branch_code: code, address: address,
+        contact: contact, email: email, status: status
+        // spreadsheet_id and spreadsheet_url preserved from existing record
+      });
+    }
+  } else {
+    var tempId = 'BR-PENDING';
+    BR.all.unshift({
+      branch_id: tempId, branch_name: name, branch_code: code,
+      address: address, contact: contact, email: email, status: status,
+      spreadsheet_id: '', spreadsheet_url: '', created_at: '', updated_at: ''
+    });
+    payload._tempId = tempId;
+  }
+
+  br_applyFilter();
+  br_closeModal();
+  toast('info', isEdit ? 'Saving changes…' : 'Adding branch…');
+
+  // ── Background sync ──
+  var fn = isEdit ? 'updateBranch' : 'createBranch';
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) {
+        // Rollback
+        BR.all = snapshot;
+        br_applyFilter();
+        toast('error', r.message || 'Failed to save.');
+        // Reopen modal with the data intact
+        setTimeout(function(){
+          if (isEdit) br_openEdit(payload.branch_id);
+          else        br_openModal();
+          document.getElementById('brFldName').value    = name;
+          document.getElementById('brFldCode').value    = code;
+          document.getElementById('brFldAddress').value = address;
+          document.getElementById('brFldContact').value = contact;
+          document.getElementById('brFldEmail').value   = email;
+          document.getElementById('brFldStatus').value  = status;
+          br_showModalErr(r.message || 'Failed to save. Please try again.');
+        }, 200);
+        return;
+      }
+      // Success — if create, update temp record with real ID + SS details from server
+      if (!isEdit && r.branch_id) {
+        var ti = BR.all.findIndex(function(b){ return b.branch_id === 'BR-PENDING'; });
+        if (ti !== -1) {
+          BR.all[ti].branch_id       = r.branch_id;
+          BR.all[ti].spreadsheet_id  = r.spreadsheet_id  || '';
+          BR.all[ti].spreadsheet_url = r.spreadsheet_url || '';
+        }
+        br_applyFilter();
+      }
+      toast('success', isEdit ? 'Branch updated!' : 'Branch created!');
+    })
+    .withFailureHandler(function(e) {
+      BR.all = snapshot;
+      br_applyFilter();
+      toast('error', e.message || 'Connection error.');
+    })
+    [fn](payload);
+}
+
+/* ══════════════════════════════════════
+   OPTIMISTIC DELETE
+   1. Confirm modal closes instantly
+   2. Row fades out + removed from local state
+   3. Sync to GAS in background
+   4. On error: restore row + toast
+══════════════════════════════════════ */
+var _brDeleteId = null;
+
+function br_openDelete(id) {
+  var b = BR.all.find(function(x){ return x.branch_id === id; });
+  if (!b) return;
+  _brDeleteId = id;
+  document.getElementById('brDeleteMsg').textContent =
+    'Delete "' + b.branch_name + '"? This cannot be undone.';
+  document.getElementById('brDeleteModal').style.display = 'flex';
+}
+function br_closeDeleteModal() {
+  document.getElementById('brDeleteModal').style.display = 'none';
+  _brDeleteId = null;
+}
+
+function br_confirmDelete() {
+  if (!_brDeleteId) return;
+  var id       = _brDeleteId;
+  var snapshot = BR.all.slice();
+
+  // Close modal instantly
+  br_closeDeleteModal();
+
+  // Fade out row optimistically
+  var row = document.getElementById('br-row-' + id);
+  if (row) {
+    row.style.transition = 'opacity .25s, transform .25s';
+    row.style.opacity    = '0';
+    row.style.transform  = 'translateX(8px)';
+  }
+
+  // Remove from local state after animation
+  setTimeout(function() {
+    BR.all = BR.all.filter(function(b){ return b.branch_id !== id; });
+    br_applyFilter();
+  }, 260);
+
+  toast('info', 'Deleting branch…');
+
+  // Background sync
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) {
+        BR.all = snapshot;
+        br_applyFilter();
+        toast('error', r.message || 'Failed to delete.');
+        return;
+      }
+      toast('success', 'Branch deleted.');
+    })
+    .withFailureHandler(function(e) {
+      BR.all = snapshot;
+      br_applyFilter();
+      toast('error', e.message || 'Connection error.');
+    })
+    .deleteBranch(id);
+}
+
+/* ══════════════════════════════════════
+   BRANCH DETAIL PANEL
+   Shows departments + categories for a
+   specific branch with toggle controls.
+══════════════════════════════════════ */
+var BD = {
+  branchId: null,
+  data:     []   // [{dept_id, department_name, master_active, branch_active, categories:[...]}]
+};
+
+function brDetail_open(branchId) {
+  var b = BR.all.find(function(x){ return x.branch_id === branchId; });
+  if (!b) return;
+  BD.branchId = branchId;
+
+  document.getElementById('brDetailName').textContent = b.branch_name;
+  document.getElementById('brDetailMeta').textContent = b.branch_code + ' · ' + (b.address || '');
+
+  var isSA = APP.user && APP.user.role === 'Super Admin';
+  var note = document.getElementById('brDetailSANote');
+  if (note) note.style.display = isSA ? 'inline-flex' : 'none';
+
+  document.getElementById('brDetailPanel').style.display = 'flex';
+  brDetail_load();
+}
+
+function brDetail_close() {
+  document.getElementById('brDetailPanel').style.display = 'none';
+  BD.branchId = null;
+  BD.data     = [];
+}
+
+function brDetail_load() {
+  document.getElementById('brDetailBody').innerHTML =
+    '<div style="text-align:center;padding:40px;color:var(--text-4);font-family:var(--mono);font-size:13px;">'
+    + '<span class="spinner spinner-teal" style="display:inline-block;margin-bottom:8px;"></span><br>Loading departments…</div>';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) {
+        document.getElementById('brDetailBody').innerHTML =
+          '<div style="text-align:center;padding:32px;color:var(--danger);font-size:13px;">Failed to load. '
+          + '<a href="javascript:void(0)" onclick="brDetail_load()" style="color:var(--teal-600);">Retry</a></div>';
+        return;
+      }
+      BD.data = r.data || [];
+      brDetail_render();
+    })
+    .withFailureHandler(function(e) {
+      document.getElementById('brDetailBody').innerHTML =
+        '<div style="text-align:center;padding:32px;color:var(--danger);font-size:13px;">' + _e(e.message) + '</div>';
+    })
+    .getBranchDeptStatus(BD.branchId);
+}
+
+function brDetail_render() {
+  var isSA = APP.user && APP.user.role === 'Super Admin';
+
+  if (!BD.data.length) {
+    document.getElementById('brDetailBody').innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--text-4);font-size:13px;">No departments in master catalog yet.<br>'
+      + '<span style="font-size:12px;">Add departments from the Departments tab first.</span></div>';
+    return;
+  }
+
+  var h = '';
+  BD.data.forEach(function(dept, di) {
+    var dActive   = dept.branch_active == 1;
+    var forcedOff = dept.master_active == 0;
+
+    h += '<div style="margin-bottom:10px;border:1.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">';
+
+    // ── Department row — big, prominent ──
+    h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:' + (dActive && !forcedOff ? 'rgba(16,168,168,.04)' : 'var(--gray-50)') + ';gap:12px;">'
+      + '<div style="flex:1;min-width:0;">'
+        + '<div style="font-size:14px;font-weight:800;color:var(--text-1);letter-spacing:-.01em;">' + _e(dept.department_name) + '</div>'
+        + (forcedOff
+            ? '<div style="font-size:11px;color:var(--danger);margin-top:2px;">⚠ Globally inactive by Super Admin</div>'
+            : '<div style="font-size:11px;color:var(--text-4);margin-top:1px;font-family:var(--mono);">' + (dept.categories||[]).length + ' categories</div>')
+      + '</div>'
+      // Big toggle for department
+      + brToggle(dActive && !forcedOff, forcedOff, 'brDetail_toggleDept(' + di + ')', 44, 24)
+      + '</div>';
+
+    // ── Category rows — smaller, indented ──
+    if (dept.categories && dept.categories.length) {
+      h += '<div style="background:var(--white);border-top:1px solid var(--border);">';
+      dept.categories.forEach(function(cat, ci) {
+        var cActive   = cat.branch_active == 1 && dActive && !forcedOff;
+        var cDisabled = forcedOff || !dActive;
+        var isLast    = ci === dept.categories.length - 1;
+        h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px 10px 36px;'
+            + (!isLast ? 'border-bottom:1px solid var(--gray-100);' : '') + 'gap:12px;">'
+          + '<div style="display:flex;align-items:center;gap:8px;">'
+            + '<div style="width:5px;height:5px;border-radius:50%;background:' + (cActive ? 'var(--teal-400)' : 'var(--gray-300)') + ';flex-shrink:0;"></div>'
+            + '<span style="font-size:12px;color:' + (cDisabled ? 'var(--text-4)' : 'var(--text-2)') + ';font-weight:500;">' + _e(cat.category_name) + '</span>'
+          + '</div>'
+          // Smaller toggle for category
+          + brToggle(cActive, cDisabled, 'brDetail_toggleCat(' + di + ',' + ci + ')', 34, 18)
+          + '</div>';
+      });
+      h += '</div>';
+    }
+
+    h += '</div>';
+  });
+
+  document.getElementById('brDetailBody').innerHTML = h;
+}
+
+/* Reusable toggle builder — w/h = track size */
+function brToggle(isOn, disabled, onclick, w, h) {
+  var knob = h - 4;
+  return '<div style="display:inline-flex;align-items:center;gap:8px;cursor:' + (disabled ? 'not-allowed' : 'pointer') + ';" onclick="' + (disabled ? '' : onclick) + '">'
+    + '<div style="position:relative;width:' + w + 'px;height:' + h + 'px;flex-shrink:0;">'
+      + '<div style="position:absolute;inset:0;border-radius:' + h + 'px;background:' + (isOn ? 'var(--teal-500)' : 'var(--gray-300)') + ';opacity:' + (disabled ? '.4' : '1') + ';transition:background .2s;"></div>'
+      + '<div style="position:absolute;top:2px;left:' + (isOn ? (w - knob - 2) + 'px' : '2px') + ';width:' + knob + 'px;height:' + knob + 'px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);opacity:' + (disabled ? '.4' : '1') + ';"></div>'
+    + '</div>'
+    + '<span style="font-size:' + (h >= 22 ? '13' : '11') + 'px;font-weight:700;min-width:' + (h >= 22 ? '52' : '44') + 'px;color:' + (isOn && !disabled ? 'var(--teal-600)' : 'var(--text-4)') + ';opacity:' + (disabled ? '.5' : '1') + ';">' + (isOn && !disabled ? 'Active' : 'Inactive') + '</span>'
+  + '</div>';
+}
+
+/* ── Toggle Department (optimistic) ── */
+function brDetail_toggleDept(di) {
+  var dept     = BD.data[di];
+  if (!dept || dept.master_active == 0) return;
+  var newVal   = dept.branch_active == 1 ? 0 : 1;
+  var snapshot = JSON.parse(JSON.stringify(BD.data));
+
+  dept.branch_active = newVal;
+  // If deactivating dept → deactivate all its categories too
+  if (newVal == 0 && dept.categories) {
+    dept.categories.forEach(function(c){ c.branch_active = 0; });
+  }
+  brDetail_render();
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) { BD.data = snapshot; brDetail_render(); toast('error', r.message || 'Failed.'); }
+      else toast('success', dept.department_name + ' ' + (newVal ? 'activated' : 'deactivated') + ' for this branch.');
+    })
+    .withFailureHandler(function(e) { BD.data = snapshot; brDetail_render(); toast('error', e.message); })
+    .setBranchDeptStatus(BD.branchId, dept.dept_id, newVal);
+}
+
+/* ── Toggle Category (optimistic) ── */
+function brDetail_toggleCat(di, ci) {
+  var dept   = BD.data[di];
+  var cat    = dept && dept.categories && dept.categories[ci];
+  if (!cat || dept.master_active == 0 || dept.branch_active == 0) return;
+  var newVal   = cat.branch_active == 1 ? 0 : 1;
+  var snapshot = JSON.parse(JSON.stringify(BD.data));
+
+  cat.branch_active = newVal;
+  brDetail_render();
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success) { BD.data = snapshot; brDetail_render(); toast('error', r.message || 'Failed.'); }
+      else toast('success', cat.category_name + ' ' + (newVal ? 'activated' : 'deactivated') + ' for this branch.');
+    })
+    .withFailureHandler(function(e) { BD.data = snapshot; brDetail_render(); toast('error', e.message); })
+    .setBranchCatStatus(BD.branchId, cat.cat_id, newVal);
+}
+
+/* Backdrop close */
+document.getElementById('brDetailPanel').addEventListener('click', function(e){
+  if (e.target === this) brDetail_close();
+});
+
+/* ── Close modals on backdrop click ── */
+document.getElementById('brModal').addEventListener('click', function(e) {
+  if (e.target === this) br_closeModal();
+});
+document.getElementById('brDeleteModal').addEventListener('click', function(e) {
+  if (e.target === this) br_closeDeleteModal();
+});
+
+/* ── Shimmer keyframe (added once) ── */
+(function() {
+  if (document.getElementById('br-shimmer-style')) return;
+  var s = document.createElement('style');
+  s.id = 'br-shimmer-style';
+  s.textContent = '@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}';
+  document.head.appendChild(s);
+})();
+</script>
