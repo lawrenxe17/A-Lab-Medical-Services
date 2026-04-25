@@ -724,7 +724,7 @@ function techdash_renderSheetLink(container, item, borderStyle) {
   google.script.run
     .withSuccessHandler(function(r) {
       var row = r && r.success && r.data && r.data.length ? r.data[0] : null;
-      existingPdf = (row && row.unit === 'LAB_PDF') ? row.result_value : null;
+      existingPdf = (row && (row.unit === 'LAB_PDF' || row.unit === 'LAB_DOCX')) ? row.result_value : null;
       onBothLoaded();
     })
     .withFailureHandler(function() { onBothLoaded(); })
@@ -753,9 +753,9 @@ function techdash_buildLabForm(container, item, borderStyle, existingPdf, params
   if (existingPdf) {
     html += '<div style="display:flex;align-items:center;gap:12px;background:var(--gray-50);padding:12px;border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:12px;">'
       + '<div style="font-size:24px;">📄</div>'
-      + '<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text-1);">PDF Result Ready</div>'
+      + '<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text-1);">Result Ready</div>'
       + '<div style="font-size:11px;color:var(--text-3);">Saved to patient folder.</div></div>'
-      + '<a href="' + _e(existingPdf) + '" target="_blank" class="btn btn-primary btn-sm">View PDF</a>'
+      + '<a href="' + _e(existingPdf) + '" target="_blank" class="btn btn-primary btn-sm">View Result</a>'
       + '</div>'
       + '<div style="display:flex;justify-content:flex-end;">'
       + '<button class="btn btn-secondary btn-sm" style="color:var(--danger);border-color:rgba(239,68,68,.3);" onclick="techdash_editResult(\'' + iid + '\',\'lab\')">'
@@ -979,7 +979,7 @@ function techdash_renderXrayEncoding(container, item, borderStyle) {
   google.script.run
     .withSuccessHandler(function(r) {
       var existing = (r && r.success && r.data && r.data.length) ? r.data[0] : null;
-      var pdfUrl = existing && existing.unit === 'XRAY_PDF' ? existing.result_value : '';
+      var pdfUrl = existing && (existing.unit === 'XRAY_PDF' || existing.unit === 'XRAY_DOCX') ? existing.result_value : '';
       var procDone = !!item.processed_at;
       var encDone  = !!item.encoded_at;
       var html = '<div style="' + borderStyle + '">'
@@ -992,9 +992,9 @@ function techdash_renderXrayEncoding(container, item, borderStyle) {
         }
         html += '<div style="display:flex;align-items:center;gap:12px;background:var(--gray-50);padding:12px;border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:12px;">'
           + '<div style="font-size:24px;">📄</div>'
-          + '<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text-1);">PDF Result Ready</div>'
+          + '<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text-1);">Result Ready</div>'
           + '<div style="font-size:11px;color:var(--text-3);">Saved to patient folder.</div></div>'
-          + '<a href="' + _e(pdfUrl) + '" target="_blank" class="btn btn-primary btn-sm">View PDF</a>'
+          + '<a href="' + _e(pdfUrl) + '" target="_blank" class="btn btn-primary btn-sm">View Result</a>'
           + '<button class="btn btn-secondary btn-sm" onclick="techdash_printPdf(\'' + _e(pdfUrl) + '\')">🖨 Print</button>'
           + '</div>'
           + '<div style="display:flex;justify-content:flex-end;margin-bottom:10px;">'
