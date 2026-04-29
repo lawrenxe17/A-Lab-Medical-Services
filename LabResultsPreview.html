@@ -442,6 +442,53 @@ function lrp_filterCategory(catId) {
   lrp_renderAllPages();
 }
 
+/* ─── ESTIMATE ROW COUNT PER SERVICE ─── */
+function lrp_estimateServiceRows(svc) {
+  var params = svc.params || [];
+  var rows = 2; // table header + service label
+  params.forEach(function(pp) {
+    if ((pp.param_name || '').toUpperCase() === 'OTHERS') return;
+    rows++;
+    var refLines = (pp.reference_range || '').split('\n');
+    if (refLines.length > 1) rows += refLines.length - 1;
+  });
+  return rows;
+}
+
+/* ─── SPLIT CATEGORY INTO PAGE-SIZED GROUPS ─── */
+function lrp_splitCategoryServices(cat) {
+  var services = cat.services || [];
+  if (services.length <= 1) return [cat];
+
+  var MAX_ROWS = 20;
+  var groups = [];
+  var currentGroup = [];
+  var currentRows = 0;
+
+  services.forEach(function(svc) {
+    var svcRows = lrp_estimateServiceRows(svc);
+    if (currentGroup.length > 0 && (currentRows + svcRows) > MAX_ROWS) {
+      groups.push(currentGroup);
+      currentGroup = [svc];
+      currentRows = svcRows;
+    } else {
+      currentGroup.push(svc);
+      currentRows += svcRows;
+    }
+  });
+  if (currentGroup.length > 0) groups.push(currentGroup);
+
+  return groups.map(function(grp, idx) {
+    return {
+      cat_id: cat.cat_id,
+      category_name: cat.category_name,
+      services: grp,
+      _pageIndex: idx,
+      _totalPages: groups.length
+    };
+  });
+}
+
 /* ─── RENDER ALL PAGES ─── */
 function lrp_renderAllPages() {
   var container = document.getElementById('lrpRenderedPages');
@@ -453,7 +500,10 @@ function lrp_renderAllPages() {
 
   cats.forEach(function(cat) {
     if (LRP.activeCategory && LRP.activeCategory !== cat.cat_id) return;
-    html += lrp_renderCategoryPage(cat, data.patient, data.signatures);
+    var pages = lrp_splitCategoryServices(cat);
+    pages.forEach(function(pageCat) {
+      html += lrp_renderCategoryPage(pageCat, data.patient, data.signatures);
+    });
   });
 
   if (!html) {
@@ -491,7 +541,11 @@ function lrp_renderCategoryPage(cat, patient, signatures) {
     + '</div>';
 
   // Title banner
-  html += '<div class="lrp-title-banner">' + _e(cat.category_name || '').toUpperCase() + '</div>';
+  var titleText = _e(cat.category_name || '').toUpperCase();
+  if (cat._totalPages && cat._totalPages > 1) {
+    titleText += ' (Page ' + (cat._pageIndex + 1) + ' of ' + cat._totalPages + ')';
+  }
+  html += '<div class="lrp-title-banner">' + titleText + '</div>';
 
   // Render services — each service gets its own table with appropriate columns
   var services = cat.services || [];
