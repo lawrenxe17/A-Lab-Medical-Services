@@ -354,7 +354,7 @@ function lrp_renderOrderList() {
   var html = '';
   LRP.filteredOrders.forEach(function(o) {
     var isActive = LRP.selectedOrderId === o.order_id;
-    var statusColor = o.status === 'RELEASED' ? '#16a34a' : o.status === 'FOR_RELEASE' ? '#7c3aed' : 'var(--text-3)';
+    var statusColor = o.status === 'RELEASED' ? '#16a34a' : o.status === 'FOR_RELEASE' ? '#7c3aed' : '#6b7280';
     var statusLabel = (o.status || '').replace(/_/g, ' ');
 
     html += '<div class="lrp-order-item' + (isActive ? ' active' : '') + '" onclick="lrp_selectOrder(\'' + _e(o.order_id) + '\')">'

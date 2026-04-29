@@ -301,6 +301,7 @@ function doLogout() {
   if (typeof RPT   !== 'undefined') { RPT.data = null; RPT.services = []; RPT.branchId = null; RPT.branches = []; }
   // Clear liaison state if exists
   if (typeof LIA   !== 'undefined') { LIA.all = []; LIA.branchId = null; }
+  if (typeof LRP   !== 'undefined') { LRP.allOrders = []; LRP.filteredOrders = []; LRP.selectedOrderId = null; LRP.selectedOrderData = null; LRP.categories = []; LRP.activeCategory = null; LRP.branchId = null; }
 
   document.getElementById('lUser').value = '';
   document.getElementById('lPass').value = '';
