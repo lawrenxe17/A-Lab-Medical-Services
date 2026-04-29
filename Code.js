@@ -403,6 +403,7 @@ function saveTemplateSettings(branchId, settings) {
   }
 }
 
+
 function uploadTemplateHeaderImage(branchId, base64Data, mimeType) {
   try {
     if (!base64Data || !branchId) return { success: false, message: 'Missing data.' };
