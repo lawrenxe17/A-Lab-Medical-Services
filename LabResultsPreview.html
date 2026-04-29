@@ -319,6 +319,7 @@ function lrp_init() {
   google.script.run
     .withSuccessHandler(function(r) {
       LRP.templateSettings = (r && r.success && r.data) ? r.data : {};
+      if (LRP.selectedOrderData) lrp_renderAllPages();
     })
     .withFailureHandler(function() { LRP.templateSettings = {}; })
     .getTemplateSettings(branchId);
