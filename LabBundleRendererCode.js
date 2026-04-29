@@ -643,13 +643,15 @@ function _fetchPatientForOrder_(branchId, orderId) {
           patient.medtech_name          = ti.name || '';
           patient.medtech_cred          = ti.credentials || '';
           patient.medtech_license_no    = ti.license_no || '';
+          patient.medtech_signature_url = ti.signature_url || '';
         }
       }
       var ls = getLabSignatures(branchId);
       if (ls && ls.success && ls.pathologist) {
-        patient.pathologist_name       = ls.pathologist.name || '';
-        patient.pathologist_cred       = ls.pathologist.credentials || '';
-        patient.pathologist_license_no = ls.pathologist.license_no || '';
+        patient.pathologist_name          = ls.pathologist.name || '';
+        patient.pathologist_cred          = ls.pathologist.credentials || '';
+        patient.pathologist_license_no    = ls.pathologist.license_no || '';
+        patient.pathologist_signature_url = ls.pathologist.signature_url || '';
       }
     } catch (e) { Logger.log('signature lookup: ' + e.message); }
   } catch (e) { Logger.log('_fetchPatientForOrder_ ERROR: ' + e.message); }
