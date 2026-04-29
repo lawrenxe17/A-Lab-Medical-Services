@@ -205,8 +205,10 @@ function ts_updatePreview() {
   if (!container) return;
 
   var s = TS.settings;
-  var noteVal = (document.getElementById('tsClinicalNote') || {}).value || s.clinical_note || '';
-  var footerVal = (document.getElementById('tsFooterText') || {}).value || s.footer_text || '';
+  var noteEl = document.getElementById('tsClinicalNote');
+  var footerEl = document.getElementById('tsFooterText');
+  var noteVal = noteEl ? noteEl.value : (s.clinical_note || '');
+  var footerVal = footerEl ? footerEl.value : (s.footer_text || '');
 
   var html = '';
   // Header
@@ -306,7 +308,8 @@ function ts_save() {
 
   var payload = {
     clinical_note: noteEl ? noteEl.value : '',
-    footer_text: footerEl ? footerEl.value : ''
+    footer_text: footerEl ? footerEl.value : '',
+    header_image_url: TS.settings.header_image_url || ''
   };
 
   btn.disabled = true;
