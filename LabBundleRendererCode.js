@@ -782,8 +782,20 @@ function getLabPreviewData(branchId, orderId) {
     var groups = {};
     var catOrder = [];
 
+    // Pre-load Lab_Serv_Params sheet for fallback when raw_values are missing
+    var paramSheetRows = null;
+    function _getParamSheetRows() {
+      if (paramSheetRows !== null) return paramSheetRows;
+      try {
+        var mss = getSS_();
+        var psh = mss.getSheetByName('Lab_Serv_Params');
+        if (!psh || psh.getLastRow() < 2) { paramSheetRows = []; return paramSheetRows; }
+        paramSheetRows = psh.getRange(2, 1, psh.getLastRow() - 1, Math.max(psh.getLastColumn(), 10)).getValues();
+      } catch (e) { paramSheetRows = []; }
+      return paramSheetRows;
+    }
+
     items.forEach(function (it) {
-      if (!it.raw_values) return;
       var catInfo = _getCategoryForService_(it.serv_id, catCache);
 
       if (!groups[catInfo.cat_id]) {
@@ -791,18 +803,40 @@ function getLabPreviewData(branchId, orderId) {
         catOrder.push(catInfo.cat_id);
       }
 
-      var params = it.raw_values.map(function (p) {
-        return {
-          param_name: p.param_name,
-          unit: p.unit || '',
-          reference_range: p.reference_range || '',
-          field_type: p.field_type || 'numeric',
-          sort_order: p.sort_order || 0,
-          sub_label: p.sub_label || '',
-          indent: p.indent || 0,
-          result_value: p.result_value || ''
-        };
-      });
+      var params;
+      if (it.raw_values) {
+        params = it.raw_values.map(function (p) {
+          return {
+            param_name: p.param_name,
+            unit: p.unit || '',
+            reference_range: p.reference_range || '',
+            field_type: p.field_type || 'numeric',
+            sort_order: p.sort_order || 0,
+            sub_label: p.sub_label || '',
+            indent: p.indent || 0,
+            result_value: p.result_value || ''
+          };
+        });
+      } else {
+        // Fallback: load param definitions from Lab_Serv_Params master sheet
+        var pRows = _getParamSheetRows();
+        params = pRows
+          .filter(function (r) { return String(r[1]).trim() === it.serv_id; })
+          .sort(function (a, b) { return (Number(a[5]) || 0) - (Number(b[5]) || 0); })
+          .map(function (r) {
+            return {
+              param_name: String(r[2] || '').trim(),
+              unit: String(r[3] || '').trim(),
+              reference_range: String(r[4] || '').trim(),
+              field_type: String(r[8] || 'numeric').trim() || 'numeric',
+              sort_order: Number(r[5]) || 0,
+              sub_label: '',
+              indent: 0,
+              result_value: ''
+            };
+          });
+        if (!params.length) return;
+      }
 
       groups[catInfo.cat_id].services.push({
         serv_id: it.serv_id,
@@ -812,7 +846,7 @@ function getLabPreviewData(branchId, orderId) {
     });
 
     if (catOrder.length === 0) {
-      return { success: false, message: 'No encoded lab results with param data found for this order.' };
+      return { success: false, message: 'No encoded lab results found for this order.' };
     }
 
     // 3. Collect signature info
