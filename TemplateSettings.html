@@ -184,7 +184,7 @@ function ts_populate() {
   var preview = document.getElementById('tsHeaderPreview');
   var removeBtn = document.getElementById('tsHeaderRemoveBtn');
   if (s.header_image_url) {
-    preview.innerHTML = '<img src="' + s.header_image_url + '" style="max-width:100%;max-height:100%;object-fit:contain;">';
+    preview.innerHTML = '<img src="' + _e(s.header_image_url) + '" style="max-width:100%;max-height:100%;object-fit:contain;">';
     removeBtn.style.display = '';
   } else {
     preview.innerHTML = '<span style="font-size:11px;color:var(--text-4);">No header image uploaded</span>';
@@ -213,7 +213,7 @@ function ts_updatePreview() {
   var html = '';
   // Header
   if (s.header_image_url) {
-    html += '<div style="text-align:center;margin-bottom:12px;"><img src="' + s.header_image_url + '" style="max-width:100%;max-height:100px;object-fit:contain;"></div>';
+    html += '<div style="text-align:center;margin-bottom:12px;"><img src="' + _e(s.header_image_url) + '" style="max-width:100%;max-height:100px;object-fit:contain;"></div>';
   } else {
     html += '<div style="text-align:center;padding:24px;border:1.5px dashed #ddd;border-radius:6px;color:#aaa;font-size:12px;margin-bottom:12px;">Header image will appear here</div>';
   }
